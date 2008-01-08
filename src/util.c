@@ -337,12 +337,11 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     
     /* reading input parameters */
     va_start(arg, g);
-    D = Subgraph2Dataset(g);
     L = va_arg(arg,int);
     Param = va_arg(arg,gsl_matrix *);
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
-    
+        
     column = gsl_matrix_column(Param, 0); /* the first column stands for the number of hidden units */
     d = CreateDBN(g->nfeats, &column.vector, g->nlabels, L);
     
@@ -355,6 +354,7 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
         d->m[i]->eta_max = gsl_matrix_get(Param, i, 5);
     }
     
+    D = Subgraph2Dataset(g);
     reconstruction_error = BernoulliDBNTrainingbyContrastiveDivergence(D, d, n_epochs, 1, batch_size);
     DestroyDBN(&d);
     DestroyDataset(&D);

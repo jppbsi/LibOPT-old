@@ -329,31 +329,29 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				batch_size = va_arg(arg, int);
 				n_gibbs_sampling = va_arg(arg, int);
 				L = va_arg(arg, int);
-				fprintf(stderr,"\nL: %d -------", L);
-				
-				Param = gsl_matrix_alloc(L, 6);		
+								
+				Param = gsl_matrix_alloc(L, 6);
 				for(i = 0; i < H->m; i++){
 				
-						/* setting Param matrix */
-						for(l = 0; l < L; l++){
-								z = 0;
-								while(z < H->n){
-										for(j = 0; j < 5; j++)
-												gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
-										z+=5; /* we have six decision variables for each layer l: # hidden units, eta, lambda, alpha, eta_min and eta_max*/
-								}
-								fprintf(stderr,"\n---- H->n: %d, z: %d", H->n, z);
-						}
-
-						f = Evaluate(g, L, Param, n_epochs, batch_size); 
-						gsl_vector_set(H->fitness, i, f);
-						if(f < H->best_fitness){
-							H->best = i;
-							H->best_fitness = f;
-						}else if(f > H->worst_fitness){
-							H->worst = i;
-							H->worst_fitness = f;
-						}
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+							
+					f = Evaluate(g, L, Param, n_epochs, batch_size); 
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
 				}
 
 				gsl_matrix_free(Param);
@@ -719,13 +717,13 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				
 				/* setting Param matrix */
 				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
 				for(l = 0; l < L; l++){
-						z = 0;
-						while(z < H->n){
-								for(j = 0; j < 5; j++)
-										gsl_matrix_set(Param, l, j, gsl_vector_get(h, j+z));
-								z+=5; 
-						}
+					for(j = 0; j < 4; j++)
+						gsl_matrix_set(Param, l, j, gsl_vector_get(h, j+z));
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
 				}
 				
 				f = Evaluate(g, L, Param, n_epochs, batch_size);
@@ -744,30 +742,6 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 						for(i = 0; i < H->n; i++)
 							H->Rehearsal[H->worst][i] = H->op_type[i];
 					}
-				}
-				
-				Param = gsl_matrix_alloc(L, 6);		
-				for(i = 0; i < H->m; i++){
-				
-						/* setting Param matrix */
-						for(l = 0; l < L; l++){
-								z = 0;
-								while(z < H->n){
-										for(j = 0; j < 5; j++)
-												gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
-										z+=5; /* we have six decision variables for each layer l: # hidden units, eta, lambda, alpha, eta_min and eta_max*/
-								}
-						}
-
-						f = Evaluate(g, L, Param, n_epochs, batch_size); 
-						gsl_vector_set(H->fitness, i, f);
-						if(f < H->best_fitness){
-							H->best = i;
-							H->best_fitness = f;
-						}else if(f > H->worst_fitness){
-							H->worst = i;
-							H->worst_fitness = f;
-						}
 				}
 
 				gsl_matrix_free(Param);
