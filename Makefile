@@ -21,6 +21,7 @@ $(OBJ)/ba.o \
 $(OBJ)/gp.o \
 $(OBJ)/mbo.o \
 $(OBJ)/util.o \
+$(OBJ)/numerical.o \
 
 	ar csr $(LIB)/libopt.a \
 $(OBJ)/opt.o \
@@ -29,6 +30,7 @@ $(OBJ)/ba.o \
 $(OBJ)/gp.o \
 $(OBJ)/mbo.o \
 $(OBJ)/util.o \
+$(OBJ)/numerical.o \
 
 $(OBJ)/opt.o: $(SRC)/opt.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
@@ -59,6 +61,11 @@ $(OBJ)/util.o: $(SRC)/util.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
     -L $(OPF_DIR)/lib -lOPF -L $(LIBDEEP_DIR)/lib -L /usr/local/lib -lDeep -lgsl -lgslcblas `pkg-config --cflags --libs opencv` `pkg-config --cflags --libs gsl` \
     -c $(SRC)/util.c -o $(OBJ)/util.o
+
+$(OBJ)/numerical.o: $(SRC)/numerical.c
+	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
+    -L $(OPF_DIR)/lib -lOPF -L $(LIBDEEP_DIR)/lib -L /usr/local/lib -lDeep -lgsl -lgslcblas `pkg-config --cflags --libs opencv` `pkg-config --cflags --libs gsl` \
+    -c $(SRC)/numerical.c -o $(OBJ)/numerical.o
 
 clean:
 	rm -f $(LIB)/lib*.a; rm -f $(OBJ)/*.o

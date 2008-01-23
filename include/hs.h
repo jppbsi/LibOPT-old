@@ -68,4 +68,5 @@ void runPSF_HS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...);  /* 
 /* Hybrid */
 void runHybridHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, int HEURISTIC_ID, double p, ...); /* It executes hybrid HS */
 void goHybridHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, int HEURISTIC_ID, double p, va_list arg); /* It executes the hybridization of HS */
+
 #endif
