@@ -25,7 +25,7 @@ void GradientDescent(Subgraph *g, double alpha, prtFun EvaluateFun, int FUNCTION
                 for(j = 0; j < g->nfeats; j++){
                     tmp = alpha*(1/(double)g->nnodes);
                     for(i = 0; i < g->nnodes; i++){
-                        tmp+=(EvaluateFun(LinearRegression_Fitting()))*g->node[i].feat[j]        
+                        tmp+=(EvaluateFun(LinearRegression_Fitting()-y))*g->node[i].feat[j]        
                     }
                 }
             }               

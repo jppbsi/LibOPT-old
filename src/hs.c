@@ -777,25 +777,25 @@ void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     if(H){
         int t, i;
         double p;
-	gsl_vector *h = NULL;
+		gsl_vector *h = NULL;
                             
-        fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
-	EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
-	fprintf(stderr," OK.");
-	
-	ShowHarmonyMemory(H);
-	
-        for(t = 1; t <= H->max_iterations; t++){
-            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
-            va_copy(arg, argtmp);
-            
-            h = CreateNewHarmony(H);
-	    EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
-	    gsl_vector_free(h);
-    		            
-            fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
-            fprintf(stdout,"%d %lf\n", t, H->best_fitness);
-        }
+		fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+		EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
+		fprintf(stderr," OK.");
+		
+		ShowHarmonyMemory(H);
+		
+		for(t = 1; t <= H->max_iterations; t++){
+			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
+			va_copy(arg, argtmp);
+				
+			h = CreateNewHarmony(H);
+			EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
+			gsl_vector_free(h);
+							
+			fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
+			fprintf(stdout,"%d %lf\n", t, H->best_fitness);
+		}
         
     }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
     va_end(arg);
