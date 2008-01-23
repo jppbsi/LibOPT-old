@@ -13,6 +13,7 @@ extern "C" {
 #define BBRBM_PCD 4 /* Bernoulli-Bernoulli RBM trained by Persistent Contrastive Divergence */
 #define BBRBM_FPCD 5 /* Bernoulli-Bernoulli RBM trained by Fast Persistent Contrastive Divergence */
 #define BBDBN4RECONSTRUCTION 6 /* Bernoulli_Bernoulli DBN for data reconstruction */
+#define LINEAR_REGRESSION 7 /* Linear Regression */
 
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */
@@ -47,6 +48,7 @@ typedef double (*prtFun)(Subgraph *, ...);
 #include "ba.h"
 #include "gp.h"
 #include "mbo.h"
+#include "numerical.h"
 #include "util.h"
 
 #ifdef __cplusplus
