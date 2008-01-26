@@ -23,12 +23,12 @@ void GradientDescent(gsl_matrix *X, gsl_vector *Y, double alpha, int FUNCTION_ID
 		switch (FUNCTION_ID){
 			case 7: /* Linear Regression*/
 				w = va_arg(arg, gsl_vector *);
+				gsl_vector_memcpy(w_tmp, w);
 				while(abs(error-old_error) > 0.00001){
 					old_error = error;
 				
 					for(j = 0; j < X->size2; j++){
-						tmp = alpha*(1/(double)X->size1); // tmp = alpha*1/m
-						tmp+=Linear_RegressionPartialDerivative(X, w, Y, j); //tmp = alpha*1/m*sum(h(x_i)-y_i)x_i^j
+						tmp = gsl_vector_get(w_tmp, j) - (alpha*1.0/X->size1)*Linear_RegressionPartialDerivative(X, w, Y, j); //tmp = w_j - alpha*1/m*sum(h(x_i)-y_i)x_i^j
 						gsl_vector_set(w_tmp, j, tmp);
 					}
 					
