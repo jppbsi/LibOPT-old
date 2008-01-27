@@ -91,7 +91,7 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
         return NULL;
     }
     
-    fscanf(fp, "%d %d %d %d %d %d %d", &n_trees, &max_depth, &n_decision_variables, &type, &max_iterations, &has_terminal); WaiveComment(fp);
+    fscanf(fp, "%d %d %d %d %d %d", &n_trees, &max_depth, &n_decision_variables, &type, &max_iterations, &has_terminal); WaiveComment(fp);
     gp = CreateGeneticProgramming(n_trees);
     gp->type = type, gp->max_depth = max_depth; gp->n = n_decision_variables; gp->max_iterations = max_iterations; gp->has_terminal = has_terminal;
     
@@ -794,7 +794,9 @@ tree_id: id of the tree to be evaluated
 arg: argument list */
 double EvaluateTree(GeneticProgramming *gp, int tree_id, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     gsl_vector *v = NULL;
-    double fitness = 0;
+    int n_epochs, batch_size, n_gibbs_sampling, L, z, l, j; 
+    double f = 0;
+    gsl_matrix *Param = NULL;
     Subgraph *g = NULL;
     
     if(gp->T){
@@ -806,14 +808,42 @@ double EvaluateTree(GeneticProgramming *gp, int tree_id, prtFun Evaluate, int FU
 	switch(FUNCTION_ID){
 	    case 2: /* kMeans */
 		g = va_arg(arg, Subgraph *);
-		fitness = Evaluate(g, v);
+		f = Evaluate(g, v);
+		break;
+	    case 6: /* Bernoulli_Bernoulli DBN for data reconstruction trained by Contrastive Divergence */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+		
+		Param = gsl_matrix_alloc(L, 6); /* it allocates 6 variables (n, eta, lambda, alpha, alpha_min and alpha_max)*/
+				
+		/* setting Param matrix */
+		z = 0;
+		for(l = 0; l < L; l++){
+		    for(j = 0; j < 4; j++)
+			gsl_matrix_set(Param, l, j, gsl_vector_get(v, j+z));
+			gsl_matrix_set(Param, l, j++, gsl_vector_get(gp->LB, z+1)); // setting up eta_min 
+			gsl_matrix_set(Param, l, j, gsl_vector_get(gp->UB, z+1)); // setting up eta_max
+			z+=4;
+		    }
+							
+		    f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+		    gsl_vector_set(gp->fitness, tree_id, f);
+		    if(f < gp->best_fitness){
+			gp->best = tree_id;
+			gp->best_fitness = f;
+		    }
+
+		gsl_matrix_free(Param);
 		break;
 	}
     
 	gsl_vector_free(v);
     }else fprintf(stderr,"\nThere is no tree-like structure allocated @EvaluateTree.\n");
     
-    return fitness;
+    return f;
 }
 
 float **PrefixEvaluateTree4DescriptorCombination(Node *T, float ***D, int M){
