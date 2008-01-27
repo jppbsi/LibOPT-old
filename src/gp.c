@@ -72,7 +72,7 @@ Parameters: [file]
 file: file name */
 GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
     FILE *fp = NULL, *fpData = NULL;
-    int n_trees, type, ctr, i, j, z, max_depth, n_decision_variables, max_iterations, n_constants;
+    int n_trees, type, ctr, i, j, z, max_depth, n_decision_variables, max_iterations, n_constants, has_terminal;
     double aux, aux2, lb, ub;
     char data[32], c;
     GeneticProgramming *gp = NULL;
@@ -91,8 +91,9 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
         return NULL;
     }
     
-    fscanf(fp, "%d %d %d %d %d", &n_trees, &max_depth, &n_decision_variables, &type, &max_iterations); WaiveComment(fp);
-    gp = CreateGeneticProgramming(n_trees); gp->type = type, gp->max_depth = max_depth; gp->n = n_decision_variables; gp->max_iterations = max_iterations;
+    fscanf(fp, "%d %d %d %d %d %d %d", &n_trees, &max_depth, &n_decision_variables, &type, &max_iterations, &has_terminal); WaiveComment(fp);
+    gp = CreateGeneticProgramming(n_trees);
+    gp->type = type, gp->max_depth = max_depth; gp->n = n_decision_variables; gp->max_iterations = max_iterations; gp->has_terminal = has_terminal;
     
     fscanf(fp, "%lf %lf", &(gp->pReproduction), &(gp->pMutation)); WaiveComment(fp);
     aux = gp->pReproduction+gp->pMutation;
@@ -135,8 +136,6 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
     WaiveComment(fp);
     DestroyStringSet(&S); 
     /***/
-    
-    fscanf(fp, "%d", &(gp->has_terminal)); WaiveComment(fp);
     
     if(gp->has_terminal){ /* it reads the terminals */
 	S = NULL;
