@@ -1340,10 +1340,14 @@ gsl_vector *EXP_VECTOR(gsl_vector *v){
 gsl_vector *LOG_VECTOR(gsl_vector *v){
     gsl_vector *out = NULL;
     int i;
+    double tmp;
     
     out = gsl_vector_calloc(v->size);
-    for(i = 0; i < v->size; i++)
-	gsl_vector_set(out, i, log(gsl_vector_get(v, i)));
+    for(i = 0; i < v->size; i++){
+	tmp = gsl_vector_get(v, i);
+	if (tmp > 0) gsl_vector_set(out, i, log(gsl_vector_get(v, i)));
+	else gsl_vector_set(out, i, 0.0);
+    }
     
     return out;
 }
