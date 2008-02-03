@@ -342,7 +342,6 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
         EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg);
         
         for(t = 1; t <= S->max_iterations; t++){
-		ShowSwarm(S);
             fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
             va_copy(arg, argtmp);
             
@@ -351,13 +350,10 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
                 UpdateParticleVelocity(S, i);
                 UpdateParticlePosition(S, i);
             }
-	    ShowSwarm(S);
 	    CheckSwarmLimits(S);
-	    ShowSwarm(S);
 	         
             EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
 	    fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
-            fprintf(stderr,"%d %lf\n", t, S->best_fitness);
         }
         gsl_rng_free(r);
         
