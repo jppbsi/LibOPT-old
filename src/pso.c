@@ -249,7 +249,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 				z+=4;
 			}
 							
-			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+			fprintf(stderr,"\nf: %lf", f);
 			gsl_vector_set(S->fitness, i, f);
 			if(f < S->best_fitness){
 				S->best = i;
@@ -266,7 +267,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 Parameters: [S, particle_id]
 S: search space
 particle_id: particle's index */ 
-inline void UpdateParticleVelocity(Swarm *S, int particle_id){
+void UpdateParticleVelocity(Swarm *S, int particle_id){
     double tmp, r1, r2;
     int j;
     const gsl_rng_type *T = NULL;
@@ -291,7 +292,7 @@ inline void UpdateParticleVelocity(Swarm *S, int particle_id){
 Parameters: [S, particle_id]
 S: search space
 particle_id: particle's index */ 
-inline void UpdateParticlePosition(Swarm *S, int particle_id){
+void UpdateParticlePosition(Swarm *S, int particle_id){
     double tmp;
     int j;
     

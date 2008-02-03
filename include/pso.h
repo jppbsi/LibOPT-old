@@ -33,8 +33,8 @@ void ShowSwarm(Swarm *S); /* It displays the search space's content */
 void ShowSwarmInformation(Swarm *S); /* It displays the search space's main information */
 
 /* Main algorithm */
-inline void UpdateParticleVelocity(Swarm *S, int particle_id); /* It updates the velocity of each particle */
-inline void UpdateParticlePosition(Swarm *S, int particle_id); /* It updates the position of each particle */
+void UpdateParticleVelocity(Swarm *S, int particle_id); /* It updates the velocity of each particle */
+void UpdateParticlePosition(Swarm *S, int particle_id); /* It updates the position of each particle */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all particles */
 void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Particle Swarm Optimization for function minimization */
 

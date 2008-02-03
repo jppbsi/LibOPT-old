@@ -394,6 +394,7 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     DestroyDataset(&D);
     va_end(arg);
     
+    fprintf(stderr,"\nreconstruction_error: %lf", reconstruction_error);
     return reconstruction_error;
 }
 
