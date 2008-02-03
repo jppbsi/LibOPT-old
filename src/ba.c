@@ -193,6 +193,7 @@ void InitializeBats(Bats *B){
 		r = gsl_rng_alloc(T);
 		gsl_rng_set(r, rand());
 		
+		B->mean_A = 0;
 		for(i = 0; i < B->m; i++){
 			for(j = 0; j < B->n; j++){
                                 p = (gsl_vector_get(B->UB, j)-gsl_vector_get(B->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(B->LB, j);
@@ -207,7 +208,9 @@ void InitializeBats(Bats *B){
                         /* initializing the loudness */
                         p = (B->A_max-B->A_min)*gsl_rng_uniform(r)+B->A_min;
                         gsl_vector_set(B->A, i, p);
+			B->mean_A+=p;
 		}
+		B->mean_A/=B->m;
 		
 		gsl_rng_free(r);
 		
@@ -424,12 +427,14 @@ B: search space */
 void UpdateLoudness(Bats *B){
     int i;
     
+    B->mean_A = 0;
     for(i = 0; i < B->m; i++){
         gsl_vector_set(B->A, i, B->alpha*gsl_vector_get(B->A, i));
         if(gsl_vector_get(B->A, i) < B->A_min) gsl_vector_set(B->A, i, B->A_min);
         else if(gsl_vector_get(B->A, i) > B->A_max) gsl_vector_set(B->A, i, B->A_max);
+	B->mean_A+=gsl_vector_get(B->A, i);
     }
-    
+    B->mean_A/=B->m; /* it updates the mean loudness */
 }
 
 /* It updates the pulse rate
@@ -462,7 +467,7 @@ inline void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp){
 		gsl_rng_set(r, rand());
 		
 		for(j = 0; j < tmp->size; j++){
-			aux = gsl_matrix_get(B->x, best, j)+0.001*gsl_rng_uniform(r);
+			aux = gsl_matrix_get(B->x, best, j)+gsl_rng_uniform(r)*B->mean_A;
 			gsl_vector_set(tmp, j, aux);
 		}
 		gsl_rng_free(r);

@@ -152,7 +152,7 @@ void InitializeSwarm(Swarm *S){
 		for(i = 0; i < S->m; i++){
 			for(j = 0; j < S->n; j++){
 				p = (gsl_vector_get(S->UB, j)-gsl_vector_get(S->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(S->LB, j);
-				gsl_matrix_set(S->x, i, j, p);
+				gsl_matrix_set(S->x, i, j, p); gsl_matrix_set(S->y, i, j, p);
 			}
 			gsl_vector_set(S->fitness, i, DBL_MAX);
 		}
@@ -205,6 +205,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     double f;
     Subgraph *g = NULL;
     gsl_matrix *Param = NULL;
+    gsl_vector *row = NULL;
     
     switch(FUNCTION_ID){
         case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
@@ -235,6 +236,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		batch_size = va_arg(arg, int);
 		n_gibbs_sampling = va_arg(arg, int);
 		L = va_arg(arg, int);
+		row = gsl_vector_alloc(S->n);
 								
 		Param = gsl_matrix_alloc(L, 6);
 		for(i = 0; i < S->m; i++){
@@ -250,8 +252,16 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			}
 							
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
-			fprintf(stderr,"\nf: %lf", f);
+			
+			/* it updates the best position of the agent */
+			if(f < gsl_vector_get(S->fitness, i)){
+				gsl_matrix_get_row(row, S->x, i);
+				gsl_matrix_set_row(S->y, i, row);
+			}
+						
 			gsl_vector_set(S->fitness, i, f);
+			
+			/* it updates the global optimum */
 			if(f < S->best_fitness){
 				S->best = i;
 				S->best_fitness = f;
@@ -259,6 +269,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		}
 
 		gsl_matrix_free(Param);
+		gsl_vector_free(row);
 	break;
     }
 }
@@ -313,7 +324,7 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
     const gsl_rng_type *T = NULL;
     gsl_rng *r;
     double p;
-		
+    		
     va_start(arg, FUNCTION_ID);
     va_copy(argtmp, arg);
     if(S){
@@ -331,6 +342,7 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
         EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg);
         
         for(t = 1; t <= S->max_iterations; t++){
+		ShowSwarm(S);
             fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
             va_copy(arg, argtmp);
             
@@ -338,8 +350,10 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
             for(i = 0; i < S->m; i++){
                 UpdateParticleVelocity(S, i);
                 UpdateParticlePosition(S, i);
-                CheckSwarmLimits(S);
             }
+	    ShowSwarm(S);
+	    CheckSwarmLimits(S);
+	    ShowSwarm(S);
 	         
             EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
 	    fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
