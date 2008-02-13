@@ -338,8 +338,9 @@ double Gaussian_BernoulliDRBM(Subgraph *g, ...){
 /* Deep Belief Networks */
 
 /* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g
-Parameters: [g, L, Param, n_epochs, batch_size = va_arg(arg,int);]
+Parameters: [g, op, L, Param, n_epochs, batch_size = va_arg(arg,int);]
 g: dataset in the OPF format
+op: 1 - CD|2 - PCD|3 - FPCD
 L: number of RBMs
 Param: a matrix containing the parameters of each stacked RBM. Each row of this matrix stands for the configuration of each RBM.
 n_epochs: number of epochs for training
@@ -347,7 +348,7 @@ batch_size: size of the mini-batch */
 
 double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     va_list arg;
-    int n_hidden_units, n_epochs, batch_size, L, i;
+    int n_hidden_units, n_epochs, batch_size, L, i, op;
     double reconstruction_error;
     DBN *d = NULL;
     Dataset *D = NULL;
@@ -356,6 +357,7 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     
     /* reading input parameters */
     va_start(arg, g);
+    op = va_arg(arg,int);
     L = va_arg(arg,int);
     Param = va_arg(arg,gsl_matrix *);
     n_epochs = va_arg(arg,int);
@@ -374,7 +376,17 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     }
     
     D = Subgraph2Dataset(g);
-    reconstruction_error = BernoulliDBNTrainingbyContrastiveDivergence(D, d, n_epochs, 1, batch_size);
+    switch (op){
+        case 1:
+            reconstruction_error = BernoulliDBNTrainingbyContrastiveDivergence(D, d, n_epochs, 1, batch_size);
+        break;
+        case 2:
+            reconstruction_error = BernoulliDBNTrainingbyPersistentContrastiveDivergence(D, d, n_epochs, 1, batch_size);
+        break;
+        case 3:
+            reconstruction_error = BernoulliDBNTrainingbyFastPersistentContrastiveDivergence(D, d, n_epochs, 1, batch_size);
+        break;
+    }
     DestroyDBN(&d);
     DestroyDataset(&D);
     va_end(arg);
