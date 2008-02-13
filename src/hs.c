@@ -237,7 +237,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 		gsl_vector_view row;
 		gsl_vector *sigma = NULL;
 		gsl_matrix *Param = NULL;
-		
+				
 		Subgraph *g = NULL;
 		switch(FUNCTION_ID){
 			case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
