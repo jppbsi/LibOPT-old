@@ -104,6 +104,7 @@ void CheckHarmoniesLimits(HarmonyMemory *H){
 	int i, j;
 	
 	if(H){
+		#pragma omp parallel for
 		for(i = 0; i < H->m; i++){
 			for(j = 0; j < H->n; j++){
 				if(gsl_matrix_get(H->HM, i, j) < gsl_vector_get(H->LB, j)) gsl_matrix_set(H->HM, i, j, gsl_vector_get(H->LB, j));
@@ -165,6 +166,7 @@ void InitializeHarmonyMemory(HarmonyMemory *H){
 		r = gsl_rng_alloc(T);
 		gsl_rng_set(r, random_seed());
 		
+		#pragma omp parallel for
 		for(i = 0; i < H->m; i++){
 			for(j = 0; j < H->n; j++){
 				p = (gsl_vector_get(H->UB, j)-gsl_vector_get(H->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(H->LB, j);
@@ -194,6 +196,7 @@ void InitializeHarmonyMemoryFromDatasetSamples4Kmeans(HarmonyMemory *H, Subgraph
 		r = gsl_rng_alloc(T);
 		gsl_rng_set(r, random_seed());
 		
+		#pragma omp parallel for
 		for(i = 0; i < H->m; i++){
 			z = 0;
 			for(k = 0; k < g->nlabels; k++){
@@ -209,11 +212,13 @@ void InitializeHarmonyMemoryFromDatasetSamples4Kmeans(HarmonyMemory *H, Subgraph
 		min = gsl_vector_calloc(g->nfeats);
 		max = gsl_vector_calloc(g->nfeats);
 		
+		#pragma omp parallel for
 		for(j = 0; j < g->nfeats; j++){
 			gsl_vector_set(min, j, g->node[0].feat[j]);
 			gsl_vector_set(max, j, g->node[0].feat[j]);
 		}
 		
+		#pragma omp parallel for
 		for(i = 1; i < g->nnodes; i++){
 			for(j = 0; j < g->nfeats; j++){
 				if(g->node[i].feat[j] < gsl_vector_get(min, j)) gsl_vector_set(min, j, g->node[i].feat[j]);
@@ -223,6 +228,7 @@ void InitializeHarmonyMemoryFromDatasetSamples4Kmeans(HarmonyMemory *H, Subgraph
 		
 		z = 0;
 		while(z < H->n){
+			#pragma omp parallel for
 			for(j = 0; j < g->nfeats; j++){
 				gsl_vector_set(H->LB, j+z, gsl_vector_get(min, j));
 				gsl_vector_set(H->UB, j+z, gsl_vector_get(max, j));
@@ -256,6 +262,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
 				
+				#pragma omp parallel for
 				for(i = 0; i < H->m; i++){
 				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size); 
 				    gsl_vector_set(H->fitness, i, f);
@@ -271,6 +278,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 			case 2: /* kMeans */
 				g = va_arg(arg, Subgraph *);
 				
+				#pragma omp parallel for
 				for(i = 0; i < H->m; i++){
 					row = gsl_matrix_row (H->HM, i);
 					f = Evaluate(g, &row.vector);
