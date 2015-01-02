@@ -301,9 +301,9 @@ variables. Thus, the n first values concern with the first mean point, the next 
 mean point, and so on. */
 double kMeans4Optimization(Subgraph *g, ...){
     int i, j, z, k;
-    double dist, mindist, error;
+    double dist, mindist, error, tmp;
     gsl_matrix *c = NULL;
-    gsl_vector *x = NULL;
+    gsl_vector *x = NULL, *sum_distance = NULL;
     gsl_vector_view row;
     
     va_list arg;
@@ -321,9 +321,7 @@ double kMeans4Optimization(Subgraph *g, ...){
             for(j = 0; j < c->size2; j++)
                 gsl_matrix_set(c, i, j, gsl_vector_get(tmp_mean, z++));
         /***/
-        
-        error = 0.0;
-            
+                    
         /* it associates each node to its nearest center --- */
         for(i = 0; i < g->nnodes; i ++){ //for each node
             x = opt_node2gsl_vector(g->node[i].feat, g->nfeats);
@@ -339,10 +337,25 @@ double kMeans4Optimization(Subgraph *g, ...){
             }
                 
             gsl_vector_free(x);
-            error += mindist;
         }
         /* --- */
     
+        /* Computing fitness function according to Equation 6 of paper: "Combining PSO and k-means to Enhance Data Clustering" by
+        Alireza Ahmadyfard and Hamidreza Modares. */
+        sum_distance = gsl_vector_calloc(k);
+        for(i = 0; i < g->nnodes; i++){
+            row = gsl_matrix_row(c, g->node[i].label-1);
+            dist = opt_EuclideanDistance(g->node[i], &row.vector);
+            gsl_vector_set(sum_distance, g->node[i].label-1, gsl_vector_get(sum_distance, g->node[i].label-1)+dist);
+        }
+        
+        error = 0.0;
+        for(i = 0; i < sum_distance->size; i++)
+            error+=gsl_vector_get(sum_distance, i);
+        error/=g->nnodes;
+        /* End of fitness function computation */
+        
+        gsl_vector_free(sum_distance);
         gsl_matrix_free(c);
     }
     else fprintf(stderr,"\nThere is not mean matrix allocated @kMeans.\n");
