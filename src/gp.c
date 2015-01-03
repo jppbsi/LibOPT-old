@@ -20,11 +20,18 @@ GeneticProgramming *CreateGeneticProgramming(int n_trees){
     gp->n_terminals = 0;
     gp->best = 0;
     gp->best_fitness = DBL_MAX;
+    gp->constant = NULL;
+    gp->LB = NULL;
+    gp->UB = NULL;
+    gp->fitness = NULL;
+    gp->vector = NULL;
+    gp->terminal = NULL;
+    gp->function = NULL;
     
     gp->T = (Node **)malloc(gp->m*sizeof(Node *));
     for(i = 0; i < gp->m; i++)
 	gp->T[i] = NULL;
-    
+	    
     return gp;
 }
 
@@ -37,7 +44,6 @@ GeneticProgramming DestroyGeneticProgramming(GeneticProgramming **gp){
     
     aux = *gp;
     if(aux){
-	
 	for(i = 0; i < aux->m; i++)
 	    DestroyTree(&(aux->T[i]));
 	free(aux->T);
@@ -47,10 +53,11 @@ GeneticProgramming DestroyGeneticProgramming(GeneticProgramming **gp){
 	for(i = 0; i < aux->n_functions; i++)
 	    free(aux->function[i]);
 	free(aux->function);
-	gsl_vector_free(aux->LB);
-	gsl_vector_free(aux->UB);
-	gsl_vector_free(aux->fitness);
-	if(aux->type) gsl_matrix_free(aux->vector);
+	if(aux->LB) gsl_vector_free(aux->LB);
+	if(aux->UB) gsl_vector_free(aux->UB);
+	if(aux->fitness) gsl_vector_free(aux->fitness);
+	if(aux->constant) gsl_vector_free(aux->constant);
+	if(aux->vector) gsl_matrix_free(aux->vector);
 	else{
 	    for(i = 0; i < aux->n_terminals; i++) gsl_matrix_free(aux->matrix[i]);
 	    free(aux->matrix);
@@ -65,11 +72,18 @@ Parameters: [file]
 file: file name */
 GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
     FILE *fp = NULL, *fpData = NULL;
-    int n_trees, type, ctr, i, j, z, max_depth, n_decision_variables, max_iterations;
-    double aux, aux2;
+    int n_trees, type, ctr, i, j, z, max_depth, n_decision_variables, max_iterations, n_constants;
+    double aux, aux2, lb, ub;
     char data[16], c;
     GeneticProgramming *gp = NULL;
     StringSet *S = NULL, *tmp = NULL;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r = NULL;
+    
+    srand(time(NULL));
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+    gsl_rng_set(r, random_seed());
         
     fp = fopen(fileName, "r");
     if(!fp){
@@ -130,9 +144,10 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
 	strcpy(gp->terminal[i], tmp->data);
 	tmp = tmp->prox;
     }
-    DestroyStringSet(&S); WaiveComment(fp);
+    WaiveComment(fp);
     /***/
     
+    tmp = S;
     if(gp->type){ /* if it is a vector-based problem */
 	gp->vector = gsl_matrix_alloc(gp->n_terminals, gp->n);
 	
@@ -140,19 +155,28 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
 	    fscanf(fp,"%s", data); fpData = NULL;
 	    fpData = fopen(data,"r");
 	    if(fpData){
-		fscanf(fpData,"%lf",&aux);
-		for(j = 0; j < gp->n; j++){
+		if(!strcmp(tmp->data, "CONST")){
+		    fscanf(fpData,"%d %lf %lf",&n_constants, &lb, &ub);
+		    gp->constant = gsl_vector_alloc(n_constants);
+		    for(j = 0; j < gp->constant->size; j++)
+			gsl_vector_set(gp->constant, j, (ub-lb)*gsl_rng_uniform(r)+lb);
+		}else{
 		    fscanf(fpData,"%lf",&aux);
-		    gsl_matrix_set(gp->vector, i, j, aux);
+		    for(j = 0; j < gp->n; j++){
+			fscanf(fpData,"%lf",&aux);
+			gsl_matrix_set(gp->vector, i, j, aux);
+		    }
 		}
 		fclose(fpData);
 	    }else{
 		fprintf(stderr,"\nunable to open file %s @ReadGeneticProgrammingFromFile.\n", data);
+		gsl_rng_free(r);
 		DestroyGeneticProgramming(&gp);
 		fclose(fp);
 		return NULL;
 	    }
 	    WaiveComment(fp);
+	    tmp = tmp->prox;
 	}
     }
     else{ /* if is is a matrix-based problem */
@@ -194,6 +218,8 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
     }
     
     fclose(fp);
+    gsl_rng_free(r);
+    DestroyStringSet(&S); 
     
     return gp;    
 }
@@ -232,21 +258,22 @@ void BuildTrees(GeneticProgramming *gp){
     gsl_rng_free(r);
 }
 
-void PrintTree2File(Node *T, char *filename){
+void PrintTree2File(GeneticProgramming *gp, Node *T, char *filename){
     FILE *fp = NULL;
     
     fp = fopen(filename, "a");
-    PreFixPrintTree4File(T, fp);
+    PreFixPrintTree4File(gp, T, fp);
     fprintf(fp,"\n");
     fclose(fp);
 }
 
-void PreFixPrintTree4File(Node *T, FILE *fp){
+void PreFixPrintTree4File(GeneticProgramming *gp, Node *T, FILE *fp){
     if(T){
         if(!T->is_terminal) fprintf(fp,"(");
-        fprintf(fp,"%s ", T->elem);
-        PreFixPrintTree4File(T->esq, fp);
-        PreFixPrintTree4File(T->dir, fp);
+        if(T->is_const) fprintf(fp,"%lf ", gsl_vector_get(gp->constant, T->const_id));
+	else fprintf(fp,"%s ", T->elem);
+        PreFixPrintTree4File(gp, T->esq, fp);
+        PreFixPrintTree4File(gp, T->dir, fp);
         if(!T->is_terminal) fprintf(fp,")");
     }
 }
@@ -307,7 +334,7 @@ Node *PreFixPositioningTree(Node *T, int pos, char *FLAG, char isTerminal){
 void PreFixTravel4Copy(Node *T, Node *Parent){
     Node *aux = NULL;
     if(T){
-        aux = CreateNode(T->elem, T->terminal_id, T->is_terminal);
+        aux = CreateNode(T->elem, T->terminal_id, T->is_terminal, T->is_const, T->const_id);
         aux->son_esq = T->son_esq;
         aux->esq = NULL; aux->dir = NULL;
         if(T->son_esq) Parent->esq = aux;
@@ -323,7 +350,7 @@ Node *CopyTree(Node *T){
     Node *root = NULL;
     
     if(T){
-        root = CreateNode(T->elem, T->terminal_id, T->is_terminal);
+        root = CreateNode(T->elem, T->terminal_id, T->is_terminal, T->is_const, T->const_id);
         root->son_esq = T->son_esq;
         PreFixTravel4Copy(T->esq, root);
         PreFixTravel4Copy(T->dir, root);
@@ -334,7 +361,7 @@ Node *CopyTree(Node *T){
     
 }
 
-Node *CreateNode(char *value, int terminal_id, char flag){
+Node *CreateNode(char *value, int terminal_id, char flag, char is_const, int const_id){
     Node *tmp = NULL;
     tmp = (Node *)malloc(sizeof(Node));
     
@@ -343,7 +370,7 @@ Node *CreateNode(char *value, int terminal_id, char flag){
         exit(-1);
     }
     
-    tmp->terminal_id = terminal_id;
+    tmp->terminal_id = terminal_id; tmp->is_const = is_const; tmp->const_id = const_id;
     tmp->esq = tmp->dir = tmp->parent = NULL; tmp->is_terminal = flag;
     tmp->son_esq = 1; /* by default, every node is a left node */
     tmp->elem = (char *)malloc((strlen(value)+1)*sizeof(char));
@@ -375,22 +402,44 @@ gp: genetic programming structure
 d: minimum depth
 dmax: maximum depth */
 Node *GROW(GeneticProgramming *gp, int d, int dmax){
-    int it, aux;
+    int it, aux, const_id;
     Node *tmp = NULL, *node = NULL;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r = NULL;
     
     if(d == dmax){
         aux = rand()%gp->n_terminals;
-        return CreateNode(gp->terminal[aux], aux, 1);
+	if(!strcmp(gp->terminal[aux], "CONST")){
+	    srand(time(NULL));
+	    T = gsl_rng_default;
+	    r = gsl_rng_alloc(T);
+	    gsl_rng_set(r, random_seed());
+	
+	    const_id = gsl_rng_uniform_int(r, gp->constant->size);
+	    gsl_rng_free(r);
+	    return CreateNode(gp->terminal[aux], aux, 1, 1, const_id);
+	}
+        return CreateNode(gp->terminal[aux], aux, 1, 0, -1);
     }
     else{
         aux = rand()%(gp->n_functions+gp->n_terminals);
         if(aux >= gp->n_functions){ // if tmp is a terminal
             aux = aux-gp->n_functions;
-            tmp = CreateNode(gp->terminal[aux], aux, 1);
+	    if(!strcmp(gp->terminal[aux], "CONST")){
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+	    
+		const_id = gsl_rng_uniform_int(r, gp->constant->size);
+		gsl_rng_free(r);
+		tmp = CreateNode(gp->terminal[aux], aux, 1, 1, const_id);
+	    }
+            else tmp = CreateNode(gp->terminal[aux], aux, 1, 0, -1);
             return tmp;
         }
         else{
-            node = CreateNode(gp->function[aux], aux, 0);
+            node = CreateNode(gp->function[aux], aux, 0, 0, -1);
             for(it = 0; it < N_ARGS_FUNCTION[getFUNCTIONid(gp->function[aux])]; it++){
                 tmp = GROW(gp, d+1,dmax);
                 if(!it)
@@ -693,9 +742,15 @@ gsl_vector *RunTree4Vector(GeneticProgramming *gp, Node *T){
 	y = RunTree4Vector(gp, T->dir);
 	
 	if(T->is_terminal){ /* If T is a terminal (leaf node), so x=y=NULL */
-	    row = gsl_matrix_row(gp->vector, T->terminal_id);
-	    out = gsl_vector_calloc((&row.vector)->size);
-	    gsl_vector_memcpy(out, &row.vector);
+	    if(T->is_const){
+		out = gsl_vector_calloc(gp->n);
+		gsl_vector_add_constant(out, gsl_vector_get(gp->constant, T->const_id));
+		return out;
+	    }else{
+		row = gsl_matrix_row(gp->vector, T->terminal_id);
+		out = gsl_vector_calloc((&row.vector)->size);
+		gsl_vector_memcpy(out, &row.vector);
+	    }
 	    return out;
 	}else{
 	    if(!strcmp(T->elem,"SUM")) out = SUM_VECTOR(x, y);

@@ -22,8 +22,8 @@ typedef struct _Node4Fitness{
 
 typedef struct _Node{
     char *elem;
-    int terminal_id;
-    char son_esq, is_terminal;
+    int terminal_id, const_id;
+    char son_esq, is_terminal, is_const;
     struct _Node *dir, *esq, *parent;
 }Node;
 
@@ -43,6 +43,7 @@ typedef struct _GeneticProgramming{
     gsl_vector *UB; /* upper bound for each decision variable */
     double best_fitness; /* value of the best fitness */
     gsl_vector *fitness; /* array with the fitness value of each tree */
+    gsl_vector *constant; /* array with the random constants */
     char **function; /* matrix with the functions' names */
     char **terminal; /* matrix with the terminals' names */
     Node **T; /* pointer to the trees */
@@ -56,10 +57,10 @@ GeneticProgramming DestroyGeneticProgramming(GeneticProgramming **gp); /* It dea
 GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName); /* Tt creates a genetic programming specified in a file */
 
 /* Tree-related functions */
-Node *CreateNode(char *value, int terminal_id, char flag);
+Node *CreateNode(char *value, int terminal_id, char flag, char is_const, int const_id);
 int getSizeTree(Node *T);
-void PrintTree2File(Node *T, char *filename);
-void PreFixPrintTree4File(Node *T, FILE *fp);
+void PrintTree2File(GeneticProgramming *gp, Node *T, char *filename);
+void PreFixPrintTree4File(GeneticProgramming *gp, Node *T, FILE *fp);
 void PosFixPrintTree(Node *T);
 Node *PreFixPositioningTree(Node *T, int pos, char *FLAG, char isTerminal);
 Node *CopyTree(Node *T);
