@@ -120,7 +120,7 @@ void WaiveComment(FILE *fp){
     char c;
     
     fscanf(fp, "%c", &c);
-    while(c != '\n') fscanf(fp, "%c", &c);
+    while((c != '\n') && (!feof(fp))) fscanf(fp, "%c", &c);
     
 }
 
@@ -345,8 +345,10 @@ double kMeans4Optimization(Subgraph *g, ...){
         sum_distance = gsl_vector_calloc(k);
         for(i = 0; i < g->nnodes; i++){
             row = gsl_matrix_row(c, g->node[i].label-1);
-            dist = opt_EuclideanDistance(g->node[i], &row.vector);
+            x = opt_node2gsl_vector(g->node[i].feat, g->nfeats);
+            dist = opt_EuclideanDistance(x, &row.vector);
             gsl_vector_set(sum_distance, g->node[i].label-1, gsl_vector_get(sum_distance, g->node[i].label-1)+dist);
+            gsl_vector_free(x);
         }
         
         error = 0.0;
