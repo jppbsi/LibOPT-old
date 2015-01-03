@@ -709,6 +709,9 @@ gsl_vector *RunTree4Vector(GeneticProgramming *gp, Node *T){
                         else if(!strcmp(T->elem,"SQRT")){
                             if(x) out = SQRT_VECTOR(x);
                             else out = SQRT_VECTOR(y);
+                        }else if(!strcmp(T->elem,"LOG")){
+                            if(x) out = LOG_VECTOR(x);
+                            else out = LOG_VECTOR(y);
                         }
 	    /* it deallocates the sons of the current one, since they have been already used */
 	    gsl_vector_free(x); 
@@ -989,8 +992,10 @@ void runGP(GeneticProgramming *gp, prtFun EvaluateFun, int FUNCTION_ID, ...){
 		    gp->best = j;
 		}
 		
-		tmp_T[j] = CopyTree(gp->T[j]);
-		DestroyTree(&(gp->T[j]));
+		if(it < gp->max_iterations){
+		    tmp_T[j] = CopyTree(gp->T[j]);
+		    DestroyTree(&(gp->T[j]));
+		}
 	    }
 	    fprintf(stderr,"\n-> Minimum fitness value of %lf at tree %d", gp->best_fitness, gp->best);
 	    
@@ -1001,10 +1006,8 @@ void runGP(GeneticProgramming *gp, prtFun EvaluateFun, int FUNCTION_ID, ...){
 		k3 = gp->m-(k1+k2); crossover = RouletteSelection(gp, k3);
 		
 		/* It performs the reproduction */
-		for(j = 0; j < k1; j++){
+		for(j = 0; j < k1; j++)
 		    gp->T[j] = CopyTree(tmp_T[(int)gsl_vector_get(reproduction, j)]);
-		    fprintf(stderr,"\nkeeping tree %d", (int)gsl_vector_get(reproduction, j));
-		}
 		
 		/* it performs the mutation */
 		z = 0;
