@@ -365,3 +365,24 @@ double kMeans4Optimization(Subgraph *g, ...){
     va_end(arg);
     return error;
 }
+
+ /* It nomalizes the input data by means of a univariate gaussian distribution
+ Parameters: [x, mean, sigma]
+ x: input data to be normalized
+ mean: mean value to be used as an input to the Gaussian distribution
+ sigma: variance value to be used as an input to the Gaussian distribution */
+gsl_vector *NormalizebyGaussianDistribution(gsl_vector *x, gsl_vector *mean, double sigma){
+    gsl_vector *out = NULL;
+    int i;
+    double p;
+    
+    if((x) && (mean)){
+        out = gsl_vector_calloc(x->size);
+        for(i = 0; i < out->size; i++){
+            p = gsl_ran_gaussian_pdf(gsl_vector_get(x, i), sigma)+gsl_vector_get(mean, i);
+            gsl_vector_set(out, i, p);
+        }
+    }else fprintf(stderr,"\nInput data or mean data not allocated @NormalizebyGaussianDistribution.\n");
+    
+    return out;
+}
