@@ -18,7 +18,7 @@ HarmonyMemory *CreateHarmonyMemory(int m, int n){
 	H->n = n;
 	
 	H->HM = gsl_matrix_alloc(H->m, H->n);
-	H->fitness = gsl_vector_alloc(H->m);
+	H->fitness = gsl_vector_calloc(H->m);
 	H->LB = gsl_vector_alloc(H->n);
 	H->UB = gsl_vector_alloc(H->n);
 	
@@ -171,6 +171,7 @@ void InitializeHarmonyMemory(HarmonyMemory *H){
 				p = (gsl_vector_get(H->UB, j)-gsl_vector_get(H->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(H->LB, j);
 				gsl_matrix_set(H->HM, i, j, p);
 			}
+			
 		}
 		
 		gsl_rng_free(r);
@@ -244,11 +245,11 @@ H: search space
 EvaluateFun: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg){
-	
 	if(H){
-		int i, n_epochs, batch_size;
+		int i, n_epochs, batch_size, CD_iterations;
 		double f;
 		gsl_vector_view row;
+		gsl_vector *sigma = NULL;
 		
 		Subgraph *g = NULL;
 		switch(FUNCTION_ID){
@@ -269,7 +270,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 					    H->worst_fitness = f;
 				    }
 				}
-				break;
+			break;
 			case 2: /* kMeans */
 				g = va_arg(arg, Subgraph *);
 				
@@ -280,7 +281,26 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 					gsl_vector_set(H->fitness, i, f);
 				}
 				UpdateHarmonyMemoryIndices(H);
-				break;
+			break;
+			case 3: /* Gaussian_BernoulliDRBM */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				sigma = va_arg(arg, gsl_vector *);
+				CD_iterations = va_arg(arg, int);
+			
+				for(i = 0; i < H->m; i++){
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, sigma, CD_iterations); 
+				    gsl_vector_set(H->fitness, i, f);
+				    if(f < H->best_fitness){
+					H->best = i;
+					H->best_fitness = f;
+				    }else if(f > H->worst_fitness){
+					    H->worst = i;
+					    H->worst_fitness = f;
+				    }
+				}
+			break;
 			
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateHarmonies.\n");	
@@ -415,9 +435,10 @@ H: harmony memory
 h: new harmony to be evaluated */
 void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if((H) && (h)){
-		int i, n_epochs, batch_size;
+		int i, n_epochs, batch_size, CD_iterations;
 		Subgraph *g = NULL;
 		double f;
+		gsl_vector *sigma = NULL;
 		
 		switch(FUNCTION_ID){
 			case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
@@ -441,6 +462,25 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				g = va_arg(arg, Subgraph *);
 			
 				f = Evaluate(g, h);
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+				}
+			break;
+			case 3: /* Gaussian_BernoulliDRBM */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				sigma = va_arg(arg, gsl_vector *);
+				CD_iterations = va_arg(arg, int);
+			
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, sigma, CD_iterations); 
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
 					H->PARm+=H->PAR; /* used for SGHS */
@@ -483,15 +523,8 @@ void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     if(H){
         int t, i;
         double p;
-        const gsl_rng_type *T = NULL;
-        gsl_rng *r = NULL;
 	gsl_vector *h = NULL;
-                    
-        srand(time(NULL));
-        T = gsl_rng_default;
-        r = gsl_rng_alloc(T);
-        gsl_rng_set(r, random_seed());
-        
+                            
         fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
 	EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
 	fprintf(stderr," OK.");
@@ -507,7 +540,6 @@ void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
             fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
             fprintf(stdout,"%d %lf\n", t, H->best_fitness);
         }
-        gsl_rng_free(r);
         
     }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
     va_end(arg);

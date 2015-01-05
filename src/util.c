@@ -175,6 +175,56 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
     return reconstruction_error;
 }
 
+/* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit
+Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, sigma, CD_iterations]
+int: number of parameters of the function
+g: dataset in the OPF format
+n_hidden_units: number of DRBM hidden units
+eta: learning rate
+lambda: penalty parameter
+alpha: weigth decay
+n_epocs: numer of epochs for training
+batch_size: mini-batch size
+sigma: input array with the variances associated to each visible unit
+CD_iterations: number of iterations for Constrastive Divergence */
+double Gaussian_BernoulliDRBM(Subgraph *g, ...){
+    va_list arg;
+    int n_hidden_units, n_epochs, batch_size, CD_iterations;
+    double reconstruction_error = -1, eta, alpha, lambda;
+    RBM *m = NULL;
+    Dataset *D = NULL;
+    gsl_vector *sigma = NULL;
+    
+    va_start(arg, g);
+    D = Subgraph2Dataset(g);
+    
+    n_hidden_units = (int)va_arg(arg,double);
+    eta = va_arg(arg,double);
+    lambda = va_arg(arg,double);
+    alpha = va_arg(arg,double);
+    n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
+    sigma = va_arg(arg,gsl_vector *);
+    CD_iterations = va_arg(arg,int);
+    
+    m = CreateDRBM(g->nfeats, n_hidden_units, g->nlabels, sigma);
+    m->eta = eta;
+    m->alpha = alpha;
+    m->lambda = lambda;
+    
+    InitializeWeights(m);
+    InitializeLabelWeights(m);    
+    InitializeBias4HiddenUnits(m);
+    InitializeBias4VisibleUnitsWithRandomValues(m);
+    InitializeBias4LabelUnits(m);
+    reconstruction_error = DiscriminativeGaussianBernoulliRBMTrainingbyContrastiveDivergence(D, m, n_epochs, CD_iterations, batch_size);
+    DestroyDRBM(&m);
+    DestroyDataset(&D);
+    va_end(arg);
+    
+    return reconstruction_error;
+}
+
 /*********************************/
 
 /* It generates a new solution around a position

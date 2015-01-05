@@ -9,6 +9,7 @@ extern "C" {
 
 #define BBRBM4RECONSTRUCTION 1 /* Bernoulli-Bernoulli RBM for data reconstruction */
 #define KMEANS 2 /* K-Means for data clustering */
+#define GBDRBM 3 /* Gaussian-Bernoulli DRBM */
 
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */
