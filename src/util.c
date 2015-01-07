@@ -175,6 +175,47 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
     return reconstruction_error;
 }
 
+/* It executes a Bernoulli-Berboulli RBM trained by PCD and returns the reconstruction error of dataset in g
+Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, PCD_iterations]
+int: number of parameters of the function
+g: dataset in the OPF format
+n_hidden_units: number of RBM hidden units
+eta: learning rate
+lambda: penalty parameter
+alpha: weigth decay
+n_epocs: numer of epochs for training
+batch_size: mini-batch size
+PCD_iterations: number of PCD iterations */
+double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...){
+    va_list arg;
+    int n_hidden_units, n_epochs, batch_size, PCD_iterations;
+    double reconstruction_error;
+    RBM *m = NULL;
+    Dataset *D = NULL;
+    
+    va_start(arg, g);
+    D = Subgraph2Dataset(g);
+    
+    n_hidden_units = (int)va_arg(arg,double);
+    m = CreateRBM(g->nfeats, n_hidden_units, 1);
+    m->eta = va_arg(arg,double);
+    m->lambda = va_arg(arg,double);
+    m->alpha = va_arg(arg,double);
+    n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
+    PCD_iterations = va_arg(arg,int);
+    
+    InitializeWeights(m);    
+    InitializeBias4HiddenUnits(m);
+    InitializeBias4VisibleUnitsWithRandomValues(m);        
+    reconstruction_error = BernoulliRBMTrainingbyPersistentContrastiveDivergence(D, m, n_epochs, PCD_iterations, batch_size);
+    DestroyRBM(&m);
+    DestroyDataset(&D);
+    va_end(arg);
+    
+    return reconstruction_error;
+}
+
 /* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit
 Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, sigma, CD_iterations]
 int: number of parameters of the function

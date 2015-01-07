@@ -24,6 +24,7 @@ gsl_vector *NormalizebyGaussianDistribution(gsl_vector *x, gsl_vector *mean, dou
 
 /* Restricted Boltzmann Machines */
 double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM and returns the reconstruction error of dataset in g */
+double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by PCD and returns the reconstruction error of dataset in g */
 double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit */
 /*********************************/
 
