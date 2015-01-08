@@ -145,7 +145,9 @@ eta: learning rate
 lambda: penalty parameter
 alpha: weigth decay
 n_epocs: numer of epochs for training
-batch_size: mini-batch size */
+batch_size: mini-batch size
+eta_min: minimum bound for eta
+eta_max: maximum bound for eta */
 double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
     va_list arg;
     int n_hidden_units, n_epochs, batch_size;
@@ -163,8 +165,10 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
     m->alpha = va_arg(arg,double);
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
+    m->eta_min = va_arg(arg,double);
+    m->eta_max = va_arg(arg,double);
     
-    InitializeWeights(m);    
+    InitializeWeights(m);
     InitializeBias4HiddenUnits(m);
     InitializeBias4VisibleUnitsWithRandomValues(m);
     reconstruction_error = BernoulliRBMTrainingbyContrastiveDivergence(D, m, n_epochs, 1, batch_size);
@@ -175,7 +179,7 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
     return reconstruction_error;
 }
 
-/* It executes a Bernoulli-Berboulli RBM trained by PCD and returns the reconstruction error of dataset in g
+/* It executes a Bernoulli-Bernoulli RBM trained by PCD and returns the reconstruction error of dataset in g
 Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, PCD_iterations]
 int: number of parameters of the function
 g: dataset in the OPF format
