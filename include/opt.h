@@ -11,6 +11,7 @@ extern "C" {
 #define KMEANS 2 /* K-Means for data clustering */
 #define GBDRBM 3 /* Gaussian-Bernoulli DRBM */
 #define BBRBM_PCD 4 /* Bernoulli-Bernoulli RBM trained by Persistent Contrastive Divergence */
+#define BBRBM_FPCD 5 /* Bernoulli-Bernoulli RBM trained by Fast Persistent Contrastive Divergence */
 
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */
