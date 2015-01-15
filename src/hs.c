@@ -490,6 +490,11 @@ gsl_vector *CreateNewHarmony4SGHS(HarmonyMemory *H){
 				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
 				if(p >= 0.5) gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i)+(p2*H->bw));
 				else gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i)-(p2*H->bw));
+				
+				/* it checks the new harmony's boundaries */
+				if(gsl_vector_get(h, i) < gsl_vector_get(H->LB, i)) gsl_vector_set(h, i, gsl_vector_get(H->LB, i));
+				else if(gsl_vector_get(h, i) > gsl_vector_get(H->UB, i)) gsl_vector_set(h, i, gsl_vector_get(H->UB, i));
+				
 				p = gsl_rng_uniform(r);
 				if(H->PAR >= p) gsl_vector_set(h, i, gsl_matrix_get(H->HM, H->best, i));
 			}else{
