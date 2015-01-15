@@ -309,7 +309,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				
 				//#pragma omp parallel for
 				for(i = 0; i < H->m; i++){
-				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, CD_iterations); 
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, CD_iterations, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				    gsl_vector_set(H->fitness, i, f);
 				    if(f < H->best_fitness){
 					H->best = i;
@@ -465,6 +465,47 @@ gsl_vector *CreateNewHarmony4NGHS(HarmonyMemory *H){
 	}
 }
 
+/* It creates a new harmony for SGHS according to the algorithm at Section 3.3 
+Parameters: [H]
+H: harmony memory */
+gsl_vector *CreateNewHarmony4SGHS(HarmonyMemory *H){
+	if(H){
+		int i, index;
+		gsl_vector *h = NULL;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p, p2, signal;
+			    
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+		
+		h = gsl_vector_alloc(H->n);
+		for(i = 0; i < H->n; i++){
+			p = gsl_rng_uniform(r);
+			if(H->HMCR >= p){
+				p = gsl_rng_uniform(r);
+				p2 = gsl_rng_uniform(r);
+				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
+				if(p >= 0.5) gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i)+(p2*H->bw));
+				else gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i)-(p2*H->bw));
+				p = gsl_rng_uniform(r);
+				if(H->PAR >= p) gsl_vector_set(h, i, gsl_matrix_get(H->HM, H->best, i));
+			}else{
+				p = (gsl_vector_get(H->UB, i)-gsl_vector_get(H->LB, i))*gsl_rng_uniform(r)+gsl_vector_get(H->LB, i);
+				gsl_vector_set(h, i, p);
+			}
+		}
+		gsl_rng_free(r);
+		
+		return h;
+	}else{
+		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewHarmony.\n");
+		return NULL;
+	}
+}
+
 /* It evaluates the new harmony and updates the harmony memory
 Parameters: [H,h]
 H: harmony memory
@@ -534,7 +575,7 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				batch_size = va_arg(arg, int);
 				CD_iterations = va_arg(arg, int);
 			
-				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, CD_iterations); 
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, CD_iterations, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
 					H->PARm+=H->PAR; /* used for SGHS */
@@ -756,10 +797,10 @@ void runSGHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
 	    }
             
 	    /* it updates the bandwidth according to Equation 8 */
-	    if(t < H->max_iterations/2.0) H->bw = H->bw_max - ((H->bw_max-H->bw_min)/H->max_iterations);
+	    if(t < H->max_iterations/2.0) H->bw = H->bw_max - ((2*t)*(H->bw_max-H->bw_min)/H->max_iterations);
 	    else H->bw = H->bw_min;
 	
-            h = CreateNewHarmony4GHS(H);
+            h = CreateNewHarmony4SGHS(H);
 	    EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
 	    gsl_vector_free(h);
 	    		            

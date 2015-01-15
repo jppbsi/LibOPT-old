@@ -208,6 +208,8 @@ double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...)
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
     PCD_iterations = va_arg(arg,int);
+    m->eta_min = va_arg(arg,double);
+    m->eta_max = va_arg(arg,double);
     
     InitializeWeights(m);    
     InitializeBias4HiddenUnits(m);

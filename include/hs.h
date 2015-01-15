@@ -46,6 +46,7 @@ void UpdateHarmonyMemoryIndices(HarmonyMemory *H); /* It updates the best and wo
 gsl_vector *CreateNewHarmony(HarmonyMemory *H); /* It creates a new harmony */
 gsl_vector *CreateNewHarmony4GHS(HarmonyMemory *H);  /* It creates a new harmony for GHS  */
 gsl_vector *CreateNewHarmony4NGHS(HarmonyMemory *H);  /* It creates a new harmony for NGHS  */
+gsl_vector *CreateNewHarmony4SGHS(HarmonyMemory *H);  /* It creates a new harmony for SGHS  */
 void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates the new harmony and updates the harmony memory */
 void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all harmonies */
 void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the Harmony Memory for function minimization */
