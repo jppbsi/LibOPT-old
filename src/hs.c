@@ -307,7 +307,6 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				batch_size = va_arg(arg, int);
 				CD_iterations = va_arg(arg, int);
 				
-				//#pragma omp parallel for
 				for(i = 0; i < H->m; i++){
 				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, CD_iterations, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				    gsl_vector_set(H->fitness, i, f);
@@ -579,7 +578,7 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
 				CD_iterations = va_arg(arg, int);
-			
+							
 				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, CD_iterations, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */

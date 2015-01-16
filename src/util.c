@@ -213,7 +213,7 @@ double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...)
     
     InitializeWeights(m);    
     InitializeBias4HiddenUnits(m);
-    InitializeBias4VisibleUnitsWithRandomValues(m);        
+    InitializeBias4VisibleUnitsWithRandomValues(m);
     reconstruction_error = BernoulliRBMTrainingbyPersistentContrastiveDivergence(D, m, n_epochs, PCD_iterations, batch_size);
     DestroyRBM(&m);
     DestroyDataset(&D);
