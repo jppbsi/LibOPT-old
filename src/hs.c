@@ -258,7 +258,6 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
 						
-				//#pragma omp parallel for
 				for(i = 0; i < H->m; i++){
 				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				    gsl_vector_set(H->fitness, i, f);
@@ -644,6 +643,8 @@ void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
         fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
 	EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
 	fprintf(stderr," OK.");
+	
+	ShowHarmonyMemory(H);
 	
         for(t = 1; t <= H->max_iterations; t++){
             fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
