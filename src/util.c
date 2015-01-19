@@ -180,7 +180,7 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
 }
 
 /* It executes a Bernoulli-Bernoulli RBM trained by PCD and returns the reconstruction error of dataset in g
-Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, PCD_iterations]
+Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, n_gibbs_sampling]
 int: number of parameters of the function
 g: dataset in the OPF format
 n_hidden_units: number of RBM hidden units
@@ -189,10 +189,10 @@ lambda: penalty parameter
 alpha: weigth decay
 n_epocs: numer of epochs for training
 batch_size: mini-batch size
-PCD_iterations: number of PCD iterations */
+n_gibbs_sampling: number of PCD iterations */
 double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...){
     va_list arg;
-    int n_hidden_units, n_epochs, batch_size, PCD_iterations;
+    int n_hidden_units, n_epochs, batch_size, n_gibbs_sampling;
     double reconstruction_error;
     RBM *m = NULL;
     Dataset *D = NULL;
@@ -207,14 +207,14 @@ double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...)
     m->alpha = va_arg(arg,double);
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
-    PCD_iterations = va_arg(arg,int);
+    n_gibbs_sampling = va_arg(arg,int);
     m->eta_min = va_arg(arg,double);
     m->eta_max = va_arg(arg,double);
     
     InitializeWeights(m);    
     InitializeBias4HiddenUnits(m);
     InitializeBias4VisibleUnitsWithRandomValues(m);
-    reconstruction_error = BernoulliRBMTrainingbyPersistentContrastiveDivergence(D, m, n_epochs, PCD_iterations, batch_size);
+    reconstruction_error = BernoulliRBMTrainingbyPersistentContrastiveDivergence(D, m, n_epochs, n_gibbs_sampling, batch_size);
     DestroyRBM(&m);
     DestroyDataset(&D);
     va_end(arg);
@@ -223,7 +223,7 @@ double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...)
 }
 
 /* It executes a Bernoulli-Bernoulli RBM trained by FPCD and returns the reconstruction error of dataset in g
-Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, PCD_iterations]
+Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, n_gibbs_sampling]
 int: number of parameters of the function
 g: dataset in the OPF format
 n_hidden_units: number of RBM hidden units
@@ -231,10 +231,11 @@ eta: learning rate
 lambda: penalty parameter
 alpha: weigth decay
 n_epocs: numer of epochs for training
-batch_size: mini-batch size */
+batch_size: mini-batch size
+n_gibbs_sampling: number of Gibbs sampling iterations */
 double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence(Subgraph *g, ...){
     va_list arg;
-    int n_hidden_units, n_epochs, batch_size;
+    int n_hidden_units, n_epochs, batch_size, n_gibbs_sampling;
     double reconstruction_error;
     RBM *m = NULL;
     Dataset *D = NULL;
@@ -249,11 +250,14 @@ double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence(Subgraph *g, 
     m->alpha = va_arg(arg,double);
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
+    n_gibbs_sampling = va_arg(arg,int);
+    m->eta_min = va_arg(arg,double);
+    m->eta_max = va_arg(arg,double);
     
     InitializeWeights(m);    
     InitializeBias4HiddenUnits(m);
     InitializeBias4VisibleUnitsWithRandomValues(m);        
-    reconstruction_error = BernoulliRBMTrainingbyFastPersistentContrastiveDivergence(D, m, n_epochs, batch_size);
+    reconstruction_error = BernoulliRBMTrainingbyFastPersistentContrastiveDivergence(D, m, n_epochs, n_gibbs_sampling, batch_size);
     DestroyRBM(&m);
     DestroyDataset(&D);
     va_end(arg);

@@ -246,7 +246,7 @@ EvaluateFun: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(H){
-		int i, n_epochs, batch_size, CD_iterations;
+		int i, n_epochs, batch_size, n_gibbs_sampling;
 		double f;
 		gsl_vector_view row;
 		gsl_vector *sigma = NULL;
@@ -286,10 +286,10 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
 				sigma = va_arg(arg, gsl_vector *);
-				CD_iterations = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
 			
 				for(i = 0; i < H->m; i++){
-				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, sigma, CD_iterations); 
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, sigma, n_gibbs_sampling); 
 				    gsl_vector_set(H->fitness, i, f);
 				    if(f < H->best_fitness){
 					H->best = i;
@@ -304,10 +304,10 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
-				CD_iterations = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
 				
 				for(i = 0; i < H->m; i++){
-				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, CD_iterations, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				    gsl_vector_set(H->fitness, i, f);
 				    if(f < H->best_fitness){
 					H->best = i;
@@ -322,9 +322,10 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
 				
 				for(i = 0; i < H->m; i++){
-				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size); 
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				    gsl_vector_set(H->fitness, i, f);
 				    if(f < H->best_fitness){
 					H->best = i;
@@ -515,7 +516,7 @@ H: harmony memory
 h: new harmony to be evaluated */
 void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if((H) && (h)){
-		int i, n_epochs, batch_size, CD_iterations;
+		int i, n_epochs, batch_size, n_gibbs_sampling;
 		Subgraph *g = NULL;
 		double f;
 		gsl_vector *sigma = NULL;
@@ -558,9 +559,9 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
 				sigma = va_arg(arg, gsl_vector *);
-				CD_iterations = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
 			
-				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, sigma, CD_iterations); 
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, sigma, n_gibbs_sampling); 
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
 					H->PARm+=H->PAR; /* used for SGHS */
@@ -576,9 +577,9 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
-				CD_iterations = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
 							
-				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, CD_iterations, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
 					H->PARm+=H->PAR; /* used for SGHS */
@@ -594,8 +595,9 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
-			
-				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size); 
+				n_gibbs_sampling = va_arg(arg, int);
+				
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
 					H->PARm+=H->PAR; /* used for SGHS */
