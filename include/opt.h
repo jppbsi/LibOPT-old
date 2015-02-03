@@ -41,6 +41,7 @@ typedef double (*prtFun)(Subgraph *, ...);
 #include "hs.h"
 #include "ba.h"
 #include "gp.h"
+#include "mbo.h"
 #include "util.h"
 
 #ifdef __cplusplus
