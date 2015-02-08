@@ -22,7 +22,7 @@ BirdFlock *CreateBirdFlock(int m, int n){
 	B->max_iterations = 0;
 	B->X = 0;
 	B->leader = 0;
-	B->x = gsl_matriz_alloc(B->m, B->n);
+	B->x = gsl_matrix_alloc(B->m, B->n);
 	B->fitness = gsl_vector_alloc(B->m);
 	B->left = (int *)malloc(ceil(B->m-1)/2.0);
 	B->right = (int *)malloc(B->m/2);
