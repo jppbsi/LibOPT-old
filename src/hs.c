@@ -97,24 +97,6 @@ HarmonyMemory *ReadHarmoniesFromFile(char *fileName){
         return H;
 }
 
-/* Tt checks the limits of each decision variable ---
-Parameters: [h]
-H: harmony memory */
-void CheckHarmoniesLimits(HarmonyMemory *H){
-	int i, j;
-	
-	if(H){
-		#pragma omp parallel for
-		for(i = 0; i < H->m; i++){
-			for(j = 0; j < H->n; j++){
-				if(gsl_matrix_get(H->HM, i, j) < gsl_vector_get(H->LB, j)) gsl_matrix_set(H->HM, i, j, gsl_vector_get(H->LB, j));
-				else if (gsl_matrix_get(H->HM, i, j) > gsl_vector_get(H->UB, j)) gsl_matrix_set(H->HM, i, j, gsl_vector_get(H->UB, j));
-			}
-		}
-		
-	}else fprintf(stderr,"\nThere is no harmony memory allocated @CheckHarmoniesLimits.\n");	
-}
-
 /* It displays the harmomy memory's content ---
 Parameters: [H]
 H: harmony memory */
@@ -491,8 +473,7 @@ gsl_vector *CreateNewHarmony4SGHS(HarmonyMemory *H){
 				else gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i)-(p2*H->bw));
 				
 				/* it checks the new harmony's boundaries */
-				if(gsl_vector_get(h, i) < gsl_vector_get(H->LB, i)) gsl_vector_set(h, i, gsl_vector_get(H->LB, i));
-				else if(gsl_vector_get(h, i) > gsl_vector_get(H->UB, i)) gsl_vector_set(h, i, gsl_vector_get(H->UB, i));
+				CheckLimits(h, H->LB, H->UB);
 				
 				p = gsl_rng_uniform(r);
 				if(H->PAR >= p) gsl_vector_set(h, i, gsl_matrix_get(H->HM, H->best, i));

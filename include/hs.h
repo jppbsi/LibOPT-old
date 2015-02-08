@@ -35,7 +35,6 @@ void DestroyHarmonyMemory(HarmonyMemory **H); /* It deallocates the harmony memo
 HarmonyMemory *ReadHarmoniesFromFile(char *fileName); /* it creates a harmony memory specified in a file */
 
 /* Auxiliary functions */
-void CheckHarmoniesLimits(HarmonyMemory *H); /* it checks the limits of each decision variable */
 void InitializeHarmonyMemory(HarmonyMemory *H); /* it initializes the harmony memory */
 void InitializeHarmonyMemoryFromDatasetSamples4Kmeans(HarmonyMemory *H, Subgraph *g); /* It initializes the harmony memory with random dataset samples for k-Means algorithm */
 void ShowHarmonyMemory(HarmonyMemory *H); /* It displays the harmomy memory's content */
