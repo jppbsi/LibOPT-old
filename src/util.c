@@ -526,3 +526,56 @@ gsl_vector *NormalizebyGaussianDistribution(gsl_vector *x, gsl_vector *mean, dou
     
     return out;
 }
+
+/* It generates one random neighbour
+Parameters: [n, x, LB, UB, m]
+n: new neighbour generated
+x: central position to be considered when generating a new neighbour
+LB: lower bound
+UB: upper bound
+m: number of agents of the search space
+This function is based on Equation 6 of paper "System Identification by Using Migrating Birds Optimization Algorithm: A Comparative Performance Anlaysis"*/
+void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, gsl_vector *LB, gsl_vector *UB, int m){
+    if(!y || !x || !LB || !UB)
+        fprintf(stderr,"\nOne or more input parameters are not allocated @GenerateRandomNeighbour.\n");
+    else{
+        const gsl_rng_type *T = NULL;
+        gsl_rng *r = NULL;
+        double Phi;
+        int k, j;
+
+        srand(time(NULL));
+        gsl_rng_env_setup();
+        T = gsl_rng_default;
+        r = gsl_rng_alloc(T);
+        gsl_rng_set(r, rand());
+        
+        k = gsl_rng_uniform_int(r, m);
+        Phi = 2*gsl_rng_uniform(r)-1; /* it generates a random number in [-1,1] */
+        
+        for(j = 0; j < y->size; j++)
+            gsl_vector_set(y, j, gsl_vector_get(x, j)+Phi*(gsl_vector_get(x, j)-gsl_vector_get(x, k)));
+        
+        CheckLimits(y, LB, UB);
+    
+        gsl_rng_free(r);           
+    }
+}
+
+/* It cheks the limits of a solution vector
+Parameters: [x, LB, UB]
+x: input vector
+LB: lower bound
+UB: upper bound*/
+void CheckLimits(gsl_vector *x, gsl_vector *LB, gsl_vector *UB){
+    if(!x || !LB || !UB)
+        fprintf(stderr,"\nOne or more input parameters are not allocated @CheckLimits.\n");
+    else{
+        int i;
+        
+        for(i = 0; i < x->size; i++){
+            if(gsl_vector_get(x,i) < gsl_vector_get(LB, i)) gsl_vector_set(x, i, gsl_vector_get(LB, i));
+            else if(gsl_vector_get(x,i) > gsl_vector_get(UB, i)) gsl_vector_set(x, i, gsl_vector_get(UB, i));
+        }        
+    }
+}
