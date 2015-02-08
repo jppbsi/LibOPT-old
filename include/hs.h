@@ -5,7 +5,7 @@
 
 typedef struct _HarmonyMemory{
     int m; /* number of harmonies */
-    int n; /* number decision variables */
+    int n; /* number of decision variables */
     int max_iterations; /* maximum number of iterations */
     int best; /* index of the best harmony */
     int worst; /* index of the worst harmony */

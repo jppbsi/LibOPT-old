@@ -7,20 +7,22 @@
 
 typedef struct _BirdFlock{
     int m; /* number of birds in the flock */
-	int WTS; /* WTS, positive correlation of wing-tip spacing */
-	int b; /* wing span */
-	int w; /* maximum wing widht */
-	int d; /* optimum depth */
-	int n_flaps; /* the number of wing flaps before a change or the profiling energy spent */
-	int K; /* number of tours, iteration limit */
-	int leader; /* index of leader bird  */
-    gsl_vector *k; /* speed of the fight */
-	gsl_matrix *x; /* flock of birds in V formation */
-	gsl_vector *fitness; /* fitness value */
+    int n; /* number of decision variables */
+    int max_iterations; /* maximum number of iterations */
+    int k; /* number of neighbours solutions to be considered */
+    int X; /* number of neighbor solutions to be shared with the next solution */
+    int M; /* number of tours, i.e., the number of iterations for the leader */
+    int leader; /* index of leader bird  */
+    int *left; /* indeces of the birds that are on the left of leader bird */
+    int *right; /* indeces of the birds that are on the right of leader bird */
+    gsl_matrix *x; /* possible solutions (birds) */
+    gsl_vector *fitness; /* fitness value */
+    gsl_vector *LB; /* lower bound for each decision variable */
+    gsl_vector *UB; /* upper bound for each decision variable */
 }BirdFlock;
 
 /* Allocation and Deallocation   */
-BirdFlock *CreateBirdFlock(int m); /* It alocattes the bird flock */
+BirdFlock *CreateBirdFlock(int m, int n); /* It alocattes the bird flock */
 void DestroyBirdFlock(BirdFlock **B); /* It desalocates the bird flock */
 BirdFlock *ReadBirdFlockFromFile(char *fileName); /* It creates a bird flock specified in a file */
 
