@@ -49,3 +49,51 @@ void DestroyBirdFlock(BirdFlock **B){
 	}
 }
 
+/* It creates a flock of birds specified from a file ---
+Parameters: [fileName]
+fileName: name of the file that stores the bird flock's configuration */
+BirdFlock *ReadBirdFlockFromFile(char *fileName){
+	FILE *fp = NULL;
+	int m, n;
+	BirdFlock *B;
+	double LB, UB;
+
+	fp = fopen(fileName,"r");
+	if (!fp){
+		fprintf (stderr,"\nunable to open file %s @ReadBirdFlockFromFile.\n", fileName);
+		return NULL;
+	}
+	
+	fscanf(fp, "%d %d", &m, &n);
+	B = CreateBirdFlock(m, n);
+	fscanf(fp, "%d", &(B->max_iterations));
+	WaiveComment(fp);
+
+	fscanf(fp, "%d %d %d", &(B->k), &(B->X), &(B->M));
+	WaiveComment(fp);
+
+	for (n=0; n<(B->n); n++){
+		fscanf(fp, "%lf %lf", &LB, &UB);
+		gsl_vector_set(B->LB, n, LB);
+		gsl_vector_set(B->UB, n, UB);
+		WaiveComment(fp);
+	}
+	fclose(fp);
+
+	return B;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
