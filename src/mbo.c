@@ -175,14 +175,16 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 /* It improves the lead bird by evaluating its neighbours ---
 Parameters: [B]
 B: bird flock */
-void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 	if(B){
 		double f;
 		int i;
 		gsl_vector *p = NULL;//, *nb_fitness = NULL;
 		gsl_vector_view row_leader;
 		//gsl_matrix *nb = NULL;
+		va_list arg;
 
+		va_start(arg, FUNCTION_ID);
 		p = gsl_vector_alloc(B->n);
 		//nb = gsl_matrix_alloc(B->k, B->n);		
 		//nb_fitness= gsl_vector_alloc(B->k);
@@ -200,6 +202,7 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 		gsl_vector_free(p);
 		//gsl_matrix_free(nb);
 		//gsl_vector_free(nb_fitness);
+		va_end(arg);
 	}
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @ShowBirdFlockInformation.\n");

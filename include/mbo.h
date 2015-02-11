@@ -33,6 +33,6 @@ void ShowBirdFlockInformation(BirdFlock *B); /* It displays the harmomy memory's
 double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a bird solution */
 
 /* Main Algoritm */
-void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It improves the lead bird by evaluating its neighbours */
+void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It improves the lead bird by evaluating its neighbours */
 
 #endif
