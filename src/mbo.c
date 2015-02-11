@@ -148,14 +148,13 @@ void ShowBirdFlockInformation(BirdFlock *B){
 }
 
 /* It evaluates a bird solution
-Parameters: [B, x, bird_id, Evaluate, FUNCTION_ID, arg]
+Parameters: [B, x, Evaluate, FUNCTION_ID, arg]
 B: bird flock
 x: bird to be evaluated
-bird_id: identifier of the bird to be evaluated
 Evaluate: pointer to the fitness function
 FUNCTION_ID: identifier of the function to be evaluated
 arg: argument list */
-double EvaluateBird(BirdFlock *B, gsl_vector *x, int bird_id, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	double f;
 	int n_epochs, batch_size;
 	Subgraph *g = NULL;
@@ -178,9 +177,8 @@ Parameters: [B]
 B: bird flock */
 void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(B){
-		//double f;
+		double f;
 		int i;
-		//Subgraph *g = NULL;
 		gsl_vector *p = NULL;//, *nb_fitness = NULL;
 		gsl_vector_view row_leader;
 		//gsl_matrix *nb = NULL;
@@ -189,14 +187,12 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 		//nb = gsl_matrix_alloc(B->k, B->n);		
 		//nb_fitness= gsl_vector_alloc(B->k);
 		
-		//g = va_arg(arg, Subgraph *);
-
 		/* it evaluates the leader's neighbours */
 		for(i = 0; i < B->k; i++){
 			row_leader = gsl_matrix_row (B->x, B->leader);
 			GenerateRandomNeighbour(p, &row_leader.vector, B->LB, B->UB, B->m);
-			//gsl_matrix_set(nb, i, 0, p);
-			//f = Evaluate (g, B->n);
+			f = EvaluateBird(B, p, Evaluate, FUNCTION_ID, arg);
+			
 			//gsl_vector(nb_fitness, i, f);
 		}
 
