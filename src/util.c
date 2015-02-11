@@ -537,7 +537,7 @@ HEURISTIC_ID: identifier of the meta-heuristic technique to be used
 ...: the last parameter is the structure of the meta-heuristic technique, i.e., a BirdFlock/Harmony Memory etc.
 This function is based on Equation 6 of paper "System Identification by Using Migrating Birds Optimization Algorithm: A Comparative Performance Anlaysis"*/
 void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, int id_x, int m, int HEURISTIC_ID, ...){
-    if(!y || !x || !LB || !UB)
+    if(!y || !x)
         fprintf(stderr,"\nOne or more input parameters are not allocated @GenerateRandomNeighbour.\n");
     else{
         const gsl_rng_type *T = NULL;
@@ -545,7 +545,7 @@ void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, int id_x, int m, int 
         double Phi;
         int k, j;
 		gsl_vector_view row;
-		gsl_vector *LB = *UB = NULL;
+		gsl_vector *LB = NULL, *UB = NULL;
 		va_list arg;
 		BirdFlock *B = NULL;
 
