@@ -21,9 +21,18 @@ typedef struct _BirdFlock{
     gsl_vector *UB; /* upper bound for each decision variable */
 }BirdFlock;
 
-/* Allocation and Deallocation   */
+/* Allocation and Deallocation  */
 BirdFlock *CreateBirdFlock(int m, int n); /* It alocattes the bird flock */
 void DestroyBirdFlock(BirdFlock **B); /* It desalocates the bird flock */
 BirdFlock *ReadBirdFlockFromFile(char *fileName); /* It creates a bird flock specified in a file */
+//Check Limits
+
+/* Auxiliary Functions */
+void InitializeBirdFlock(BirdFlock *B); /* It initializes the flock of birds */
+void ShowBirdFlock(BirdFlock *B); /* It displays the harmomy memory's content */
+void ShowBirdFlockInformation(BirdFlock *B); /* It displays the harmomy memory's main information */
+
+/* Main Algoritm */
+void ImproveLeaderSolution(BirdFlock *B); /* It improves the lead bird of the bird flock */
 
 #endif
