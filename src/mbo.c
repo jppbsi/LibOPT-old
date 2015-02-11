@@ -147,7 +147,7 @@ void ShowBirdFlockInformation(BirdFlock *B){
 		fprintf(stderr, "\nThere is no bird flock allocated @ShowBirdFlockInformation.\n");
 }
 
-/* It evaluates a bird solution
+/* It evaluates a bird solution ---
 Parameters: [B, x, Evaluate, FUNCTION_ID, arg]
 B: bird flock
 x: bird to be evaluated
@@ -172,6 +172,21 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 	return f;
 }
 
+/* It evaluates a birdflock ---
+Parameters: [B]
+B: bird flock */
+void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+	int i;
+	double f;
+	gsl_vector_view row;
+	
+	for (i = 0; i < B->m; i++){
+		row = gsl_matrix_row (B->x, i);
+		f = EvaluateBird(B, &row.vector, Evaluate, FUNCTION_ID, arg);
+		gsl_vector_set(B->fitness, i, f);
+	}
+}
+
 /* It improves the lead bird by evaluating its neighbours ---
 Parameters: [B]
 B: bird flock */
@@ -189,14 +204,17 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 		//nb = gsl_matrix_alloc(B->k, B->n);		
 		//nb_fitness= gsl_vector_alloc(B->k);
 		
+		EvaluateBirdFlock (B, Evaluate, FUNCTION_ID, arg);
+		ShowBirdFlock(B);
+		
 		/* it evaluates the leader's neighbours */
-		for(i = 0; i < B->k; i++){
+		/*for(i = 0; i < B->k; i++){
 			row_leader = gsl_matrix_row (B->x, B->leader);
 			GenerateRandomNeighbour(p, &row_leader.vector, B->leader, B->m, MBO, B);
 			f = EvaluateBird(B, p, Evaluate, FUNCTION_ID, arg);
-			
+	
 			//gsl_vector(nb_fitness, i, f);
-		}
+		}*/
 
 
 		gsl_vector_free(p);
