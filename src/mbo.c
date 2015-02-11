@@ -55,7 +55,7 @@ fileName: name of the file that stores the bird flock's configuration */
 BirdFlock *ReadBirdFlockFromFile(char *fileName){
 	FILE *fp = NULL;
 	int m, n;
-	BirdFlock *B;
+	BirdFlock *B = NULL;
 	double LB, UB;
 
 	fp = fopen(fileName,"r");
@@ -98,8 +98,8 @@ void InitializeBirdFlock(BirdFlock *B){
 		r = gsl_rng_alloc(T);
 		gsl_rng_set(r, random_seed());
 
-		for(i=0; i<(B->m); i++)
-			for(j=0; j<(B->n); j++){
+		for(i=0; i< B->m; i++)
+			for(j=0; j< B->n; j++){
 				p = (gsl_vector_get(B->UB, j)-gsl_vector_get(B->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(B->LB, j);
 				gsl_matrix_set(B->x, i, j, p);
 			}
@@ -118,9 +118,9 @@ void ShowBirdFlock(BirdFlock *B){
 	if(B){
 		int i, j;
 		
-		for(i=0; i<(B->m); i++){
+		for(i = 0; i < B->m; i++){
 			fprintf(stderr,"\nBird %d: ",i);	
-			for(j=0; j<(B->n); j++)
+			for(j = 0; j < B->n; j++)
 				fprintf(stderr,"%d: %f  ",j+1,gsl_matrix_get(B->x, i, j));
 			fprintf(stderr,"| %lf  ", gsl_vector_get(B->fitness, i));
 		}
@@ -139,7 +139,7 @@ void ShowBirdFlockInformation(BirdFlock *B){
 		fprintf(stderr,"\nDisplaying the bird flock's information ---");
 		fprintf(stderr,"\nBirds: %d\nDecision Variables: %d\nMaximum number of iterations: %d", B->m, B->n, B->max_iterations);
 		fprintf(stderr,"\nNeighbors solutions: %d\nNeighbors solutions shared with next iteration: %d\nTours: %d", B->k, B->X, B->M);
-		for(j=0; j<(B->n); j++)
+		for(j = 0; j < B->n; j++)
 			fprintf(stderr, "\nVariable %d: [%f,%f]", j+1, gsl_vector_get(B->LB, j), gsl_vector_get(B->UB, j));
 		fprintf(stderr,"\n---\n");
 	}
@@ -147,35 +147,63 @@ void ShowBirdFlockInformation(BirdFlock *B){
 		fprintf(stderr, "\nThere is no bird flock allocated @ShowBirdFlockInformation.\n");
 }
 
+/* It evaluates a bird solution
+Parameters: [B, x, bird_id, Evaluate, FUNCTION_ID, arg]
+B: bird flock
+x: bird to be evaluated
+bird_id: identifier of the bird to be evaluated
+Evaluate: pointer to the fitness function
+FUNCTION_ID: identifier of the function to be evaluated
+arg: argument list */
+double EvaluateBird(BirdFlock *B, gsl_vector *x, int bird_id, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+	double f;
+	int n_epochs, batch_size;
+	Subgraph *g = NULL;
+	
+	switch(FUNCTION_ID){
+		case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+									
+			f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), n_epochs, batch_size, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 		
+		break;
+	}
+	
+	return f;
+}
 
-/* It improves the lead bird of the bird flock ---
+/* It improves the lead bird by evaluating its neighbours ---
 Parameters: [B]
 B: bird flock */
 void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(B){
-		double f;
+		//double f;
 		int i;
-		Subgraph *g = NULL;
-		gsl_vector *p, *nb_fitness;
-		gsl_matrix *nb;
+		//Subgraph *g = NULL;
+		gsl_vector *p = NULL;//, *nb_fitness = NULL;
+		gsl_vector_view row_leader;
+		//gsl_matrix *nb = NULL;
 
-		p = gsl_vector_alloc(B->k);
-		nb = gsl_matrix_alloc(B->k, B->n);		
-		nb_fitness= gsl_vector_alloc(B->k);
+		p = gsl_vector_alloc(B->n);
+		//nb = gsl_matrix_alloc(B->k, B->n);		
+		//nb_fitness= gsl_vector_alloc(B->k);
 		
-		g = va_arg(arg, Subgraph *);
+		//g = va_arg(arg, Subgraph *);
 
-		for(i=0; i<k; i++){
-			GenerateRandomNeighbour(p, B->leader, B->LB, B->UB, B->m);
-			gsl_matrix_set(nb, i, 0, p);
-			f = Evaluate (g, B->n);
-			gsl_vector(nb_fitness, i, f);
+		/* it evaluates the leader's neighbours */
+		for(i = 0; i < B->k; i++){
+			row_leader = gsl_matrix_row (B->x, B->leader);
+			GenerateRandomNeighbour(p, &row_leader.vector, B->LB, B->UB, B->m);
+			//gsl_matrix_set(nb, i, 0, p);
+			//f = Evaluate (g, B->n);
+			//gsl_vector(nb_fitness, i, f);
 		}
 
 
 		gsl_vector_free(p);
-		gsl_matrix_free(nb);
-		gsl_vector_free(nb_fitness);
+		//gsl_matrix_free(nb);
+		//gsl_vector_free(nb_fitness);
 	}
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @ShowBirdFlockInformation.\n");

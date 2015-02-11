@@ -25,14 +25,14 @@ typedef struct _BirdFlock{
 BirdFlock *CreateBirdFlock(int m, int n); /* It alocattes the bird flock */
 void DestroyBirdFlock(BirdFlock **B); /* It desalocates the bird flock */
 BirdFlock *ReadBirdFlockFromFile(char *fileName); /* It creates a bird flock specified in a file */
-//Check Limits
 
 /* Auxiliary Functions */
 void InitializeBirdFlock(BirdFlock *B); /* It initializes the flock of birds */
 void ShowBirdFlock(BirdFlock *B); /* It displays the harmomy memory's content */
 void ShowBirdFlockInformation(BirdFlock *B); /* It displays the harmomy memory's main information */
+double EvaluateBird(BirdFlock *B, gsl_vector *x,  int bird_id, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a bird solution */
 
 /* Main Algoritm */
-void ImproveLeaderSolution(BirdFlock *B); /* It improves the lead bird of the bird flock */
+void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It improves the lead bird by evaluating its neighbours */
 
 #endif
