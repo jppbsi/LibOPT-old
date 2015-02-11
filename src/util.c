@@ -528,14 +528,15 @@ gsl_vector *NormalizebyGaussianDistribution(gsl_vector *x, gsl_vector *mean, dou
 }
 
 /* It generates one random neighbour
-Parameters: [n, x, LB, UB, m]
-n: new neighbour generated
+Parameters: [n, x, id_x, m, HEURISTIC_ID, ...]
+y: new neighbour generated
 x: central position to be considered when generating a new neighbour
-LB: lower bound
-UB: upper bound
+id_x: identifier of the central position solution
 m: number of agents of the search space
+HEURISTIC_ID: identifier of the meta-heuristic technique to be used
+...: the last parameter is the structure of the meta-heuristic technique, i.e., a BirdFlock/Harmony Memory etc.
 This function is based on Equation 6 of paper "System Identification by Using Migrating Birds Optimization Algorithm: A Comparative Performance Anlaysis"*/
-void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, gsl_vector *LB, gsl_vector *UB, int m){
+void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, int id_x, int m, int HEURISTIC_ID, ...){
     if(!y || !x || !LB || !UB)
         fprintf(stderr,"\nOne or more input parameters are not allocated @GenerateRandomNeighbour.\n");
     else{
@@ -543,22 +544,39 @@ void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, gsl_vector *LB, gsl_v
         gsl_rng *r = NULL;
         double Phi;
         int k, j;
+		gsl_vector_view row;
+		gsl_vector *LB = *UB = NULL;
+		va_list arg;
+		BirdFlock *B = NULL;
 
         srand(time(NULL));
         gsl_rng_env_setup();
         T = gsl_rng_default;
         r = gsl_rng_alloc(T);
         gsl_rng_set(r, rand());
+
+		do{         
+        	k = gsl_rng_uniform_int(r, m);
+		} while(k != id_x);
+
+		va_start(arg, HEURISTIC_ID);
+		switch(HEURISTIC_ID){
+ 			case 4:
+				B = va_arg(arg, BirdFlock *);
+				row = gsl_matrix_row (B->x, k);
+				LB = B->LB;
+				UB = B->UB;
+			break;
+		}
         
-        k = gsl_rng_uniform_int(r, m);
-        Phi = 2*gsl_rng_uniform(r)-1; /* it generates a random number in [-1,1] */
-        
-        for(j = 0; j < y->size; j++)
-            gsl_vector_set(y, j, gsl_vector_get(x, j)+Phi*(gsl_vector_get(x, j)-gsl_vector_get(x, k)));
+		Phi = 2*gsl_rng_uniform(r)-1; /* it generates a random number in the interval [-1,1] */
+        for(j = 0; j < y->size; j++)			
+            gsl_vector_set(y, j, gsl_vector_get(x, j)+Phi*(gsl_vector_get(x, j)-gsl_vector_get(&row.vector, j)));
         
         CheckLimits(y, LB, UB);
     
-        gsl_rng_free(r);           
+        gsl_rng_free(r);   
+		va_end(arg);        
     }
 }
 

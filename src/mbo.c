@@ -192,7 +192,7 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 		/* it evaluates the leader's neighbours */
 		for(i = 0; i < B->k; i++){
 			row_leader = gsl_matrix_row (B->x, B->leader);
-			GenerateRandomNeighbour(p, &row_leader.vector, B->LB, B->UB, B->m);
+			GenerateRandomNeighbour(p, &row_leader.vector, B->leader, B->m, MBO, B);
 			f = EvaluateBird(B, p, Evaluate, FUNCTION_ID, arg);
 			
 			//gsl_vector(nb_fitness, i, f);

@@ -16,6 +16,7 @@ extern "C" {
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */
 #define GP 3 /* Genetic Programming */
+#define MBO 4 /* Migrating Birds Optimization */
     
 #include <stdio.h>
 #include <stdlib.h>
