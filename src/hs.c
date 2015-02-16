@@ -434,6 +434,7 @@ gsl_vector *CreateNewHarmony4NGHS(HarmonyMemory *H){
 			
 			p = gsl_rng_uniform(r);
 			if(H->pm >= p){
+				p = gsl_rng_uniform(r);
 				gsl_vector_set(h, i, gsl_vector_get(H->LB, i)+p*(gsl_vector_get(H->UB, i)-gsl_vector_get(H->LB, i)));
 			}
 		}
