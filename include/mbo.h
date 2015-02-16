@@ -17,6 +17,10 @@ typedef struct _BirdFlock{
     int *right; /* indeces of the birds that are on the right of leader bird */
     gsl_matrix *x; /* possible solutions (birds) */
     gsl_vector *fitness; /* fitness value */
+	gsl_matrix *nb; /* neighbor of the current iteration */
+	gsl_vector *nb_fitness; /* neighbors's fitness of the current iteration */
+	//gsl_matrix *nb_temp; /* neighbors to share with the next iteration */
+	//gsl_vector *nb_temp_fitness; /* neighbors's fitness to share with the next iteration */
     gsl_vector *LB; /* lower bound for each decision variable */
     gsl_vector *UB; /* upper bound for each decision variable */
 }BirdFlock;
