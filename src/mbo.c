@@ -4,7 +4,7 @@
 Parameters: [m, n]
 m: number of birds
 n: number of decision variables */
-BirdFlock *CreateBirdFlock(int m, int n){
+BirdFlock *CreateBirdFlock(int m, int n, int k){
 
 	if(m < 1 || n < 1){
 		fprintf(stderr,"\nInvalid parameters @CreateFlockBird.\n");
@@ -16,8 +16,8 @@ BirdFlock *CreateBirdFlock(int m, int n){
 	B = (BirdFlock *)malloc(sizeof(BirdFlock));
 	B->m = m;
 	B->n = n;
+	B->k = k;
 	
-	B->k = 0;
 	B->M = 0;
 	B->max_iterations = 0;
 	B->X = 0;
@@ -29,8 +29,8 @@ BirdFlock *CreateBirdFlock(int m, int n){
 
 	B->nb = gsl_matrix_alloc(B->k, B->n);
 	B->nb_fitness = gsl_vector_alloc(B->k);	
-	B->nb_temp = gsl_matrix_alloc(B->k, B->n);
-	B->nb_temp_fitness = gsl_vector_alloc(B->k);
+	//B->nb_temp = gsl_matrix_alloc(B->k, B->n);
+	//B->nb_temp_fitness = gsl_vector_alloc(B->k);
 
 	B->LB = gsl_vector_alloc(B->n);
 	B->UB = gsl_vector_alloc(B->n);
@@ -52,8 +52,8 @@ void DestroyBirdFlock(BirdFlock **B){
 		
 		gsl_matrix_free(aux->nb);
 		gsl_vector_free(aux->nb_fitness);	
-		gsl_matrix_free(aux->nb_temp);
-		gsl_vector_free(aux->nb_temp_fitness);
+		//gsl_matrix_free(aux->nb_temp);
+		//gsl_vector_free(aux->nb_temp_fitness);
 
 		gsl_vector_free(aux->LB);
 		gsl_vector_free(aux->UB);
@@ -66,7 +66,7 @@ Parameters: [fileName]
 fileName: name of the file that stores the bird flock's configuration */
 BirdFlock *ReadBirdFlockFromFile(char *fileName){
 	FILE *fp = NULL;
-	int m, n;
+	int m, n, k, max_iterations;
 	BirdFlock *B = NULL;
 	double LB, UB;
 
@@ -76,13 +76,14 @@ BirdFlock *ReadBirdFlockFromFile(char *fileName){
 		return NULL;
 	}
 	
-	fscanf(fp, "%d %d", &m, &n);
-	B = CreateBirdFlock(m, n);
-	fscanf(fp, "%d", &(B->max_iterations));
+	fscanf(fp, "%d %d %d", &m, &n, &max_iterations);
 	WaiveComment(fp);
 
-	fscanf(fp, "%d %d %d", &(B->k), &(B->X), &(B->M));
+	fscanf(fp, "%d ", &k);
+	B = CreateBirdFlock(m, n, k);
+	fscanf(fp, "%d %d", &(B->X), &(B->M));
 	WaiveComment(fp);
+	B->max_iterations = max_iterations;
 
 	for (n=0; n<(B->n); n++){
 		fscanf(fp, "%lf %lf", &LB, &UB);
@@ -223,15 +224,16 @@ B: bird flock */
 void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 	if(B){
 		double f;
-		int i;		
+		int i, j;		
 		gsl_matrix *nb_temp = NULL, *aux = NULL;
-		gsl_vector *nb_temp_fitness = NULL;
+		gsl_vector *nb_temp_fitness = NULL, *temp = NULL;
 		gsl_vector_view row_leader, row_rd, rox_aux;
 		va_list arg;
 
 		aux = gsl_matrix_alloc((B->k)+1, B->n);
-		nb_temp = gsl_matrix_alloc(B->k, B->n);
-		nb_temp_fitness = gsl_vector_alloc(B->k);
+		temp = gsl_vector_alloc(B->k);
+		//nb_temp = gsl_matrix_alloc(B->k, B->n);
+		//nb_temp_fitness = gsl_vector_alloc(B->k);
 		va_start(arg, FUNCTION_ID);
 
 		//Cria vizinhos
@@ -243,33 +245,38 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 			gsl_vector_set(B->nb_fitness, i, f);
 		}
 		
-		//Ordena fitness vizinhos
-		/*gsl_matrix_set_row (aux, 0, B->nb_fitness);		
-		for(i = 1; i <= B->k; i++){
-			row_aux = gsl_matrix_row(B->nb, i-1);
-			gsl_matrix_set_row (aux, i,&row_aux.vector);
+		for(i = 0; i < B->k; i++){
+			gsl_vector_set(temp, i, i);
 		}
-
-		/*qsort(aux, k+1, sizeof(*gsl_vector), compare_ascending);
-
-		for(i = 0; i <= B->k; i++){
-			row_aux = gsl_matrix_row(aux, i);
-			if (i == 0)
-				gsl_vector_set(B->nb_fitness, i, &row_aux.vector);
-			else
-				gsl_matrix_set_row (B->nb, i-1, &row_aux.vector);
+		
+		fprintf(stderr, "\nFitness: ");
+		for(i = 0; i < B->k; i++){
+			fprintf(stderr, "%lf ", gsl_vector_get(B->nb_fitness, i));
+		}
+		
+		gsl_sort_vector2(B->nb_fitness, temp);
+		
+		fprintf(stderr, "\nTemp: ");
+		for(i = 0; i < B->k; i++){
+			fprintf(stderr, "%lf ", gsl_vector_get(temp, i));
 		}			
-
+		
+		fprintf(stderr, "\nFitness: ");
+		for(i = 0; i < B->k; i++){
+			fprintf(stderr, "%lf ", gsl_vector_get(B->nb_fitness, i));
+		}
+		
 		//Divide em duas listas
 		
-		
 		//Verifica lider
-		if (gsl_vector_get(B->nb_fitness, 0) < gsl_vector_get(B->fitness, B->leader)){
+		/*if (gsl_vector_get(B->nb_fitness, 0) < gsl_vector_get(B->fitness, B->leader)){
 			gsl_matrix_set(B->x,B->leader);
 		}*/
-
-		free(nb_temp);
-		free(nb_temp_fitness);
+		
+		gsl_vector_free(temp);
+		gsl_matrix_free(aux);		
+		//gsl_matrix_free(nb_temp);
+		//gsl_vector_free(nb_temp_fitness);
 		va_end(arg);
 	}
 	else

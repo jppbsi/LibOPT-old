@@ -26,7 +26,7 @@ typedef struct _BirdFlock{
 }BirdFlock;
 
 /* Allocation and Deallocation  */
-BirdFlock *CreateBirdFlock(int m, int n); /* It alocattes the bird flock */
+BirdFlock *CreateBirdFlock(int m, int n, int k); /* It alocattes the bird flock */
 void DestroyBirdFlock(BirdFlock **B); /* It desalocates the bird flock */
 BirdFlock *ReadBirdFlockFromFile(char *fileName); /* It creates a bird flock specified in a file */
 
