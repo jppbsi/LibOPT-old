@@ -543,21 +543,27 @@ void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, int id_x, int m, int 
         const gsl_rng_type *T = NULL;
         gsl_rng *r = NULL;
         double Phi;
-        int k, j;
+        int k, j, ctr = 0;
 		gsl_vector_view row;
 		gsl_vector *LB = NULL, *UB = NULL;
 		va_list arg;
 		BirdFlock *B = NULL;
 
-        srand(time(NULL));
-        gsl_rng_env_setup();
-        T = gsl_rng_default;
-        r = gsl_rng_alloc(T);
-        gsl_rng_set(r, rand());
+
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
 
 		do{         
         	k = gsl_rng_uniform_int(r, m);
-		} while(k != id_x);
+			ctr ++;
+		} while(k == id_x && ctr < 1000);
+
+		if (ctr == 1000){
+			fprintf(stderr, "\nUnable to generate a random neighbor @GenerateRandomNeighbour.\n");
+			exit(-1);
+		}
 
 		va_start(arg, HEURISTIC_ID);
 		switch(HEURISTIC_ID){
@@ -570,10 +576,11 @@ void GenerateRandomNeighbour(gsl_vector *y, gsl_vector *x, int id_x, int m, int 
 		}
         
 		Phi = 2*gsl_rng_uniform(r)-1; /* it generates a random number in the interval [-1,1] */
-        for(j = 0; j < y->size; j++)			
+        for(j = 0; j < y->size; j++){
             gsl_vector_set(y, j, gsl_vector_get(x, j)+Phi*(gsl_vector_get(x, j)-gsl_vector_get(&row.vector, j)));
-        
-        CheckLimits(y, LB, UB);
+        }
+
+		CheckLimits(y, LB, UB);
     
         gsl_rng_free(r);   
 		va_end(arg);        

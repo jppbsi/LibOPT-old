@@ -13,14 +13,14 @@ typedef struct _BirdFlock{
     int X; /* number of neighbor solutions to be shared with the next solution */
     int M; /* number of tours, i.e., the number of iterations for the leader */
     int leader; /* index of leader bird  */
-    int *left; /* indeces of the birds that are on the left of leader bird */
-    int *right; /* indeces of the birds that are on the right of leader bird */
+    gsl_vector **left; /* indeces of the birds that are on the left of leader bird */
+    gsl_vector **right; /* indeces of the birds that are on the right of leader bird */
     gsl_matrix *x; /* possible solutions (birds) */
     gsl_vector *fitness; /* fitness value */
 	gsl_matrix *nb; /* neighbor of the current iteration */
 	gsl_vector *nb_fitness; /* neighbors's fitness of the current iteration */
-	//gsl_matrix *nb_temp; /* neighbors to share with the next iteration */
-	//gsl_vector *nb_temp_fitness; /* neighbors's fitness to share with the next iteration */
+	gsl_matrix *nb_temp; /* neighbors to share with the next iteration */
+	gsl_vector *nb_fitness_temp; /* neighbors's fitness to share with the next iteration */
     gsl_vector *LB; /* lower bound for each decision variable */
     gsl_vector *UB; /* upper bound for each decision variable */
 }BirdFlock;
@@ -35,7 +35,7 @@ void InitializeBirdFlock(BirdFlock *B); /* It initializes the flock of birds */
 void ShowBirdFlock(BirdFlock *B); /* It displays the harmomy memory's content */
 void ShowBirdFlockInformation(BirdFlock *B); /* It displays the harmomy memory's main information */
 double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a bird solution */
-void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a bird flock */
+void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It evaluates a bird flock */
 
 /* Main Algoritm */
 void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It improves the lead bird by evaluating its neighbours */
