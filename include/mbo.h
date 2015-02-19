@@ -39,5 +39,6 @@ void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* 
 
 /* Main Algoritm */
 void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It improves the lead bird by evaluating its neighbours */
+void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It improves the other birds by evaluating its neighbours */
 
 #endif
