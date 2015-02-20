@@ -300,55 +300,135 @@ B: bird flock */
 void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 	if(B){
 		double f;
-		int i, p, size, t = 1;
+		int i, j, p, size, t = 1;
 		gsl_vector_view row_bird, row_nb;
 		gsl_matrix *nb_temp = NULL;
-		gsl_vector *temp_left = NULL, *temp_right = NULL, *nb_fitness_temp = NULL;
+		gsl_vector *temp = NULL, *nb_fitness_temp = NULL;
 		va_list arg;
 
 		va_start(arg, FUNCTION_ID);
 		nb_temp = gsl_matrix_alloc(B->k, B->n);
 		nb_fitness_temp = gsl_vector_alloc(B->k);
-		temp_left = gsl_vector_alloc(B->k);
-		temp_left = gsl_vector_alloc(B->k);
+		temp = gsl_vector_alloc(B->k);
 
 		size = ceil((B->m-1)/2);
 		p = B->m-1;
 
 /*
-		double f;
-		int i, j;		
-		gsl_matrix *nb_temp = NULL;
-		gsl_vector *temp = NULL, *nb_fitness_temp = NULL;
-*/
-		/* generate neighbors of the left side */
-		while (t < p/2){			
+		for(i = 0; i < B->k; i++){
+			fprintf(stderr, "\nNeighbor: %d \n", i);
+			for (j = 0; j < B->n; j++){
+				fprintf(stderr, "%lf ", gsl_matrix_get(B->nb, i, j));
+			}
+			fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
+		}*/
+	
+		while (t <= ceil(p/2)){			
+			/* generate neighbors of the left side */
 			row_bird = gsl_matrix_row(B->x, t);
+
 			for(i = B->X; i < B->k; i++){
 				row_nb = gsl_matrix_row(B->nb, i);
 				GenerateRandomNeighbour(&row_nb.vector, &row_bird.vector, t, B->m, MBO, B);
 				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
 				gsl_vector_set(B->nb_fitness, i, f);
 			}
+/*
+			fprintf(stderr, "\nBird: %d \n", t);
+			for(i = 0; i < B->k; i++){
+				fprintf(stderr, "\nNeighbor: %d \n", i);
+				for (j = 0; j < B->n; j++){
+					fprintf(stderr, "%lf ", gsl_matrix_get(B->nb, i, j));
+				}
+				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
+			}*/
+
+			/* sort neighbors by fitness */
+			for(i = 0; i < B->k; i++)
+				gsl_vector_set(temp, i, i);
+			gsl_sort_vector2(B->nb_fitness, temp);
+
+			/* compare bird fitness */
+			if (gsl_vector_get(B->nb_fitness, 0) < gsl_vector_get(B->fitness, t)){
+				row_nb = gsl_matrix_row(B->nb, gsl_vector_get(temp, 0));
+				gsl_matrix_set_row(B->x, t, &row_nb.vector);
+				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness, 0));
+			}
+
+			/*fprintf(stderr, "Fitness: %lf ", gsl_vector_get(B->nb_fitness, B->leader));*/
+
+			/* share fitness lists */
+			for(i = 0; i < B->k; i++){
+				row_nb = gsl_matrix_row(B->nb, i);
+				gsl_matrix_set_row(nb_temp, gsl_vector_get(temp, i), &row_nb.vector);
+			}
+			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness);
+			
+			gsl_matrix_set_zero(B->nb);		
+			gsl_vector_set_zero(B->nb_fitness);
+		
+			for(i = 1; i <= B->X; i++){
+				row_nb = gsl_matrix_row(nb_temp, i);
+				gsl_matrix_set_row(B->nb, (i-1), &row_nb.vector);
+				gsl_vector_set(B->nb_fitness, (i-1), gsl_vector_get(nb_fitness_temp, i));
+			}
+			/*fprintf(stderr, "\nBird: %d \n", t);
+			for(i = 0; i < B->k; i++){
+				fprintf(stderr, "\nNeighbor: %d \n", i);
+				for (j = 0; j < B->n; j++){
+					fprintf(stderr, "%lf ", gsl_matrix_get(B->nb, i, j));
+				}
+				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
+			}*/
+
 			t++;
 		}
 
-		/* generate neighbors of the right side */
-		while (t < p){			
+		while (t <= p){			
+			/* generate neighbors of the right side */
 			row_bird = gsl_matrix_row(B->x, t);
+
 			for(i = B->X; i < B->k; i++){
 				row_nb = gsl_matrix_row(B->nb_temp, i);
 				GenerateRandomNeighbour(&row_nb.vector, &row_bird.vector, t, B->m, MBO, B);
 				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
 				gsl_vector_set(B->nb_fitness_temp, i, f);
 			}
+			
+			/* sort neighbors by fitness */
+			for(i = 0; i < B->k; i++)
+				gsl_vector_set(temp, i, i);
+			gsl_sort_vector2(B->nb_fitness_temp, temp);
+
+			/* compare bird fitness */
+			if (gsl_vector_get(B->nb_fitness_temp, 0) < gsl_vector_get(B->fitness, t)){
+				row_nb = gsl_matrix_row(B->nb_temp, gsl_vector_get(temp, 0));
+				gsl_matrix_set_row(B->x, t, &row_nb.vector);
+				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness_temp, 0));
+			}
+			
+			/* share fitness lists */
+			for(i = 0; i < B->k; i++){
+				row_nb = gsl_matrix_row(B->nb_temp, i);
+				gsl_matrix_set_row(nb_temp, gsl_vector_get(temp, i), &row_nb.vector);
+			}
+			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness);
+			
+			gsl_matrix_set_zero(B->nb_temp);		
+			gsl_vector_set_zero(B->nb_fitness_temp);
+		
+			for(i = 1; i <= B->X; i++){
+				row_nb = gsl_matrix_row(nb_temp, i);
+				gsl_matrix_set_row(B->nb_temp, (i-1), &row_nb.vector);
+				gsl_vector_set(B->nb_fitness_temp, (i-1), gsl_vector_get(nb_fitness_temp, i));
+			}
+
 			t++;
 		}
 
 		gsl_matrix_free(nb_temp);
 		gsl_vector_free(nb_fitness_temp);		
-		gsl_vector_free(temp_left);
-		gsl_vector_free(temp_right);		
+		gsl_vector_free(temp);		
 		va_end(arg);
 	}
 	else
