@@ -5,6 +5,11 @@
 
 #include "opt.h"
 
+
+//COLOCAR UMA BREVE DESCRICAO EXPLICANDO COMO SAO AS ESTRUTURAS .. LEADER SEMPRE 0, LEFT SIDE TEM ceil((B->M-1)/2) ....
+//ARRUMAR PARAMETROS - DESCRICAO
+//VERIFICAR SE O PROBLEMA TEM LEAK QUANDO TEMOS ERROS DO USUARIO
+
 typedef struct _BirdFlock{
     int m; /* number of birds in the flock */
     int n; /* number of decision variables */
@@ -12,15 +17,14 @@ typedef struct _BirdFlock{
     int k; /* number of neighbours solutions to be considered */
     int X; /* number of neighbor solutions to be shared with the next solution */
     int M; /* number of tours, i.e., the number of iterations for the leader */
-    int leader; /* index of leader bird  */
     gsl_vector **left; /* indeces of the birds that are on the left of leader bird */
     gsl_vector **right; /* indeces of the birds that are on the right of leader bird */
     gsl_matrix *x; /* possible solutions (birds) */
     gsl_vector *fitness; /* fitness value */
-	gsl_matrix *nb; /* neighbor of the current iteration */
-	gsl_vector *nb_fitness; /* neighbors's fitness of the current iteration */
-	gsl_matrix *nb_temp; /* neighbors to share with the next iteration */
-	gsl_vector *nb_fitness_temp; /* neighbors's fitness to share with the next iteration */
+    gsl_matrix *nb_left; /* neighbor set of the current iteration regarding left birds */
+    gsl_vector *nb_fitness_left; /* neighbors's fitness of the current iteration regarding left birds */
+    gsl_matrix *nb_right; /* neighbor set of the current iteration regarding right birds */
+    gsl_vector *nb_fitness_right; /* neighbors's fitness of the current iteration regarding right birds */
     gsl_vector *LB; /* lower bound for each decision variable */
     gsl_vector *UB; /* upper bound for each decision variable */
 }BirdFlock;

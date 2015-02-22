@@ -30,6 +30,9 @@ extern "C" {
 #include <time.h>
 #include <ctype.h>
 #include <stdarg.h>
+    
+/* GSL */
+#include <gsl/gsl_sort_vector.h>
 
 /* libDeep */
 #include "deep.h"
