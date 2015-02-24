@@ -332,14 +332,15 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 		/* it runs over the left side of V formation */
 		while (t <= size){
 			
-			/* generate neighbors of the left side */
+			/* for each left bird t */
 			row_bird = gsl_matrix_row(B->x, t);
 
+			/* it generates and evaluates k-X neighbours for bird t */
 			for(i = B->X; i < B->k; i++){
 				row_nb = gsl_matrix_row(B->nb_left, i);
 				GenerateRandomNeighbour(&row_nb.vector, &row_bird.vector, t, B->m, MBO, B);
 				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
-				gsl_vector_set(B->nb_fitness, i, f);
+				gsl_vector_set(B->nb_fitness_left, i, f);
 			}
 /*
 			fprintf(stderr, "\nBird: %d \n", t);
@@ -351,34 +352,34 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
 			}*/
 
-			/* sort neighbors by fitness */
+			/* it sorts the neighbors by fitness */
 			for(i = 0; i < B->k; i++)
 				gsl_vector_set(temp, i, i);
-			gsl_sort_vector2(B->nb_fitness, temp);
+			gsl_sort_vector2(B->nb_fitness_left, temp);
 
-			/* compare bird fitness */
-			if (gsl_vector_get(B->nb_fitness, 0) < gsl_vector_get(B->fitness, t)){
-				row_nb = gsl_matrix_row(B->nb, gsl_vector_get(temp, 0));
+			/* it compares the best neighbour's fitness with the current bird's one */
+			if (gsl_vector_get(B->nb_fitness_left, 0) < gsl_vector_get(B->fitness, t)){
+				row_nb = gsl_matrix_row(B->nb_left, gsl_vector_get(temp, 0));
 				gsl_matrix_set_row(B->x, t, &row_nb.vector);
-				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness, 0));
+				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness_left, 0));
 			}
 
 			/*fprintf(stderr, "Fitness: %lf ", gsl_vector_get(B->nb_fitness, B->leader));*/
 
-			/* share fitness lists */
+			/* it copies all neighbours in an ascending order of fitness */
 			for(i = 0; i < B->k; i++){
-				row_nb = gsl_matrix_row(B->nb, i);
+				row_nb = gsl_matrix_row(B->nb_left, i);
 				gsl_matrix_set_row(nb_temp, gsl_vector_get(temp, i), &row_nb.vector);
 			}
-			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness);
+			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness_left);
 			
-			gsl_matrix_set_zero(B->nb);		
-			gsl_vector_set_zero(B->nb_fitness);
+			gsl_matrix_set_zero(B->nb_left);		
+			gsl_vector_set_zero(B->nb_fitness_left);
 		
 			for(i = 1; i <= B->X; i++){
 				row_nb = gsl_matrix_row(nb_temp, i);
-				gsl_matrix_set_row(B->nb, (i-1), &row_nb.vector);
-				gsl_vector_set(B->nb_fitness, (i-1), gsl_vector_get(nb_fitness_temp, i));
+				gsl_matrix_set_row(B->nb_left, (i-1), &row_nb.vector);
+				gsl_vector_set(B->nb_fitness_left, (i-1), gsl_vector_get(nb_fitness_temp, i));
 			}
 			/*fprintf(stderr, "\nBird: %d \n", t);
 			for(i = 0; i < B->k; i++){
@@ -391,44 +392,47 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 
 			t++;
 		}
-
-		while (t <= p){			
-			/* generate neighbors of the right side */
+		
+		/* it runs over the right side of V formation */
+		while (t < B->m){
+			
+			/* for each right bird t */
 			row_bird = gsl_matrix_row(B->x, t);
 
+			/* it generates and evaluates k-X neighbours for bird t */
 			for(i = B->X; i < B->k; i++){
-				row_nb = gsl_matrix_row(B->nb_temp, i);
+				row_nb = gsl_matrix_row(B->nb_right, i);
 				GenerateRandomNeighbour(&row_nb.vector, &row_bird.vector, t, B->m, MBO, B);
 				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
-				gsl_vector_set(B->nb_fitness_temp, i, f);
+				gsl_vector_set(B->nb_fitness_right, i, f);
 			}
 			
-			/* sort neighbors by fitness */
+			/* it sorts the neighbors by fitness */
 			for(i = 0; i < B->k; i++)
 				gsl_vector_set(temp, i, i);
-			gsl_sort_vector2(B->nb_fitness_temp, temp);
+			gsl_sort_vector2(B->nb_fitness_right, temp);
 
-			/* compare bird fitness */
-			if (gsl_vector_get(B->nb_fitness_temp, 0) < gsl_vector_get(B->fitness, t)){
-				row_nb = gsl_matrix_row(B->nb_temp, gsl_vector_get(temp, 0));
+			/* it compares the best neighbour's fitness with the current bird's one */
+			if (gsl_vector_get(B->nb_fitness_right, 0) < gsl_vector_get(B->fitness, t)){
+				row_nb = gsl_matrix_row(B->nb_right, gsl_vector_get(temp, 0));
 				gsl_matrix_set_row(B->x, t, &row_nb.vector);
-				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness_temp, 0));
+				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness_right, 0));
 			}
 			
-			/* share fitness lists */
+			/* it copies all neighbours in an ascending order of fitness */
 			for(i = 0; i < B->k; i++){
-				row_nb = gsl_matrix_row(B->nb_temp, i);
+				row_nb = gsl_matrix_row(B->nb_right, i);
 				gsl_matrix_set_row(nb_temp, gsl_vector_get(temp, i), &row_nb.vector);
 			}
-			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness);
+			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness_right);
 			
-			gsl_matrix_set_zero(B->nb_temp);		
-			gsl_vector_set_zero(B->nb_fitness_temp);
+			gsl_matrix_set_zero(B->nb_right);		
+			gsl_vector_set_zero(B->nb_fitness_right);
 		
 			for(i = 1; i <= B->X; i++){
 				row_nb = gsl_matrix_row(nb_temp, i);
-				gsl_matrix_set_row(B->nb_temp, (i-1), &row_nb.vector);
-				gsl_vector_set(B->nb_fitness_temp, (i-1), gsl_vector_get(nb_fitness_temp, i));
+				gsl_matrix_set_row(B->nb_right, (i-1), &row_nb.vector);
+				gsl_vector_set(B->nb_fitness_right, (i-1), gsl_vector_get(nb_fitness_temp, i));
 			}
 
 			t++;
