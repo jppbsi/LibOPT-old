@@ -7,6 +7,8 @@ extern "C" {
 
 #define N_ITE 30
 
+TESTANDO
+
 #define BBRBM4RECONSTRUCTION 1 /* Bernoulli-Bernoulli RBM for data reconstruction */
 #define KMEANS 2 /* K-Means for data clustering */
 #define GBDRBM 3 /* Gaussian-Bernoulli DRBM */
