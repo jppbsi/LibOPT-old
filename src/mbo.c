@@ -19,6 +19,7 @@ BirdFlock *CreateBirdFlock(int m, int n, int k){
 	B->n = n;
 	B->k = k;
 	
+	B->leftSide = 1;
 	B->M = 0;
 	B->max_iterations = 0;
 	B->X = 0;
@@ -114,7 +115,7 @@ Parameters: [B]
 B: bird flock */
 void InitializeBirdFlock(BirdFlock *B){
 	if(B){
-		int i, j;
+		int i, j, size;
 		double p;
 		const gsl_rng_type *T;
 		gsl_rng *r;
@@ -125,6 +126,8 @@ void InitializeBirdFlock(BirdFlock *B){
 		r = gsl_rng_alloc(T);
 		gsl_rng_set(r, random_seed());
 
+		size = ceil((B->m-1)/2);
+
 		/* it generates random solutions for each bird */
 		for(i=0; i< B->m; i++)
 			for(j=0; j< B->n; j++){
@@ -134,14 +137,14 @@ void InitializeBirdFlock(BirdFlock *B){
 		
 		/* it defines the left side of V formation */
 		j = 0;
-		for (i = 1; i <= B->left[0]->size; i++){
+		for (i = 1; i <= size; i++){
 			row = gsl_matrix_row(B->x, i);
 			B->left[j++] = &row.vector;
 		}
 
 		/* it defines the right side of V formation */
 		j = 0;
-		for (i = B->left[0]->size+1; i < B->m; i++){
+		for (i = size+1; i < B->m; i++){
 			row = gsl_matrix_row(B->x, i);
 			B->right[j++] = &row.vector;
 		}
@@ -309,7 +312,7 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 	if(B){
 		double f;
 		int i, j, size, t = 1;
-		gsl_vector_view row_bird, row_nb;
+		gsl_vector_view row_nb, row_bird;
 		gsl_matrix *nb_temp = NULL;
 		gsl_vector *temp = NULL, *nb_fitness_temp = NULL;
 		va_list arg;
@@ -321,14 +324,29 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 
 		size = ceil((B->m-1)/2);
 /*
-		for(i = 0; i < B->k; i++){
-			fprintf(stderr, "\nNeighbor: %d \n", i);
+		for(i = 1; i <= size; i++){
+			fprintf(stderr, "\nBird Left: %d \n", i);
 			for (j = 0; j < B->n; j++){
-				fprintf(stderr, "%lf ", gsl_matrix_get(B->nb, i, j));
+				fprintf(stderr, "%lf ", gls_matrix_get(B->x, B->left[i-1], j));
 			}
-			fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
+			fprintf(stderr, "|| %lf ", gsl_vector_get(B->fitness, i));
+		}
+		for(i = size+1; i < B->m; i++){
+			fprintf(stderr, "\nBird Right: %d \n", i);
+			for (j = 0; j < B->n; j++){
+				fprintf(stderr, "%lf ", gsl_vector_get(B->right[i-1], j));
+			}
+			fprintf(stderr, "|| %lf ", gsl_vector_get(B->fitness, i));
 		}*/
-	
+
+		for(i = 0; i < B->k; i++){
+			fprintf(stderr, "\n\nNeighbor Left: %d \n", i);
+			for (j = 0; j < B->n; j++){
+				fprintf(stderr, "%lf ", gsl_matrix_get(B->nb_left, i, j));
+			}
+			fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness_left, i));
+		}
+
 		/* it runs over the left side of V formation */
 		while (t <= size){
 			
@@ -342,20 +360,22 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
 				gsl_vector_set(B->nb_fitness_left, i, f);
 			}
-/*
-			fprintf(stderr, "\nBird: %d \n", t);
+
+			fprintf(stderr, "\n\nBird: %d \n", t);
 			for(i = 0; i < B->k; i++){
 				fprintf(stderr, "\nNeighbor: %d \n", i);
 				for (j = 0; j < B->n; j++){
-					fprintf(stderr, "%lf ", gsl_matrix_get(B->nb, i, j));
+					fprintf(stderr, "%lf ", gsl_matrix_get(B->nb_left, i, j));
 				}
-				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
-			}*/
+				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness_left, i));
+			}
 
 			/* it sorts the neighbors by fitness */
 			for(i = 0; i < B->k; i++)
 				gsl_vector_set(temp, i, i);
 			gsl_sort_vector2(B->nb_fitness_left, temp);
+
+			fprintf(stderr, "\nBest-> %lf ", gsl_vector_get(B->fitness, t));
 
 			/* it compares the best neighbour's fitness with the current bird's one */
 			if (gsl_vector_get(B->nb_fitness_left, 0) < gsl_vector_get(B->fitness, t)){
@@ -364,33 +384,45 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness_left, 0));
 			}
 
-			/*fprintf(stderr, "Fitness: %lf ", gsl_vector_get(B->nb_fitness, B->leader));*/
+			fprintf(stderr, "\nBest-> %lf ", gsl_vector_get(B->fitness, t));
 
 			/* it copies all neighbours in an ascending order of fitness */
 			for(i = 0; i < B->k; i++){
+				j = 0;
 				row_nb = gsl_matrix_row(B->nb_left, i);
-				gsl_matrix_set_row(nb_temp, gsl_vector_get(temp, i), &row_nb.vector);
+				while(gsl_vector_get(temp, j) != i)
+					j++;
+				gsl_matrix_set_row(nb_temp, j, &row_nb.vector);
 			}
 			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness_left);
-			
 			gsl_matrix_set_zero(B->nb_left);		
 			gsl_vector_set_zero(B->nb_fitness_left);
+
+			fprintf(stderr, "\n\nBird: %d \n", t);
+			for(i = 0; i < B->k; i++){
+				fprintf(stderr, "\nNeighbor: %d \n", i);
+				for (j = 0; j < B->n; j++){
+					fprintf(stderr, "%lf ", gsl_matrix_get(nb_temp, i, j));
+				}
+				fprintf(stderr, "|| %lf ", gsl_vector_get(nb_fitness_temp, i));
+			}
 		
 			for(i = 1; i <= B->X; i++){
 				row_nb = gsl_matrix_row(nb_temp, i);
 				gsl_matrix_set_row(B->nb_left, (i-1), &row_nb.vector);
 				gsl_vector_set(B->nb_fitness_left, (i-1), gsl_vector_get(nb_fitness_temp, i));
 			}
-			/*fprintf(stderr, "\nBird: %d \n", t);
-			for(i = 0; i < B->k; i++){
-				fprintf(stderr, "\nNeighbor: %d \n", i);
-				for (j = 0; j < B->n; j++){
-					fprintf(stderr, "%lf ", gsl_matrix_get(B->nb, i, j));
-				}
-				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness, i));
-			}*/
-
+	
+			fprintf(stderr, "\n *********************************\n");
 			t++;
+		}
+
+		for(i = 0; i < B->k; i++){
+			fprintf(stderr, "\n\nNeighbor Right: %d \n", i);
+			for (j = 0; j < B->n; j++){
+				fprintf(stderr, "%lf ", gsl_matrix_get(B->nb_right, i, j));
+			}
+			fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness_right, i));
 		}
 		
 		/* it runs over the right side of V formation */
@@ -406,11 +438,22 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
 				gsl_vector_set(B->nb_fitness_right, i, f);
 			}
+
+			fprintf(stderr, "\n\nBird: %d \n", t);
+			for(i = 0; i < B->k; i++){
+				fprintf(stderr, "\nNeighbor: %d \n", i);
+				for (j = 0; j < B->n; j++){
+					fprintf(stderr, "%lf ", gsl_matrix_get(B->nb_right, i, j));
+				}
+				fprintf(stderr, "|| %lf ", gsl_vector_get(B->nb_fitness_right, i));
+			}
 			
 			/* it sorts the neighbors by fitness */
 			for(i = 0; i < B->k; i++)
 				gsl_vector_set(temp, i, i);
 			gsl_sort_vector2(B->nb_fitness_right, temp);
+
+			fprintf(stderr, "\nBest-> %lf ", gsl_vector_get(B->fitness, t));
 
 			/* it compares the best neighbour's fitness with the current bird's one */
 			if (gsl_vector_get(B->nb_fitness_right, 0) < gsl_vector_get(B->fitness, t)){
@@ -418,22 +461,37 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				gsl_matrix_set_row(B->x, t, &row_nb.vector);
 				gsl_vector_set(B->fitness, t, gsl_vector_get(B->nb_fitness_right, 0));
 			}
-			
+
+			fprintf(stderr, "\nBest-> %lf ", gsl_vector_get(B->fitness, t));			
+
 			/* it copies all neighbours in an ascending order of fitness */
 			for(i = 0; i < B->k; i++){
+				j = 0;
 				row_nb = gsl_matrix_row(B->nb_right, i);
-				gsl_matrix_set_row(nb_temp, gsl_vector_get(temp, i), &row_nb.vector);
+				while(gsl_vector_get(temp, j) != i)
+					j++;
+				gsl_matrix_set_row(nb_temp, j, &row_nb.vector);
 			}
 			gsl_vector_memcpy(nb_fitness_temp, B->nb_fitness_right);
-			
 			gsl_matrix_set_zero(B->nb_right);		
 			gsl_vector_set_zero(B->nb_fitness_right);
 		
+			fprintf(stderr, "\n\nBird: %d \n", t);
+			for(i = 0; i < B->k; i++){
+				fprintf(stderr, "\nNeighbor: %d \n", i);
+				for (j = 0; j < B->n; j++){
+					fprintf(stderr, "%lf ", gsl_matrix_get(nb_temp, i, j));
+				}
+				fprintf(stderr, "|| %lf ", gsl_vector_get(nb_fitness_temp, i));
+			}
+
 			for(i = 1; i <= B->X; i++){
 				row_nb = gsl_matrix_row(nb_temp, i);
 				gsl_matrix_set_row(B->nb_right, (i-1), &row_nb.vector);
 				gsl_vector_set(B->nb_fitness_right, (i-1), gsl_vector_get(nb_fitness_temp, i));
 			}
+
+			fprintf(stderr, "\n *********************************\n");
 
 			t++;
 		}
@@ -445,4 +503,49 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 	}
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @ImproveLeaderSolution.\n");
+}
+
+/* It replaces the leader bird by the next bird of V formation---
+Parameters: [B]
+B: bird flock */
+void ReplaceLeader(BirdFlock *B){
+	if(B){
+		int i, size;
+		double leader;
+		gsl_vector_view row, row_leader;
+		gsl_vector *row2;
+		
+		row2 = gsl_vector_alloc(B->n);
+
+		size = ceil((B->m-1)/2);
+
+		ShowBirdFlock(B);
+		/* it saves the leader information */
+		gsl_matrix_get_row(row2, B->x, 0);
+		leader = gsl_vector_get(B->fitness, 0);
+
+		if(!B->leftSide)
+			size = B->m - size;
+
+		/* it moves the other birds to next position */
+		i = 0;
+		while(i < size){
+			row = gsl_matrix_row(B->x, i+1);
+			gsl_matrix_set_row(B->x, i, &row.vector);
+			gsl_vector_set(B->fitness, i, gsl_vector_get(B->fitness, i+1));
+			i++;
+		}
+		
+		/* it moves the leader bird for the last position on the V formation */		
+		gsl_matrix_set_row(B->x, i, row2);
+		gsl_vector_set(B->fitness, i, leader);
+
+		B->leftSide = !B->leftSide;
+		fprintf(stderr, "\n\n");
+		ShowBirdFlock(B);
+		gsl_vector_free(row2);
+		// preciso mudar ponteiros left right?
+	}
+	else
+		fprintf(stderr, "\nThere is no bird flock allocated @ReplaceLeader.\n");
 }
