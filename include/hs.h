@@ -1,7 +1,7 @@
 #ifndef HS_H
 #define HS_H
 
-#include "opt.h" #oi
+#include "opt.h"
 
 typedef struct _HarmonyMemory{
     int m; /* number of harmonies */
