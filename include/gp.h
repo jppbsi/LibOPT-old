@@ -38,6 +38,7 @@ typedef struct _GeneticProgramming{
     int n_terminals; /* number of terminals */
     int type; /* indicate whether the combination will be performed over matrices (0) ou vectors (1) */
     int max_depth; /* maximum depth of a tree */
+    int has_terminal; /* it indicates whether we have terminal nodes already precomputed (hyperheuristic optimization) or not (standard) */
     int best; /* id of the best tree */
     gsl_vector *LB; /* lower bound for each decision variable */
     gsl_vector *UB; /* upper bound for each decision variable */

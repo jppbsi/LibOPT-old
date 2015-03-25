@@ -74,7 +74,7 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
     FILE *fp = NULL, *fpData = NULL;
     int n_trees, type, ctr, i, j, z, max_depth, n_decision_variables, max_iterations, n_constants;
     double aux, aux2, lb, ub;
-    char data[16], c;
+    char data[32], c;
     GeneticProgramming *gp = NULL;
     StringSet *S = NULL, *tmp = NULL;
     const gsl_rng_type *T = NULL;
@@ -102,6 +102,16 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
 	return NULL;
     }
     
+    /* it reads the lower and upper bounds of each decision variable */
+    gp->LB = gsl_vector_alloc(gp->n);
+    gp->UB = gsl_vector_alloc(gp->n);
+    
+    for(i = 0; i < gp->n; i++){
+	fscanf(fp, "%lf %lf", &aux, &aux2); WaiveComment(fp);
+	gsl_vector_set(gp->LB, i, aux);
+	gsl_vector_set(gp->UB, i, aux2);
+    }
+    
     gp->fitness = gsl_vector_alloc(gp->m);
     
     /* it reads the functions */
@@ -126,31 +136,42 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
     DestroyStringSet(&S); 
     /***/
     
-    /* it reads the terminals */
-    S = NULL;
-    ctr = 0;
-    do{
-	c = fgetc(fp);
-	while(c == ' ') c = fgetc(fp);
-	if((c != '#') && (c != '\n')){
-	    fseek(fp, -1, SEEK_CUR); fscanf(fp,"%s", data); gp->n_terminals++;
-	    InsertStringSet(&S, data);
+    fscanf(fp, "%d", &(gp->has_terminal)); WaiveComment(fp);
+    
+    if(gp->has_terminal){ /* it reads the terminals */
+	S = NULL;
+	ctr = 0;
+	do{
+	    c = fgetc(fp);
+	    while(c == ' ') c = fgetc(fp);
+	    if((c != '#') && (c != '\n')){
+		fseek(fp, -1, SEEK_CUR); fscanf(fp,"%s", data); gp->n_terminals++;
+		InsertStringSet(&S, data);
+	    }
+	}while((c != '#') && (c != '\n'));
+	tmp = S;
+	gp->terminal = (char **)malloc(gp->n_terminals*sizeof(char *));
+	for(i = 0; i < gp->n_terminals; i++){
+	    gp->terminal[i] = (char *)malloc((strlen(tmp->data)+1)*sizeof(char));
+	    strcpy(gp->terminal[i], tmp->data);
+	    tmp = tmp->prox;
 	}
-    }while((c != '#') && (c != '\n'));
-    tmp = S;
-    gp->terminal = (char **)malloc(gp->n_terminals*sizeof(char *));
-    for(i = 0; i < gp->n_terminals; i++){
-	gp->terminal[i] = (char *)malloc((strlen(tmp->data)+1)*sizeof(char));
-	strcpy(gp->terminal[i], tmp->data);
-	tmp = tmp->prox;
+	WaiveComment(fp);
+	/***/
+    }else{
+	gp->n_terminals = 1000; /* you can use any number here. The idea is to generate a big number of terminals when you do not have tem precomputed */
+	gp->terminal = (char **)malloc(gp->n_terminals*sizeof(char *));
+	for(i = 0; i < gp->n_terminals; i++){
+	    gp->terminal[i] = (char *)malloc(100*sizeof(char));
+	    sprintf(data,"PARAM_%d", i);
+	    strcpy(gp->terminal[i], data);
+	}
     }
-    WaiveComment(fp);
-    /***/
     
     tmp = S;
     if(gp->type){ /* if it is a vector-based problem */
 	gp->vector = gsl_matrix_alloc(gp->n_terminals, gp->n);
-	
+	    
 	for(i = 0; i < gp->vector->size1; i++){
 	    fscanf(fp,"%s", data); fpData = NULL;
 	    fpData = fopen(data,"r");
@@ -161,12 +182,13 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
 		    for(j = 0; j < gp->constant->size; j++)
 			gsl_vector_set(gp->constant, j, (ub-lb)*gsl_rng_uniform(r)+lb);
 		}else{
+		    //faco if aqui do has_terminal
 		    fscanf(fpData,"%lf",&aux);
 		    for(j = 0; j < gp->n; j++){
 			fscanf(fpData,"%lf",&aux);
-			gsl_matrix_set(gp->vector, i, j, aux);
+			gsl_matrix_set(gp->vector, i, j, aux); //gero aleatorio aqui se !has_terminal
 		    }
-		}
+	        }
 		fclose(fpData);
 	    }else{
 		fprintf(stderr,"\nunable to open file %s @ReadGeneticProgrammingFromFile.\n", data);
@@ -178,12 +200,11 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
 	    WaiveComment(fp);
 	    tmp = tmp->prox;
 	}
-    }
-    else{ /* if is is a matrix-based problem */
+    }else{ /* if is is a matrix-based problem */
 	gp->matrix = (gsl_matrix **)malloc(gp->n_terminals*sizeof(gsl_matrix **));
 	for(i = 0; i < gp->n_terminals; i++)
 	    gp->matrix[i] = gsl_matrix_calloc(gp->n, gp->n);
-	
+	    
 	for(z = 0; z < gp->n_terminals; z++){
 	    fscanf(fp,"%s", data); fpData = NULL;
 	    fprintf(stderr,"\ndata: %s", data);
@@ -204,18 +225,9 @@ GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName){
 		return NULL;
 	    }
 	    WaiveComment(fp);
-	}
+        }
     }
     
-    /* it reads the lower and upper bounds of each decision variable */
-    gp->LB = gsl_vector_alloc(gp->n);
-    gp->UB = gsl_vector_alloc(gp->n);
-    
-    for(i = 0; i < gp->n; i++){
-	fscanf(fp, "%lf %lf", &aux, &aux2); WaiveComment(fp);
-	gsl_vector_set(gp->LB, i, aux);
-	gsl_vector_set(gp->UB, i, aux2);
-    }
     
     fclose(fp);
     gsl_rng_free(r);

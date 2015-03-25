@@ -38,6 +38,8 @@ HarmonyMemory *CreateHarmonyMemory(int m, int n){
 	H->max_iterations = 0;
 	H->best_fitness = DBL_MAX;
 	H->worst_fitness = DBL_MIN;
+	H->_HMCR = NULL;
+	H->_PAR = NULL;
 }
 
 /* It deallocates the harmony memory ---
@@ -51,6 +53,8 @@ void DestroyHarmonyMemory(HarmonyMemory **H){
 		gsl_vector_free(aux->fitness);
 		gsl_vector_free(aux->LB);
 		gsl_vector_free(aux->UB);
+		if(aux->_HMCR) gsl_vector_free(aux->_HMCR);
+		if(aux->_PAR) gsl_vector_free(aux->_PAR);
 		free(aux);
 		aux = NULL;
 	}
@@ -492,6 +496,60 @@ gsl_vector *CreateNewHarmony4SGHS(HarmonyMemory *H){
 	}
 }
 
+/* It creates a new harmony for PSF_HS
+Parameters: [H]
+H: harmony memory */
+gsl_vector *CreateNewHarmony4PSF_HS(HarmonyMemory *H){
+	if(H){
+		if(H->op_type){
+			int i, index;
+			gsl_vector *h = NULL;
+			const gsl_rng_type *T = NULL;
+			gsl_rng *r = NULL;
+			double p, signal;
+				    
+			srand(time(NULL));
+			T = gsl_rng_default;
+			r = gsl_rng_alloc(T);
+			gsl_rng_set(r, random_seed());
+			
+			h = gsl_vector_alloc(H->n);
+			for(i = 0; i < H->n; i++){
+				p = gsl_rng_uniform(r);
+				if(gsl_vector_get(H->_HMCR, i) >= p){
+					index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
+					gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i));
+					p = gsl_rng_uniform(r);
+					H->op_type[i] = opt_MEMORY;
+					if(gsl_vector_get(H->_PAR, i) >= p){
+						signal = gsl_rng_uniform(r);
+						p = gsl_rng_uniform(r);
+						if(signal >= 0.5) gsl_vector_set(h, i, gsl_vector_get(h, i)+p*H->bw);
+						else gsl_vector_set(h, i, gsl_vector_get(h, i)-p*H->bw);
+						H->op_type[i] = opt_PITCH;
+						
+						if(gsl_vector_get(h, i) < gsl_vector_get(H->LB, i)) gsl_vector_set(h, i, gsl_vector_get(H->LB, i));
+						else if(gsl_vector_get(h, i) > gsl_vector_get(H->UB, i)) gsl_vector_set(h, i, gsl_vector_get(H->UB, i));
+					}
+				}else{
+					p = (gsl_vector_get(H->UB, i)-gsl_vector_get(H->LB, i))*gsl_rng_uniform(r)+gsl_vector_get(H->LB, i);
+					gsl_vector_set(h, i, p);
+					H->op_type[i] = opt_RANDOM;
+				}
+			}
+			gsl_rng_free(r);
+			
+			return h;
+		}else{
+			fprintf(stderr,"\nThere is no op_type array allocated @CreateNewHarmony4PSF_HS.\n");
+			return NULL;	
+		}
+	}else{
+		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewHarmony4PSF_HS.\n");
+		return NULL;
+	}
+}
+
 /* It evaluates the new harmony and updates the harmony memory
 Parameters: [H,h]
 H: harmony memory
@@ -519,6 +577,11 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					gsl_vector_set(H->fitness, H->worst, f);
 					
 					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
 				}
 			break;
 			case 2: /* kMeans */
@@ -534,6 +597,11 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					gsl_vector_set(H->fitness, H->worst, f);
 					
 					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
 				}
 			break;
 			case 3: /* Gaussian_BernoulliDRBM */
@@ -553,6 +621,11 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					gsl_vector_set(H->fitness, H->worst, f);
 					
 					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
 				}
 			break;
 			case 4: /* Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence */
@@ -571,6 +644,11 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					gsl_vector_set(H->fitness, H->worst, f);
 					
 					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
 				}
 			break;
 			case 5: /* Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence */
@@ -589,6 +667,11 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					gsl_vector_set(H->fitness, H->worst, f);
 					
 					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
 				}
 			break;
 		}
@@ -847,6 +930,65 @@ void runNGHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     va_end(arg);
 }
 
+/* It executes the Parameter-setting-free HS for function minimization ---
+Parameters: [H, EvaluateFun, FUNCTION_ID, ... ]
+H: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function
+This implementation is based on the paper "Parameter-setting-free Harmony Search Algorithm" */
+void runPSF_HS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
+    va_list arg, argtmp;
+		
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+    if(H){
+        int t, i;
+        double p;
+	gsl_vector *h = NULL;
+                            
+        fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+	EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
+	fprintf(stderr," OK.");
+	
+	/* creating rehearsal matrix (Equation 8) */
+	H->Rehearsal = (char **)malloc(H->m*sizeof(char *));
+	for(i = 0; i < H->m; i++)
+	    H->Rehearsal[i] = (char *)malloc(H->n*sizeof(char));
+	H->_HMCR = gsl_vector_calloc(H->n);
+	H->_PAR = gsl_vector_calloc(H->n);
+	H->op_type = (char *)malloc(H->n*sizeof(char));
+	    
+	/* At the first iteration, all decision variables come from random initialization */
+	for(i = 0; i < H->m; i++)
+	    for(t = 0; t < H->n; t++)
+		H->Rehearsal[i][t] = opt_RANDOM;
+	
+        for(t = 1; t <= H->max_iterations; t++){
+            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
+            va_copy(arg, argtmp);
+            
+	    if(t == 1){ /* in the first iteration, the predefined HMCR and PAR values are used */
+		gsl_vector_set_all(H->_HMCR, H->HMCR);
+		gsl_vector_set_all(H->_PAR, H->PAR);
+	    }
+            h = CreateNewHarmony4PSF_HS(H);
+	    UpdateIndividualHMCR_PAR(H);
+	    EvaluateNewHarmonyHS(H, h, EvaluateFun, FUNCTION_ID, arg);
+	    gsl_vector_free(h);
+    		            
+            fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
+            fprintf(stdout,"%d %lf\n", t, H->best_fitness);
+        }
+	
+	for(i = 0; i< H->m; i++)
+	    free(H->Rehearsal[i]);
+	free(H->Rehearsal);
+	free(H->op_type);
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
+    va_end(arg);
+}
 
 /* It executes the hybridization of HS
 Parameters: [HS, EvaluateFun, FUNCTION_ID, HEURISTIC_ID, arg]
@@ -987,3 +1129,18 @@ p: percentage of the harmonies that might be improved by hybridization
 		
 	}else fprintf(stderr,"\nThere is no search space allocated @runHybridHS.\n");
 }*/
+		
+/* It updates the individual values of HMCR and PAR concerning PSF_HS
+Parameters: [H]
+H: Harmony Memory */
+void UpdateIndividualHMCR_PAR(HarmonyMemory *H){
+	int i, j, ctr[3];
+		
+	for(j = 0; j < H->n; j++){
+		ctr[0] = ctr[1] = ctr[2] = 0;
+		for(i = 0; i < H->m; i++)
+			ctr[(int)H->Rehearsal[i][j]]++;
+		gsl_vector_set(H->_HMCR, j, ctr[opt_MEMORY]/(double)H->m);
+		gsl_vector_set(H->_PAR, j, ctr[opt_PITCH]/(double)H->m);
+	}
+}
