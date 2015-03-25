@@ -974,7 +974,7 @@ void runPSF_HS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
 	    }
             h = CreateNewHarmony4PSF_HS(H);
 	    UpdateIndividualHMCR_PAR(H);
-	    EvaluateNewHarmonyHS(H, h, EvaluateFun, FUNCTION_ID, arg);
+	    EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
 	    gsl_vector_free(h);
     		            
             fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
