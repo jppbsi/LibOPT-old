@@ -329,6 +329,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				batch_size = va_arg(arg, int);
 				n_gibbs_sampling = va_arg(arg, int);
 				L = va_arg(arg, int);
+				fprintf(stderr,"\nL: %d -------", L);
 				
 				Param = gsl_matrix_alloc(L, 6);		
 				for(i = 0; i < H->m; i++){
