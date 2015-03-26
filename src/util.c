@@ -339,7 +339,7 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     va_start(arg, g);
     D = Subgraph2Dataset(g);
     L = va_arg(arg,int);
-    Param = va_arg(arg,gsl_matrix **);
+    Param = va_arg(arg,gsl_matrix *);
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
     
@@ -386,8 +386,8 @@ pos: position of the sample in the search space
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    if(HEURISTIC_ID == 1){ /* Harmony Search */
-       /* H = va_arg(arg,HarmonyMemory *);
+    if(HEURISTIC_ID == 1){ // Harmony Search 
+       // H = va_arg(arg,HarmonyMemory *);
         
         for(j = 0; j < H->n; j++){
             prob = gsl_rng_uniform(r);
