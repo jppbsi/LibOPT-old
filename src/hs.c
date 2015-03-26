@@ -342,6 +342,7 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 												gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
 										z+=5; /* we have six decision variables for each layer l: # hidden units, eta, lambda, alpha, eta_min and eta_max*/
 								}
+								fprintf(stderr,"\n---- H->n: %d, z: %d", H->n, z);
 						}
 
 						f = Evaluate(g, L, Param, n_epochs, batch_size); 
