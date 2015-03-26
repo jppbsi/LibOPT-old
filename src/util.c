@@ -137,8 +137,7 @@ void convert2upper(char *s){
 /* Restricted Boltzmann Machines */
 
 /* It executes a Bernoulli-Berboulli RBM and returns the reconstruction error of dataset in g
-Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size]
-int: number of parameters of the function
+Parameters: [g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size]
 g: dataset in the OPF format
 n_hidden_units: number of RBM hidden units
 eta: learning rate
@@ -309,6 +308,73 @@ double Gaussian_BernoulliDRBM(Subgraph *g, ...){
     InitializeBias4LabelUnits(m);
     reconstruction_error = DiscriminativeGaussianBernoulliRBMTrainingbyContrastiveDivergence(D, m, n_epochs, CD_iterations, batch_size);
     DestroyDRBM(&m);
+    DestroyDataset(&D);
+    va_end(arg);
+    
+    return reconstruction_error;
+}
+
+/*********************************/
+
+/* Deep Belief Networks */
+
+/* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g
+Parameters: [g, L, Param, n_epochs]
+g: dataset in the OPF format
+L: number of RBMs
+Param: a matrix containing the parameters of each stacked RBM. Each row of this matrix stands for the configuration of each RBM.
+n_epochs: numer of epochs for training
+
+n_hidden_units, eta, lambda, alpha, n_epochs, batch_size]
+
+n_hidden_units: number of RBM hidden units
+eta: learning rate
+lambda: penalty parameter
+alpha: weigth decay
+
+batch_size: mini-batch size
+eta_min: minimum bound for eta
+eta_max: maximum bound for eta */
+
+double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
+    va_list arg;
+    int n_hidden_units, n_epochs, batch_size, L;
+    double reconstruction_error;
+    DBN *d = NULL;
+    Dataset *D = NULL;
+    gsl_matrix *Param = NULL;
+    gsl_vector_view column;
+    
+    /* reading input parameters */
+    va_start(arg, g);
+    D = Subgraph2Dataset(g);
+    L = va_arg(arg,int);
+    Param = va_arg(arg,gsl_matrix **);
+    n_epochs = va_arg(arg,int);
+    
+    column = gsl_matrix_column(Param, 0); /* the first column stands for the number of hidden units */
+    d = CreateDBN(g->nfeats, &column.vector, g->nlabels, L);
+    
+    /*InitializeDBN(d);
+    
+    
+    
+    
+    m = CreateRBM(g->nfeats, n_hidden_units, 1);
+    m->eta = va_arg(arg,double);
+    m->lambda = va_arg(arg,double);
+    m->alpha = va_arg(arg,double);
+    n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
+    m->eta_min = va_arg(arg,double);
+    m->eta_max = va_arg(arg,double);
+    
+    InitializeWeights(m);
+    InitializeBias4HiddenUnits(m);
+    InitializeBias4VisibleUnitsWithRandomValues(m);
+    BernoulliDBNTrainingbyContrastiveDivergence(D, DBN *d, n_epochs, 1, batch_size);
+    reconstruction_error = BernoulliRBMTrainingbyContrastiveDivergence(D, m, n_epochs, 1, batch_size);*/
+    DestroyDBN(&d);
     DestroyDataset(&D);
     va_end(arg);
     
