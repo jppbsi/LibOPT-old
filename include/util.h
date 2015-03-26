@@ -31,6 +31,9 @@ double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence(Subgraph *g, 
 double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit */
 /*********************************/
 
+/* Deep Belief Networks */
+double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g */
+
 /* k-Means */
 double kMeans(Subgraph *g, ...); /* It executes the k-Means clustering algorithm */
 double kMeans4Optimization(Subgraph *g, ...); /* It executes the k-Means clustering algorithm for optimization purposes */

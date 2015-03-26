@@ -232,10 +232,11 @@ EvaluateFun: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(H){
-		int i, n_epochs, batch_size, n_gibbs_sampling;
+		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L;
 		double f;
 		gsl_vector_view row;
 		gsl_vector *sigma = NULL;
+		gsl_matrix *Param = NULL;
 		
 		Subgraph *g = NULL;
 		switch(FUNCTION_ID){
@@ -322,7 +323,39 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				    }
 				}
 			break;
-			
+			case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+				
+				Param = gsl_matrix_alloc(L, 6);		
+				for(i = 0; i < H->m; i++){
+				
+						/* setting Param matrix */
+						for(l = 0; l < L; l++){
+								z = 0;
+								while(z < H->n){
+										for(j = 0; j < 5; j++)
+												gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
+										z+=5; /* we have six decision variables for each layer l: # hidden units, eta, lambda, alpha, eta_min and eta_max*/
+								}
+						}
+
+						f = Evaluate(g, L, Param, n_epochs, batch_size); 
+						gsl_vector_set(H->fitness, i, f);
+						if(f < H->best_fitness){
+							H->best = i;
+							H->best_fitness = f;
+						}else if(f > H->worst_fitness){
+							H->worst = i;
+							H->worst_fitness = f;
+						}
+				}
+
+				gsl_matrix_free(Param);
+			break;
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateHarmonies.\n");	
 }
@@ -945,48 +978,49 @@ void runPSF_HS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     if(H){
         int t, i;
         double p;
-	gsl_vector *h = NULL;
+		gsl_vector *h = NULL;
                             
-        fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
-	EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
-	fprintf(stderr," OK.");
-	
-	/* creating rehearsal matrix (Equation 8) */
-	H->Rehearsal = (char **)malloc(H->m*sizeof(char *));
-	for(i = 0; i < H->m; i++)
-	    H->Rehearsal[i] = (char *)malloc(H->n*sizeof(char));
-	H->_HMCR = gsl_vector_calloc(H->n);
-	H->_PAR = gsl_vector_calloc(H->n);
-	H->op_type = (char *)malloc(H->n*sizeof(char));
-	    
-	/* At the first iteration, all decision variables come from random initialization */
-	for(i = 0; i < H->m; i++)
-	    for(t = 0; t < H->n; t++)
-		H->Rehearsal[i][t] = opt_RANDOM;
-	
-        for(t = 1; t <= H->max_iterations; t++){
-            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
-            va_copy(arg, argtmp);
-            
-	    if(t == 1){ /* in the first iteration, the predefined HMCR and PAR values are used */
-		gsl_vector_set_all(H->_HMCR, H->HMCR);
-		gsl_vector_set_all(H->_PAR, H->PAR);
-	    }
-            h = CreateNewHarmony4PSF_HS(H);
-	    UpdateIndividualHMCR_PAR(H);
-	    EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
-	    gsl_vector_free(h);
-    		            
-            fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
-            fprintf(stdout,"%d %lf\n", t, H->best_fitness);
-        }
-	
-	for(i = 0; i< H->m; i++)
-	    free(H->Rehearsal[i]);
-	free(H->Rehearsal);
-	free(H->op_type);
-        
-    }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
+		fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+		EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
+		fprintf(stderr," OK.");
+		
+		/* creating rehearsal matrix (Equation 8) */
+		H->Rehearsal = (char **)malloc(H->m*sizeof(char *));
+		for(i = 0; i < H->m; i++)
+			H->Rehearsal[i] = (char *)malloc(H->n*sizeof(char));
+			
+		H->_HMCR = gsl_vector_calloc(H->n);
+		H->_PAR = gsl_vector_calloc(H->n);
+		H->op_type = (char *)malloc(H->n*sizeof(char));
+			
+		/* At the first iteration, all decision variables come from random initialization */
+		for(i = 0; i < H->m; i++)				
+			for(t = 0; t < H->n; t++)
+				H->Rehearsal[i][t] = opt_RANDOM;
+		
+		for(t = 1; t <= H->max_iterations; t++){
+				fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
+				va_copy(arg, argtmp);
+				
+				if(t == 1){ /* in the first iteration, the predefined HMCR and PAR values are used */
+					gsl_vector_set_all(H->_HMCR, H->HMCR);
+					gsl_vector_set_all(H->_PAR, H->PAR);
+				}
+				
+				h = CreateNewHarmony4PSF_HS(H);
+				UpdateIndividualHMCR_PAR(H);
+				EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
+				gsl_vector_free(h);
+							
+				fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
+				fprintf(stdout,"%d %lf\n", t, H->best_fitness);
+		}
+		
+		for(i = 0; i< H->m; i++)
+				free(H->Rehearsal[i]);
+		free(H->Rehearsal);
+		free(H->op_type);
+	} else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
     va_end(arg);
 }
 

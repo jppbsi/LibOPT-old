@@ -319,26 +319,16 @@ double Gaussian_BernoulliDRBM(Subgraph *g, ...){
 /* Deep Belief Networks */
 
 /* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g
-Parameters: [g, L, Param, n_epochs]
+Parameters: [g, L, Param, n_epochs, batch_size = va_arg(arg,int);]
 g: dataset in the OPF format
 L: number of RBMs
 Param: a matrix containing the parameters of each stacked RBM. Each row of this matrix stands for the configuration of each RBM.
-n_epochs: numer of epochs for training
-
-n_hidden_units, eta, lambda, alpha, n_epochs, batch_size]
-
-n_hidden_units: number of RBM hidden units
-eta: learning rate
-lambda: penalty parameter
-alpha: weigth decay
-
-batch_size: mini-batch size
-eta_min: minimum bound for eta
-eta_max: maximum bound for eta */
+n_epochs: number of epochs for training
+batch_size: size of the mini-batch */
 
 double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     va_list arg;
-    int n_hidden_units, n_epochs, batch_size, L;
+    int n_hidden_units, n_epochs, batch_size, L, i;
     double reconstruction_error;
     DBN *d = NULL;
     Dataset *D = NULL;
@@ -351,29 +341,21 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     L = va_arg(arg,int);
     Param = va_arg(arg,gsl_matrix **);
     n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
     
     column = gsl_matrix_column(Param, 0); /* the first column stands for the number of hidden units */
     d = CreateDBN(g->nfeats, &column.vector, g->nlabels, L);
     
-    /*InitializeDBN(d);
+    InitializeDBN(d);
+    for(i = 0; i < d->n_layers; i++){
+        d->m[i]->eta = gsl_matrix_get(Param, i, 1);
+        d->m[i]->lambda = gsl_matrix_get(Param, i, 2);
+        d->m[i]->alpha = gsl_matrix_get(Param, i, 3);
+        d->m[i]->eta_min = gsl_matrix_get(Param, i, 4);
+        d->m[i]->eta_max = gsl_matrix_get(Param, i, 5);
+    }
     
-    
-    
-    
-    m = CreateRBM(g->nfeats, n_hidden_units, 1);
-    m->eta = va_arg(arg,double);
-    m->lambda = va_arg(arg,double);
-    m->alpha = va_arg(arg,double);
-    n_epochs = va_arg(arg,int);
-    batch_size = va_arg(arg,int);
-    m->eta_min = va_arg(arg,double);
-    m->eta_max = va_arg(arg,double);
-    
-    InitializeWeights(m);
-    InitializeBias4HiddenUnits(m);
-    InitializeBias4VisibleUnitsWithRandomValues(m);
-    BernoulliDBNTrainingbyContrastiveDivergence(D, DBN *d, n_epochs, 1, batch_size);
-    reconstruction_error = BernoulliRBMTrainingbyContrastiveDivergence(D, m, n_epochs, 1, batch_size);*/
+    reconstruction_error = BernoulliDBNTrainingbyContrastiveDivergence(D, d, n_epochs, 1, batch_size);
     DestroyDBN(&d);
     DestroyDataset(&D);
     va_end(arg);
