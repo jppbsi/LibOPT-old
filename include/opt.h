@@ -14,6 +14,7 @@ extern "C" {
 #define BBRBM_FPCD 5 /* Bernoulli-Bernoulli RBM trained by Fast Persistent Contrastive Divergence */
 #define BBDBN4RECONSTRUCTION 6 /* Bernoulli_Bernoulli DBN for data reconstruction */
 #define LINEAR_REGRESSION 7 /* Linear Regression */
+#define F1 8
 
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */

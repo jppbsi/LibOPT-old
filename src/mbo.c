@@ -1,4 +1,5 @@
 #include "mbo.h"
+#define LEADER 0
 
 /* It allocates the flock of birds 
 Parameters: [m, n]
@@ -212,6 +213,10 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 									
 			f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), n_epochs, batch_size, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 		
 		break;
+		case 8: /* f1 */ 
+			g = va_arg(arg, Subgraph *);
+			f = Evaluate(g, gsl_vector_get(x, 0));
+			break;
 	}
 	
 	return f;
@@ -220,13 +225,13 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 /* It evaluates a birdflock ---
 Parameters: [B]
 B: bird flock */
-void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
+void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	int i;
 	double f;
 	gsl_vector_view row;
-	va_list arg;
+	//va_list arg;
 
-	va_start(arg, FUNCTION_ID);
+	//va_start(arg, FUNCTION_ID);
 	
 	for (i = 0; i < B->m; i++){
 		row = gsl_matrix_row (B->x, i);
@@ -239,16 +244,16 @@ void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 /* It improves the lead bird by evaluating its neighbours ---
 Parameters: [B]
 B: bird flock */
-void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
+void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(B){
 		double f;
 		int i, j;		
 		gsl_matrix *nb_temp = NULL;
 		gsl_vector *temp = NULL, *nb_fitness_temp = NULL;
 		gsl_vector_view row_leader, row_nb;
-		va_list arg;
+		//va_list arg;
 		
-		va_start(arg, FUNCTION_ID);
+		//va_start(arg, FUNCTION_ID);
 		nb_temp = gsl_matrix_alloc(B->k, B->n);
 		nb_fitness_temp = gsl_vector_alloc(B->k);
 		temp = gsl_vector_alloc(B->k);
@@ -308,16 +313,16 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
 /* It improves the other birds by evaluating its neighbours ---
 Parameters: [B]
 B: bird flock */
-void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...){
+void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(B){
 		double f;
 		int i, j, size, t = 1;
 		gsl_vector_view row_nb, row_bird;
 		gsl_matrix *nb_temp = NULL;
 		gsl_vector *temp = NULL, *nb_fitness_temp = NULL;
-		va_list arg;
+		//va_list arg;
 
-		va_start(arg, FUNCTION_ID);
+		//va_start(arg, FUNCTION_ID);
 		nb_temp = gsl_matrix_alloc(B->k, B->n);
 		nb_fitness_temp = gsl_vector_alloc(B->k);
 		temp = gsl_vector_alloc(B->k);
@@ -549,3 +554,45 @@ void ReplaceLeader(BirdFlock *B){
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @ReplaceLeader.\n");
 }
+
+
+
+/* It executes the Migrating Birds Optimization for function minimization ---
+Parameters: [B, EvaluateFun, FUNCTION_ID, ... ]
+B: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...){
+	va_list arg, argtmp;
+		
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+	if(B){
+        int t, i;
+        double p;
+		gsl_vector *b = NULL;
+                            
+		fprintf(stderr,"\nInitial evaluation of the bird flock ...");
+		EvaluateBirdFlock(B, EvaluateFun, FUNCTION_ID, arg);
+		fprintf(stderr," OK.");
+		
+		ShowBirdFlock(B);
+		
+		for(i = 1; i <= B->max_iterations; i++){
+			fprintf(stderr,"\nRunning iteration %d/%d ... ", i, B->max_iterations);
+			va_copy(arg, argtmp);
+			
+			for(t = 1; t <= B->M; t++){
+				ImproveLeaderSolution(B, EvaluateFun, FUNCTION_ID, arg);
+				ImproveOtherSolutions(B, EvaluateFun, FUNCTION_ID, arg);
+			}
+			ReplaceLeader(B);
+			fprintf(stderr, "OK (minimum fitness value %lf)", gsl_vector_get(B->fitness, LEADER));
+			fprintf(stdout,"%d %lf\n", i, gsl_vector_get(B->fitness, LEADER));
+		}
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runMBO.\n");
+    va_end(arg);
+}
+

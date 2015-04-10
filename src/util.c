@@ -134,6 +134,10 @@ void convert2upper(char *s){
         s[i] = toupper(s[i]);
 }
 
+double f1(Subgraph *g, double x){
+	return x*x;
+}
+
 /* Restricted Boltzmann Machines */
 
 /* It executes a Bernoulli-Berboulli RBM and returns the reconstruction error of dataset in g

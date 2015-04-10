@@ -1,4 +1,4 @@
-/* This implementation is based on the paper "Migration Birds Optimization: A new metaheuristic approach and its performance on quadratic assignment problem". Notice some parameters' names do not follow the paper's nomenclature, since we opted to standardize them in LibOPT. */
+/* This implementation is based on the paper "Migrating Birds Optimization: A new metaheuristic approach and its performance on quadratic assignment problem". Notice some parameters' names do not follow the paper's nomenclature, since we opted to standardize them in LibOPT. */
 
 #ifndef MBO_H
 #define MBO_H
@@ -40,11 +40,12 @@ void InitializeBirdFlock(BirdFlock *B); /* It initializes the flock of birds */
 void ShowBirdFlock(BirdFlock *B); /* It displays the harmomy memory's content */
 void ShowBirdFlockInformation(BirdFlock *B); /* It displays the harmomy memory's main information */
 double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a bird solution */
-void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It evaluates a bird flock */
+void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a bird flock */
 
 /* Main Algoritm */
-void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It improves the lead bird by evaluating its neighbours */
-void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, ...); /* It improves the other birds by evaluating its neighbours */
+void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It improves the lead bird by evaluating its neighbours */
+void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It improves the other birds by evaluating its neighbours */
 void ReplaceLeader(BirdFlock *B); /* It replaces the leader bird by the next bird of V formation */
+void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the Migrating Birds Optimization for function minimization */
 
 #endif
