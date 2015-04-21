@@ -134,8 +134,23 @@ void convert2upper(char *s){
         s[i] = toupper(s[i]);
 }
 
-double f1(Subgraph *g, double x){
-	return x*x;
+double f1(Subgraph *g, ...){
+	va_list arg;	
+	double x, y, n, e;
+
+	va_start(arg, g);
+	x = va_arg(arg,double);
+	y = va_arg(arg,double);
+/*
+    n = -1*((x-M_PI)*(x-M_PI)+(y-M_PI)*(y-M_PI));
+	//fprintf(stderr, "%lf", n);
+	e = exp(n);
+
+	va_end(arg);
+
+	return (-1*cos(x)*cos(y)*e);
+*/
+	return ((x+2*y-7)*(x+2*y-7))+((2*x+y-5)*(2*x+y-5));
 }
 
 /* Restricted Boltzmann Machines */
