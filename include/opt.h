@@ -20,6 +20,7 @@ extern "C" {
 #define BA 2 /* Bat Algorithm */
 #define GP 3 /* Genetic Programming */
 #define MBO 4 /* Migrating Birds Optimization */
+#define GRADIENT_DESCENT 5 /* Gradient Descent */
     
 #include <stdio.h>
 #include <stdlib.h>
