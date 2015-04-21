@@ -233,7 +233,7 @@ FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if(H){
 		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L;
-		double f;
+		double f, x, y;
 		gsl_vector_view row;
 		gsl_vector *sigma = NULL;
 		gsl_matrix *Param = NULL;
@@ -356,6 +356,24 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 
 				gsl_matrix_free(Param);
 			break;
+			case 8:
+				g = va_arg(arg, Subgraph *);
+				x = va_arg(arg, double);
+				y = va_arg(arg, double);
+						
+				for(i = 0; i < H->m; i++){
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1)); 
+				    gsl_vector_set(H->fitness, i, f);
+				    if(f < H->best_fitness){
+					H->best = i;
+					H->best_fitness = f;
+				    }else if(f > H->worst_fitness){
+					    H->worst = i;
+					    H->worst_fitness = f;
+				    }
+				}
+			
+			break;
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateHarmonies.\n");	
 }
@@ -398,6 +416,9 @@ gsl_vector *CreateNewHarmony(HarmonyMemory *H){
 			}
 		}
 		gsl_rng_free(r);
+fprintf(stderr,"\n");
+for(i = 0; i < h->size; i++)
+fprintf(stderr,"h[%d]: %lf	", i, gsl_vector_get(h, i));
 		
 		return h;
 	}else{
@@ -591,7 +612,7 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 	if((H) && (h)){
 		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L;
 		Subgraph *g = NULL;
-		double f;
+		double f, x, y;
 		gsl_vector *sigma = NULL;
 		gsl_matrix *Param = NULL;
 		
@@ -746,6 +767,28 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 
 				gsl_matrix_free(Param);
 			break;
+			case 8: /* F1 */
+				g = va_arg(arg, Subgraph *);
+				x = va_arg(arg, double);
+				y = va_arg(arg, double);
+							
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1)); fprintf(stderr,"	-> f: %lf", f);
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+				break;
 		}
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");
 }

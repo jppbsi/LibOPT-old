@@ -18,6 +18,8 @@ typedef struct _BirdFlock{
     int X; /* number of neighbor solutions to be shared with the next solution */
     int M; /* number of tours, i.e., the number of iterations for the leader */
 	int leftSide; /* a flag to know what bird will be changed */
+	int best; /* index of best bird fitness */
+	double best_fitness; /* value of best fitness */
     gsl_vector **left; /* indeces of the birds that are on the left of leader bird */
     gsl_vector **right; /* indeces of the birds that are on the right of leader bird */
     gsl_matrix *x; /* possible solutions (birds) */

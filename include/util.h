@@ -41,4 +41,6 @@ double kMeans4Optimization(Subgraph *g, ...); /* It executes the k-Means cluster
 /* Hybdrid */
 void GenerateRandomSolution(gsl_vector *x, int HEURISTIC_ID, int pos, ...); /* It generates a new solution around a position */
 
+double f1(Subgraph *g, ...);
+
 #endif
