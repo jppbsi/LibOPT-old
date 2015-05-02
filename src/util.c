@@ -136,11 +136,12 @@ void convert2upper(char *s){
 
 double f1(Subgraph *g, ...){
 	va_list arg;	
-	double x, y, n, e;
+	double x, y, n, e, output;
 
 	va_start(arg, g);
 	x = va_arg(arg,double);
 	y = va_arg(arg,double);
+	
 /*
     n = -1*((x-M_PI)*(x-M_PI)+(y-M_PI)*(y-M_PI));
 	//fprintf(stderr, "%lf", n);
@@ -150,7 +151,9 @@ double f1(Subgraph *g, ...){
 
 	return (-1*cos(x)*cos(y)*e);
 */
-	return ((x+2*y-7)*(x+2*y-7))+((2*x+y-5)*(2*x+y-5));
+	output = pow(x+2*y-7, 2)+pow(2*x+y-5, 2);
+	
+	return output;
 }
 
 /* Restricted Boltzmann Machines */

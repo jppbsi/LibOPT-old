@@ -118,48 +118,50 @@ Parameters: [B]
 B: bird flock */
 void InitializeBirdFlock(BirdFlock *B){
 	if(B){
-		int i, j, jj, size;
-		double p;
-		const gsl_rng_type *T;
-		gsl_rng *r;
-		gsl_vector_view row;
-
-		srand(time(NULL));
-		T = gsl_rng_default;
-		r = gsl_rng_alloc(T);
-		gsl_rng_set(r, random_seed());
-
-		size = ceil((B->m-1)/(double)2);
-		fprintf(stderr, "Size = %d", size);
-
-		/* it generates random solutions for each bird */
-		for(i=0; i< B->m; i++){
-			for(j=0; j< B->n; j++){
-				p = (gsl_vector_get(B->UB, j)-gsl_vector_get(B->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(B->LB, j);
-				gsl_matrix_set(B->x, i, j, p);
+		if (B->m < 3) fprintf(stderr, "\nWe need at least 3 birds @InitializeBirdFlock.\n");
+		else{
+			int i, j, jj, size;
+			double p;
+			const gsl_rng_type *T;
+			gsl_rng *r;
+			gsl_vector_view row;
+	
+			srand(time(NULL));
+			T = gsl_rng_default;
+			r = gsl_rng_alloc(T);
+			gsl_rng_set(r, random_seed());
+	
+			size = ceil((B->m-1)/2.0);
+			
+			/* it generates random solutions for each bird */
+			for(i=0; i< B->m; i++){
+				for(j=0; j< B->n; j++){
+					p = (gsl_vector_get(B->UB, j)-gsl_vector_get(B->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(B->LB, j);
+					gsl_matrix_set(B->x, i, j, p);
+				}
 			}
+			
+			/* it defines the left side of V formation */
+			for (i = 1; i <= size; i++){
+				row = gsl_matrix_row(B->x, i);
+				B->left[i-1] = &row.vector;
+				fprintf(stderr,"\n Bird left %d", i);
+				for (jj = 0; jj < B->n; jj++)
+					fprintf(stderr, " %lf ", gsl_vector_get(B->left[i-1], jj));
+			}
+	
+			/* it defines the right side of V formation */
+			j = 0;
+			for (i = size+1; i < B->m; i++){
+				row = gsl_matrix_row(B->x, i);
+				B->right[j++] = &row.vector;
+				fprintf(stderr, "\nBird Right: %d \n", i);
+				for (jj = 0; jj < B->n; jj++)
+					fprintf(stderr, "%lf ", gsl_vector_get(B->right[j-1], jj));
+			}
+	
+			gsl_rng_free(r);
 		}
-		
-		/* it defines the left side of V formation */
-		for (i = 1; i <= size; i++){
-			row = gsl_matrix_row(B->x, i);
-			B->left[i-1] = &row.vector;/*
-			fprintf(stderr,"\n Bird left %d", i-1);
-			for (jj = 0; jj < B->n; jj++)
-				fprintf(stderr, " %lf ", gsl_vector_get(B->left[i-1], jj));*/
-		}
-
-		/* it defines the right side of V formation */
-		j = 0;
-		for (i = size+1; i < B->m; i++){
-			row = gsl_matrix_row(B->x, i);
-			B->right[j++] = &row.vector;/*
-			fprintf(stderr, "\nBird Right: %d \n", i);
-			for (jj = 0; jj < B->n; jj++)
-				fprintf(stderr, "%lf ", gsl_vector_get(B->right[j-1], jj));*/
-		}
-
-		gsl_rng_free(r); 
 	}
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @InitializeBirdFlock.\n");
@@ -213,7 +215,7 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 	double f;
 	int n_epochs, batch_size;
 	Subgraph *g = NULL;
-	
+
 	switch(FUNCTION_ID){
 		case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
 			g = va_arg(arg, Subgraph *);
@@ -225,7 +227,7 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 
 		case 8: /* f1 */ 
 			g = va_arg(arg, Subgraph *);
-			f = Evaluate(g, gsl_vector_get(x, 0));
+			f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
 			break;
 	}
 	
@@ -239,9 +241,6 @@ void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list a
 	int i;
 	double f;
 	gsl_vector_view row;
-	//va_list arg;
-
-	//va_start(arg, FUNCTION_ID);
 	
 	for (i = 0; i < B->m; i++){
 		row = gsl_matrix_row (B->x, i);
@@ -501,8 +500,6 @@ void ReplaceLeader(BirdFlock *B){
 		fprintf(stderr, "\nThere is no bird flock allocated @ReplaceLeader.\n");
 }
 
-
-
 /* It executes the Migrating Birds Optimization for function minimization ---
 Parameters: [B, EvaluateFun, FUNCTION_ID, ... ]
 B: search space
@@ -530,13 +527,12 @@ void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...){
 			va_copy(arg, argtmp);
 			
 			for(t = 1; t <= B->M; t++){
+				fprintf(stderr,"\n	-> tour %d/%d", t, B->M);
 				ImproveLeaderSolution(B, EvaluateFun, FUNCTION_ID, arg);
 				ImproveOtherSolutions(B, EvaluateFun, FUNCTION_ID, arg);
 			}
-			
-			ShowBirdFlock(B);
 
-			fprintf(stderr, "OK (minimum fitness value %d: %lf)", B->best, B->best_fitness);
+			fprintf(stderr, "\nOK (minimum fitness value %d: %lf)", B->best, B->best_fitness);
 			fprintf(stdout,"%d %lf\n", B->best, B->best_fitness);
 			
 			ShowBirdFlock(B);
