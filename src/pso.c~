@@ -198,7 +198,7 @@ EvaluateFun: pointer to the function used to evaluate particles
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
-    int i, j, n_epochs, batch_size;
+    int i, n_epochs, batch_size;
     double f;
     Subgraph *g = NULL;
     

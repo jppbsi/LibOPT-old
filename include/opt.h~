@@ -23,7 +23,6 @@ extern "C" {
 #define GP 3 /* Genetic Programming */
 #define MBO 4 /* Migrating Birds Optimization */
 #define GRADIENT_DESCENT 5 /* Gradient Descent */
-#define PSO 6 /* Particle Swarm Optimization */
     
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +53,6 @@ typedef double (*prtFun)(Subgraph *, ...);
 #include "gp.h"
 #include "mbo.h"
 #include "numerical.h"
-#include "pso.h"
 #include "util.h"
 
 #ifdef __cplusplus
