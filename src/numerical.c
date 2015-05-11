@@ -37,6 +37,26 @@ void GradientDescent(gsl_matrix *X, gsl_vector *Y, double alpha, int FUNCTION_ID
 				}
 				fprintf(stderr,"\nMSE over the training set %.7lf", error);
 			break;
+			case 11: /* Logistic Regression*/
+				w = va_arg(arg, gsl_vector *);
+				w_tmp = gsl_vector_calloc(w->size);
+				gsl_vector_memcpy(w_tmp, w);
+				i = 1;
+				while(fabs(error-old_error) > 0.000001){
+					old_error = error;
+				
+					for(j = 0; j < X->size2; j++){
+						tmp = gsl_vector_get(w_tmp, j) - (alpha/X->size1)*Logistic_RegressionPartialDerivative(X, w_tmp, Y, j); //tmp = w_j - alpha*1/m*sum(h(x_i)-y_i)x_i^j
+						gsl_vector_set(w, j, tmp);
+					}
+					
+					gsl_vector_memcpy(w_tmp, w);
+					error = Logistic_Regression(X, w, Y);
+					fprintf(stderr,"\nIteration: %d -> cost function value: %lf", i, error);
+					i++;
+				}
+				fprintf(stderr,"\nError over the training set %.7lf", error);
+			break;
 		}
 	}else fprintf(stderr,"\n.There is no X and/or Y allocated @GradientDescent\n");
     
