@@ -74,5 +74,10 @@ $(OBJ)/pso.o: $(SRC)/pso.c
     -L $(OPF_DIR)/lib -lOPF -L $(LIBDEEP_DIR)/lib -L /usr/local/lib -lDeep -lgsl -lgslcblas `pkg-config --cflags --libs opencv` `pkg-config --cflags --libs gsl` \
     -c $(SRC)/pso.c -o $(OBJ)/pso.o
 
+$(OBJ)/ffa.o: $(SRC)/ffa.c
+	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
+    -L $(OPF_DIR)/lib -lOPF -L $(LIBDEEP_DIR)/lib -L /usr/local/lib -lDeep -lgsl -lgslcblas `pkg-config --cflags --libs opencv` `pkg-config --cflags --libs gsl` \
+    -c $(SRC)/ffa.c -o $(OBJ)/ffa.o
+
 clean:
 	rm -f $(LIB)/lib*.a; rm -f $(OBJ)/*.o

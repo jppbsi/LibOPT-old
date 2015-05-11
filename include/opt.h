@@ -25,6 +25,7 @@ extern "C" {
 #define MBO 4 /* Migrating Birds Optimization */
 #define GRADIENT_DESCENT 5 /* Gradient Descent */
 #define PSO 6 /* Particle Swarm Optimization */
+#define FFA 7 /* Firefly Algorithm */
     
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,7 @@ typedef double (*prtFun)(Subgraph *, ...);
 #include "mbo.h"
 #include "numerical.h"
 #include "pso.h"
+#include "ffa.h"
 #include "util.h"
 
 #ifdef __cplusplus
