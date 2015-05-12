@@ -11,30 +11,30 @@ FireflySwarm *CreateFireflySwarm(int m, int n){
 		return NULL;
 	}
 	
-	FireflySwarm *S = NULL;
+	FireflySwarm *F = NULL;
 	
-	S = (FireflySwarm *)malloc(sizeof(FireflySwarm));
-	S->m = m;
-	S->n = n;
+	F = (FireflySwarm *)malloc(sizeof(FireflySwarm));
+	F->m = m;
+	F->n = n;
 	
-	S->x = gsl_matrix_alloc(S->m, S->n);
-	S->fitness = gsl_vector_calloc(S->m);
-	S->LB = gsl_vector_alloc(S->n);
-	S->UB = gsl_vector_alloc(S->n);
+	F->x = gsl_matrix_alloc(F->m, F->n);
+	F->fitness = gsl_vector_calloc(F->m);
+	F->LB = gsl_vector_alloc(F->n);
+	F->UB = gsl_vector_alloc(F->n);
 	
-	S->gamma = 0;
-	S->beta_0 = 0;
-	S->alpha = 0;
-	S->best = 0;
-	S->max_iterations = 0;
-	S->best_fitness = DBL_MAX;
+	F->gamma = 0;
+	F->beta_0 = 0;
+	F->alpha = 0;
+	F->best = 0;
+	F->max_iterations = 0;
+	F->best_fitness = DBL_MAX;
 }
 
 /* It deallocates the FireflySwarm ---
-Parameters: [S]
-S: FireflySwarm */
-void DestroyFireflySwarm(FireflySwarm **S){
-	FireflySwarm *aux = *S;
+Parameters: [F]
+F: FireflySwarm */
+void DestroyFireflySwarm(FireflySwarm **F){
+	FireflySwarm *aux = *F;
 	
 	if(aux){
 		gsl_matrix_free(aux->x);
@@ -52,7 +52,7 @@ fileName: name of the file that stores the swarm's configuration */
 FireflySwarm *ReadFireflySwarmFromFile(char *fileName){
 	FILE *fp = NULL;
 	int m, n;
-    FireflySwarm *S = NULL;
+    FireflySwarm *F = NULL;
 	double LB, UB;
     char c;
         
@@ -63,59 +63,59 @@ FireflySwarm *ReadFireflySwarmFromFile(char *fileName){
     }
         
     fscanf(fp, "%d %d", &m, &n);
-    S = CreateFireflySwarm(m, n);
-	fscanf(fp, "%d", &(S->max_iterations));
+    F = CreateFireflySwarm(m, n);
+	fscanf(fp, "%d", &(F->max_iterations));
 	WaiveComment(fp);
 	
-	fscanf(fp, "%lf %lf %lf", &(S->gamma), &(S->beta_0), &(S->alpha));
+	fscanf(fp, "%lf %lf %lf", &(F->gamma), &(F->beta_0), &(F->alpha));
 	WaiveComment(fp);
 		
-    for(n = 0; n < S->n; n++){
+    for(n = 0; n < F->n; n++){
         fscanf(fp, "%lf %lf", &LB, &UB);
-        gsl_vector_set(S->LB, n, LB);
-        gsl_vector_set(S->UB, n, UB);
+        gsl_vector_set(F->LB, n, LB);
+        gsl_vector_set(F->UB, n, UB);
         WaiveComment(fp);
     }
     fclose(fp);
         
-    return S;
+    return F;
 }
 
 /* It copies an entire search space
-Parameters: [S]
-S: search space to be copied */
-FireflySwarm *CopyFireflySwarm(FireflySwarm *S){
+Parameters: [F]
+F: search space to be copied */
+FireflySwarm *CopyFireflySwarm(FireflySwarm *F){
     FireflySwarm *cpy = NULL;
     
-    if(S){
-        cpy = CreateFireflySwarm(S->m, S->n);
+    if(F){
+        cpy = CreateFireflySwarm(F->m, F->n);
     
-        cpy->max_iterations = S->max_iterations;
-        cpy->best = S->best;
-        cpy->best_fitness = S->best_fitness;
-        cpy->gamma = S->gamma;
-        cpy->beta_0 = S->beta_0;
-        cpy->alpha = S->alpha;
-        gsl_matrix_memcpy(cpy->x, S->x);
-        gsl_vector_memcpy(cpy->fitness, S->fitness);
-        gsl_vector_memcpy(cpy->LB, S->LB);
-        gsl_vector_memcpy(cpy->UB, S->UB);
+        cpy->max_iterations = F->max_iterations;
+        cpy->best = F->best;
+        cpy->best_fitness = F->best_fitness;
+        cpy->gamma = F->gamma;
+        cpy->beta_0 = F->beta_0;
+        cpy->alpha = F->alpha;
+        gsl_matrix_memcpy(cpy->x, F->x);
+        gsl_vector_memcpy(cpy->fitness, F->fitness);
+        gsl_vector_memcpy(cpy->LB, F->LB);
+        gsl_vector_memcpy(cpy->UB, F->UB);
         
         return cpy;
     }else fprintf(stderr,"\nThere is no search space allocated @CopyFireflySwarm.\n");		
 }
 
 /* It checks the limits of each decision variable ---
-Parameters: [S]
-S: search space */
-void CheckFireflySwarmLimits(FireflySwarm *S){
+Parameters: [F]
+F: search space */
+void CheckFireflySwarmLimits(FireflySwarm *F){
 	int i, j;
 	
-	if(S){
-		for(i = 0; i < S->m; i++){
-			for(j = 0; j < S->n; j++){
-				if(gsl_matrix_get(S->x, i, j) < gsl_vector_get(S->LB, j)) gsl_matrix_set(S->x, i, j, gsl_vector_get(S->LB, j));
-				else if (gsl_matrix_get(S->x, i, j) > gsl_vector_get(S->UB, j)) gsl_matrix_set(S->x, i, j, gsl_vector_get(S->UB, j));
+	if(F){
+		for(i = 0; i < F->m; i++){
+			for(j = 0; j < F->n; j++){
+				if(gsl_matrix_get(F->x, i, j) < gsl_vector_get(F->LB, j)) gsl_matrix_set(F->x, i, j, gsl_vector_get(F->LB, j));
+				else if (gsl_matrix_get(F->x, i, j) > gsl_vector_get(F->UB, j)) gsl_matrix_set(F->x, i, j, gsl_vector_get(F->UB, j));
 			}
 		}
 		
@@ -123,10 +123,10 @@ void CheckFireflySwarmLimits(FireflySwarm *S){
 }
 
 /* It initializes the search space ---
-Parameters: [S]
-S: search space */
-void InitializeFireflySwarm(FireflySwarm *S){
-	if(S){
+Parameters: [F]
+F: search space */
+void InitializeFireflySwarm(FireflySwarm *F){
+	if(F){
 		int i, j;
 		const gsl_rng_type *T = NULL;
 		gsl_rng *r = NULL;
@@ -138,12 +138,12 @@ void InitializeFireflySwarm(FireflySwarm *S){
 		r = gsl_rng_alloc(T);
 		gsl_rng_set(r, rand());
 		
-		for(i = 0; i < S->m; i++){
-			for(j = 0; j < S->n; j++){
-                p = (gsl_vector_get(S->UB, j)-gsl_vector_get(S->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(S->LB, j);
-				gsl_matrix_set(S->x, i, j, p);
+		for(i = 0; i < F->m; i++){
+			for(j = 0; j < F->n; j++){
+                p = (gsl_vector_get(F->UB, j)-gsl_vector_get(F->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(F->LB, j);
+				gsl_matrix_set(F->x, i, j, p);
 			}
-			gsl_vector_set(S->fitness, i, DBL_MAX);
+			gsl_vector_set(F->fitness, i, DBL_MAX);
 		}
 		
 		gsl_rng_free(r);
@@ -153,44 +153,44 @@ void InitializeFireflySwarm(FireflySwarm *S){
 }
 
 /* It displays the swarm's content ---
-Parameters: [S]
-S: swarm */
-void ShowFireflySwarm(FireflySwarm *S){
-	if(S){
+Parameters: [F]
+F: search space */
+void ShowFireflySwarm(FireflySwarm *F){
+	if(F){
 		int i, j;
 	
-		for (i = 0; i < S->m; i++){
-			fprintf(stderr,"\nParticle %d: ",i);
-			for (j = 0; j < S->n; j++){
-				fprintf(stderr,"Position %d: %f  ", j+1, gsl_matrix_get(S->x, i, j));
+		for (i = 0; i < F->m; i++){
+			fprintf(stderr,"\nFirefly %d: ",i);
+			for (j = 0; j < F->n; j++){
+				fprintf(stderr,"Position %d: %f  ", j+1, gsl_matrix_get(F->x, i, j));
 		    }
-			fprintf(stderr,"| %lf  ", gsl_vector_get(S->fitness, i));
+			fprintf(stderr,"| %lf  ", gsl_vector_get(F->fitness, i));
 		}
-	}else fprintf(stderr,"\nThere is no swarm allocated @ShowSwarm.\n");	
+	}else fprintf(stderr,"\nThere is no swarm allocated @ShowFireflySwarm.\n");	
 }
 
 /* It displays the search space's main information ---
-Parameters: [S]
-S: search space */
-void ShowFireflySwarmInformation(FireflySwarm *S){
+Parameters: [F]
+F: search space */
+void ShowFireflySwarmInformation(FireflySwarm *F){
         int i;
         
-        if(S){
+        if(F){
 		fprintf(stderr,"\n Displaying firefly information ---");
-		fprintf(stderr,"\nNumber of fireflies: %d\nDimensionality: %d\nMaximum number of iterations: %d", S->m, S->n, S->max_iterations);
-		fprintf(stderr,"\ngamma: %lf   beta_0: %lf   alpha: %lf", S->gamma, S->beta_0, S->alpha);
-		for(i = 0; i < S->n; i++)
-		    fprintf(stderr, "\nVariable %d: [%f,%f]", i+1, gsl_vector_get(S->LB, i), gsl_vector_get(S->UB, i));
+		fprintf(stderr,"\nNumber of fireflies: %d\nDimensionality: %d\nMaximum number of iterations: %d", F->m, F->n, F->max_iterations);
+		fprintf(stderr,"\ngamma: %lf   beta_0: %lf   alpha: %lf", F->gamma, F->beta_0, F->alpha);
+		for(i = 0; i < F->n; i++)
+		    fprintf(stderr, "\nVariable %d: [%f,%f]", i+1, gsl_vector_get(F->LB, i), gsl_vector_get(F->UB, i));
 		fprintf(stderr,"\n---\n");
 	}else fprintf(stderr,"\nThere is no search space allocated @ShowFireflySwarmInformation.\n");		
 }
 
 /* It evaluates all fireflies
-Parameters: [S, EvaluateFun, FUNCTION_ID]
-S: search space
+Parameters: [F, EvaluateFun, FUNCTION_ID]
+F: search space
 EvaluateFun: pointer to the function used to evaluate fireflies
 FUNCTION_ID: id of the function registered at opt.h */
-void EvaluateFireflySwarm(FireflySwarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
     int i, j, n_epochs, batch_size;
     double f;
@@ -206,14 +206,14 @@ void EvaluateFireflySwarm(FireflySwarm *S, prtFun Evaluate, int FUNCTION_ID, va_
             fprintf(stderr,"\nn_epochs: %d", n_epochs);
             fprintf(stderr,"\nbatch_size: %d", batch_size);
             
-            for(i = 0; i < S->m; i++){
-                f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), n_epochs, batch_size); 
-                if(f < gsl_vector_get(S->fitness, i)){
-                    gsl_vector_set(S->fitness, i, f);
+            for(i = 0; i < F->m; i++){
+                f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), n_epochs, batch_size); 
+                if(f < gsl_vector_get(F->fitness, i)){
+                    gsl_vector_set(F->fitness, i, f);
                 }
-                if(gsl_vector_get(S->fitness, i) < S->best_fitness){
-                    S->best = i;
-                    S->best_fitness = f;
+                if(gsl_vector_get(F->fitness, i) < F->best_fitness){
+                    F->best = i;
+                    F->best_fitness = f;
                 }
             }
         break;
@@ -221,12 +221,13 @@ void EvaluateFireflySwarm(FireflySwarm *S, prtFun Evaluate, int FUNCTION_ID, va_
 }
 
 /* It updates the position of each firefly ---
-Parameters: [S, firefly_id]
-S: search space
+Parameters: [F, firefly_id]
+F: search space
 firefly_id: firefly's index */ 
-inline void UpdateFireflyPosition(FireflySwarm *S, int firefly_id){
-    double dist, rand;
+inline void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
+    double beta, tmp, dist, aux;
     int i, j;
+    gsl_vector_view row1, row2;
     const gsl_rng_type *T = NULL;
     gsl_rng *r = NULL;
 
@@ -236,14 +237,16 @@ inline void UpdateFireflyPosition(FireflySwarm *S, int firefly_id){
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    for(i = 0; i < S->m; i++){
-        if(gsl_vector_get(S->fitness, j) > gsl_vector_get(S->fitness, i)){ /* It moves firefly firefly_id towards i */
-            dist = opf_EuclDist(gsl_matrix_get(S->x, i), gsl_matrix_get(S->x, firefly_id), S->n);
-            beta = S->beta_0*exp(-S->gamma*dist); /* It obtains attractiveness by Equation 2 */
-            rand = gsl_rng_uniform(r);
-            for(j = 0; j < S->n; j++){
-                tmp = gsl_matrix_get(S->x, firefly_id, j) + beta * (gsl_matrix_get(S->x, i, j) - gsl_matrix_get(S->x, firefly_id, j) + S->alpha * (rand-0.5));
-                gsl_matrix_set(S->x, firefly_id, j, tmp);
+    for(i = 0; i < F->m; i++){
+        if(gsl_vector_get(F->fitness, firefly_id) > gsl_vector_get(F->fitness, i)){ /* It moves firefly firefly_id towards i */
+            row1 = gsl_matrix_row(F->x, i);
+            row2 = gsl_matrix_row(F->x, firefly_id);
+            dist = opt_EuclideanDistance(&row1.vector, &row2.vector);
+            beta = F->beta_0*exp(-F->gamma*dist); /* It obtains attractiveness by Equation 2 */
+            aux = gsl_rng_uniform(r);
+            for(j = 0; j < F->n; j++){
+                tmp = gsl_matrix_get(F->x, firefly_id, j) + beta * (gsl_matrix_get(F->x, i, j) - gsl_matrix_get(F->x, firefly_id, j) + F->alpha * (aux-0.5));
+                gsl_matrix_set(F->x, firefly_id, j, tmp);
             }
         }
     }
@@ -251,11 +254,12 @@ inline void UpdateFireflyPosition(FireflySwarm *S, int firefly_id){
 }
 
 /* It updates the position of the best firefly ---
-Parameters: [S, firefly_id]
-S: search space
+Parameters: [F, firefly_id]
+F: search space
 best_firefly_id: best firefly's index */ 
-inline void UpdateBestFireflyPosition(FireflySwarm *S, int best_firefly_id){
+inline void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id){
     int j;
+    double aux, tmp;
     const gsl_rng_type *T = NULL;
     gsl_rng *r = NULL;
 
@@ -265,60 +269,47 @@ inline void UpdateBestFireflyPosition(FireflySwarm *S, int best_firefly_id){
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    rand = gsl_rng_uniform(r);
-    for(j = 0; j < S->n; j++){
-        tmp = gsl_matrix_get(S->x, best_firefly_id, j) + S->alpha * (rand-0.5));
-        gsl_matrix_set(S->x, best_firefly_id, j, tmp);
+    aux = gsl_rng_uniform(r);
+    for(j = 0; j < F->n; j++){
+        tmp = gsl_matrix_get(F->x, best_firefly_id, j) + F->alpha * (aux-0.5);
+        gsl_matrix_set(F->x, best_firefly_id, j, tmp);
     }
     
 }
 
 /* It executes the Firefly Algorithm for function minimization ---
-Parameters: [S, EvaluateFun, FUNCTION_ID, ... ]
-S: search space
+Parameters: [F, EvaluateFun, FUNCTION_ID, ... ]
+F: search space
 Evaluate: pointer to the function used to evaluate fireflies
 FUNCTION_ID: id of the function registered at opt.h
 ... other parameters of the desired function */
-void runFFA(FireflySwarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
+void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
     va_list arg, argtmp;
-    const gsl_rng_type *T = NULL;
-    gsl_rng *r;
-    double p;
 		
     va_start(arg, FUNCTION_ID);
     va_copy(argtmp, arg);
-    if(S){
+    if(F){
         int t, i;
-        double beta, prob;
-        const gsl_rng_type *T = NULL;
-        gsl_rng *r = NULL;
-                    
-        srand(time(NULL));
-        gsl_rng_env_setup();
-        T = gsl_rng_default;
-        r = gsl_rng_alloc(T);
-        gsl_rng_set(r, rand());
         
-        EvaluateFireflySwarm(S, Evaluate, FUNCTION_ID, arg);
+        EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg);
         
-        for(t = 1; t <= S->max_iterations; t++){
-            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
+        for(t = 1; t <= F->max_iterations; t++){
+            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, F->max_iterations);
             va_copy(arg, argtmp);
             
-            for(i = 0; i < S->m; i++)
-                UpdateFireflyPosition(S, i); /* It updates the position of each firefly */
+            for(i = 0; i < F->m; i++)
+                UpdateFireflyPosition(F, i); /* It updates the position of each firefly */
             
-            UpdateBestFireflyPosition(S, S->best);
+            UpdateBestFireflyPosition(F, F->best);
             
-            CheckFireflySwarnLimits(S);
+            CheckFireflySwarnLimits(F);
 
-            EvaluateFireflySwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
+            EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
                         
-            fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
-            fprintf(stderr,"%d %lf\n", t, S->best_fitness);
+            fprintf(stderr, "OK (minimum fitness value %lf)", F->best_fitness);
+            fprintf(stderr,"%d %lf\n", t, F->best_fitness);
         }
-        gsl_rng_free(r);
         
-    }else fprintf(stderr,"\nThere is no search space allocated @runPSO.\n");
+    }else fprintf(stderr,"\nThere is no search space allocated @runGA.\n");
     va_end(arg);
 }

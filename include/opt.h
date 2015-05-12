@@ -26,6 +26,7 @@ extern "C" {
 #define GRADIENT_DESCENT 5 /* Gradient Descent */
 #define PSO 6 /* Particle Swarm Optimization */
 #define FFA 7 /* Firefly Algorithm */
+#define GA 8 /* Genetic Algorithm */
     
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,6 +59,7 @@ typedef double (*prtFun)(Subgraph *, ...);
 #include "numerical.h"
 #include "pso.h"
 #include "ffa.h"
+#include "ga.h"
 #include "util.h"
 
 #ifdef __cplusplus

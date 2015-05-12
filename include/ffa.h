@@ -20,20 +20,20 @@ typedef struct _FireflySwarm{
 
 /* Allocation and deallocation */
 FireflySwarm *CreateFireflySwarm(int m, int n); /*It allocates the search space */
-void DestroyFireflySwarm(FireflySwarm **S); /* It deallocates the search space */
-FireflySwarm *ReadFireflySwarmFromFile(char *fileName); /* Tt creates a search space specified in a file */
-FireflySwarm *CopyFireflySwarm(FireflySwarm *S); /* It copies an entire search space */
+void DestroyFireflySwarm(FireflySwarm **F); /* It deallocates the search space */
+FireflySwarm *ReadFireflySwarmFromFile(char *fileName); /* It creates a search space specified in a file */
+FireflySwarm *CopyFireflySwarm(FireflySwarm *F); /* It copies an entire search space */
 
 /* Auxiliary functions */
-void CheckFireflySwarmLimits(FireflySwarm *S); /* it checks the limits of each decision variable */
-void InitializeFireflySwarm(FireflySwarm *S); /* it initializes the search space */
-void ShowFireflySwarm(FireflySwarm *S); /* It displays the search space's content */
-void ShowFireflySwarmInformation(FireflySwarm *S); /* It displays the search space's main information */
+void CheckFireflySwarmLimits(FireflySwarm *F); /* it checks the limits of each decision variable */
+void InitializeFireflySwarm(FireflySwarm *F); /* it initializes the search space */
+void ShowFireflySwarm(FireflySwarm *F); /* It displays the search space's content */
+void ShowFireflySwarmInformation(FireflySwarm *F); /* It displays the search space's main information */
 
 /* Main algorithm */
-inline void UpdateFireflyPosition(FireflySwarm *S, int firefly_id); /* It updates the position of each firefly */
-inline void UpdateBestFireflyPosition(FireflySwarm *S, int best_firefly_id); /* It updates the position of the best firefly */
-void EvaluateFireflySwarm(FireflySwarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all fireflies */
-void runFFA(FireflySwarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Firefly Algorithm for function minimization */
+inline void UpdateFireflyPosition(FireflySwarm *F, int firefly_id); /* It updates the position of each firefly */
+inline void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id); /* It updates the position of the best firefly */
+void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all fireflies */
+void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Firefly Algorithm for function minimization */
 
 #endif
