@@ -41,7 +41,7 @@ void GradientDescent(gsl_matrix *X, gsl_vector *Y, double alpha, int FUNCTION_ID
 				w = va_arg(arg, gsl_vector *);
 				w_tmp = gsl_vector_calloc(w->size);
 				gsl_vector_memcpy(w_tmp, w);
-				i = 1; fprintf(stderr,"\nFLAG: %lf",alpha/X->size1);
+				i = 1; 
 				while(fabs(error-old_error) > 0.000001){
 					old_error = error;
 				

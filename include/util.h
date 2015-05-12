@@ -3,6 +3,7 @@
 
 #include "opt.h"
 
+
 typedef struct _StringSet{
     struct _StringSet *prox;
     char *data;
@@ -40,6 +41,12 @@ double kMeans4Optimization(Subgraph *g, ...); /* It executes the k-Means cluster
 
 /* Hybdrid */
 void GenerateRandomSolution(gsl_vector *x, int HEURISTIC_ID, int pos, ...); /* It generates a new solution around a position */
+
+/* Linear Regression */
+gsl_vector *LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...); /* It fits a linear regression model using the Minimum Square Error as the error function optimized by FUNCTION_ID */
+
+/* Logistic Regression */
+gsl_vector *LogisticRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...); /* It executes the Logistic Regression classifier optimized by FUNCTION_ID */
 
 double f1(Subgraph *g, ...);
 
