@@ -11,7 +11,7 @@ void GradientDescent(gsl_matrix *X, gsl_vector *Y, double alpha, int FUNCTION_ID
     va_list arg;
     gsl_vector *w = NULL, *w_tmp = NULL;
     double error = 0.0, old_error = DBL_MAX, tmp;
-    int i, j;
+    int i, j, max_iteration = 10000;
 		
     va_start(arg, FUNCTION_ID);
 	
@@ -22,7 +22,7 @@ void GradientDescent(gsl_matrix *X, gsl_vector *Y, double alpha, int FUNCTION_ID
 				w_tmp = gsl_vector_calloc(w->size);
 				gsl_vector_memcpy(w_tmp, w);
 				i = 1;
-				while(fabs(error-old_error) > 0.000001){
+				while((fabs(error-old_error) > 0.000001) && (i <= max_iteration)){
 					old_error = error;
 				
 					for(j = 0; j < X->size2; j++){
@@ -42,7 +42,7 @@ void GradientDescent(gsl_matrix *X, gsl_vector *Y, double alpha, int FUNCTION_ID
 				w_tmp = gsl_vector_calloc(w->size);
 				gsl_vector_memcpy(w_tmp, w);
 				i = 1; 
-				while(fabs(error-old_error) > 0.000001){
+				while((fabs(error-old_error) > 0.000001) && (i <= max_iteration)){
 					old_error = error;
 				
 					for(j = 0; j < X->size2; j++){
