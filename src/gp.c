@@ -756,7 +756,6 @@ gsl_vector *RunTree4Vector(GeneticProgramming *gp, Node *T){
 	    if(T->is_const){
 		out = gsl_vector_calloc(gp->n);
 		gsl_vector_add_constant(out, gsl_vector_get(gp->constant, T->const_id));
-		return out;
 	    }else{
 		row = gsl_matrix_row(gp->vector, T->terminal_id);
 		out = gsl_vector_calloc((&row.vector)->size);
@@ -780,8 +779,8 @@ gsl_vector *RunTree4Vector(GeneticProgramming *gp, Node *T){
                             else out = LOG_VECTOR(y);
                         }
 	    /* it deallocates the sons of the current one, since they have been already used */
-	    gsl_vector_free(x); 
-	    gsl_vector_free(y);
+	    if (x) gsl_vector_free(x); 
+	    if (y) gsl_vector_free(y);
 	    return out;
 	}
     }else return NULL;
@@ -1079,6 +1078,7 @@ void runGP(GeneticProgramming *gp, prtFun EvaluateFun, int FUNCTION_ID, ...){
 	    for(j = 0; j < gp->m; j++){
 		fprintf(stderr,"\n	Evaluating tree %d ... ", j);
 		va_copy(arg, argtmp);
+		PrintTree2File(gp, gp->T[j], "tree_test.txt");
 		fitness = EvaluateTree(gp, j, EvaluateFun, FUNCTION_ID, arg);
 		gsl_vector_set(gp->fitness, j, fitness);
 		fprintf(stderr,"OK (fitness = %lf)", fitness);
