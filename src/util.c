@@ -149,9 +149,10 @@ double f1(Subgraph *g, ...){
 	va_end(arg);
 
 	return (-1*cos(x)*cos(y)*e);
-*/
 	output = pow(x+2*y-7, 2)+pow(2*x+y-5, 2);
 	
+*/
+	output = 0.26 * (x*x+y*y) - 0.48*x*y;
 	return output;
 }
 

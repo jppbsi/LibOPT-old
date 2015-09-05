@@ -56,31 +56,31 @@ fileName: name of the file that stores the swarm's configuration */
 Swarm *ReadSwarmFromFile(char *fileName){
 	FILE *fp = NULL;
 	int m, n;
-    Swarm *S = NULL;
+	Swarm *S = NULL;
 	double LB, UB;
-    char c;
+	char c;
         
-    fp = fopen(fileName, "r");
-    if(!fp){
-        fprintf(stderr,"\nunable to open file %s @ReadSwarmFromFile.\n", fileName);
-        return NULL;
-    }
+	fp = fopen(fileName, "r");
+	if(!fp){
+	    fprintf(stderr,"\nunable to open file %s @ReadSwarmFromFile.\n", fileName);
+	    return NULL;
+	}
         
-    fscanf(fp, "%d %d", &m, &n);
-    S = CreateSwarm(m, n);
+	fscanf(fp, "%d %d", &m, &n);
+	S = CreateSwarm(m, n);
 	fscanf(fp, "%d", &(S->max_iterations));
 	WaiveComment(fp);
 	
 	fscanf(fp, "%lf %lf %lf", &(S->c1), &(S->c2), &(S->w));
 	WaiveComment(fp);
 		
-    for(n = 0; n < S->n; n++){
-        fscanf(fp, "%lf %lf", &LB, &UB);
-        gsl_vector_set(S->LB, n, LB);
-        gsl_vector_set(S->UB, n, UB);
-        WaiveComment(fp);
-    }
-    fclose(fp);
+	for(n = 0; n < S->n; n++){
+	    fscanf(fp, "%lf %lf", &LB, &UB);
+	    gsl_vector_set(S->LB, n, LB);
+	    gsl_vector_set(S->UB, n, UB);
+	    WaiveComment(fp);
+	}
+	fclose(fp);
         
     return S;
 }
@@ -146,15 +146,13 @@ void InitializeSwarm(Swarm *S){
 		
 		for(i = 0; i < S->m; i++){
 			for(j = 0; j < S->n; j++){
-                p = (gsl_vector_get(S->UB, j)-gsl_vector_get(S->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(S->LB, j);
+				p = (gsl_vector_get(S->UB, j)-gsl_vector_get(S->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(S->LB, j);
 				gsl_matrix_set(S->x, i, j, p);
 			}
 			gsl_vector_set(S->fitness, i, DBL_MAX);
 		}
 		
-		gsl_rng_free(r);
-		
-		
+		gsl_rng_free(r);	
 	}else fprintf(stderr,"\nThere is no search space allocated @InitializeSwarm.\n");		
 }
 
@@ -198,9 +196,10 @@ EvaluateFun: pointer to the function used to evaluate particles
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
-    int i, j, n_epochs, batch_size;
+    int i, j, z, l, n_epochs, batch_size, n_gibbs_sampling, L;
     double f;
     Subgraph *g = NULL;
+    gsl_matrix *Param = NULL;
     
     switch(FUNCTION_ID){
         case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
@@ -225,6 +224,36 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 }
             }
         break;
+	case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+								
+		Param = gsl_matrix_alloc(L, 6);
+		for(i = 0; i < S->m; i++){
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_matrix_get(S->x, i, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(S->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(S->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+			gsl_vector_set(S->fitness, i, f);
+			if(f < S->best_fitness){
+				S->best = i;
+				S->best_fitness = f;
+			}
+		}
+
+		gsl_matrix_free(Param);
+	break;
     }
 }
 
@@ -247,7 +276,7 @@ inline void UpdateParticleVelocity(Swarm *S, int particle_id){
     r1 = gsl_rng_uniform(r);
     r2 = gsl_rng_uniform(r);
     for(j = 0; j < S->n; j++){
-        tmp = S->w * gsl_matrix_get(S->v, particle_id, j) + S->c1 * r1 * (gsl_matrix_get(S->y, particle_id, j) - gsl_matrix_get(S->x, particle_id, j)) + S->c2 * r2 * (gsl_matrix_get(S->x, S->best, j) - gsl_matrix_get(S->x, particle_id, j));
+        tmp = S->w*gsl_matrix_get(S->v, particle_id, j) + S->c1*r1*(gsl_matrix_get(S->y, particle_id, j)-gsl_matrix_get(S->x, particle_id, j)) + S->c2*r2*(gsl_matrix_get(S->x, S->best, j)-gsl_matrix_get(S->x, particle_id, j));
         gsl_matrix_set(S->v, particle_id, j, tmp);
     }
     gsl_rng_free(r);
@@ -264,8 +293,7 @@ inline void UpdateParticlePosition(Swarm *S, int particle_id){
     for(j = 0; j < S->n; j++){
         tmp = gsl_matrix_get(S->x, particle_id, j) + gsl_matrix_get(S->v, particle_id, j);
         gsl_matrix_set(S->x, particle_id, j, tmp);
-    }
-    
+    }    
 }
 
 /* It executes the Particle Swarm Optimization for function minimization ---
@@ -304,12 +332,11 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
             for(i = 0; i < S->m; i++){
                 UpdateParticleVelocity(S, i);
                 UpdateParticlePosition(S, i);
-                CheckSwarnLimits(S);
-            
-                EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
+                CheckSwarmLimits(S);
             }
-                        
-            fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
+	         
+            EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
+	    fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
             fprintf(stderr,"%d %lf\n", t, S->best_fitness);
         }
         gsl_rng_free(r);

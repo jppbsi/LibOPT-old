@@ -512,10 +512,10 @@ void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...){
     va_start(arg, FUNCTION_ID);
     va_copy(argtmp, arg);
 	if(B){
-        int t, i;
-        double p;
-		gsl_vector *b = NULL;
-                            
+		int t, i;
+		double p;
+		gsl_vector *b = NULL; // que isso?
+                   
 		fprintf(stderr,"\nInitial evaluation of the bird flock ...");
 		EvaluateBirdFlock(B, EvaluateFun, FUNCTION_ID, arg);
 		fprintf(stderr," OK.");
@@ -542,4 +542,54 @@ void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...){
     }else fprintf(stderr,"\nThere is no search space allocated @runMBO.\n");
     va_end(arg);
 }
+
+/* It executes "An Enhanced Migrating Birds Optimization Algorithm for No-wait Flow Shop Scheduling Problem" for function minimization ---
+Parameters: [B, EvaluateFun, FUNCTION_ID, ... ]
+B: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+/*void runEMBO(BirdFlock **B, prtFun EvaluateFun, int FUNCTION_ID, ...){
+	va_list arg, argtmp;
+		
+	va_start(arg, FUNCTION_ID);
+	va_copy(argtmp, arg);
+	if(B){
+		int t, i, j, n_birdflocks = 3;
+		double p, best;
+		gsl_vector *best_position;
+	
+		*best_position = gsl_vector_alloc((B[0])->n);
+		
+		gsl_vector *b = NULL; // que isso?
+		
+		
+                for(j = 0; j < n_birdflocks; j++){
+			fprintf(stderr,"\nInitial evaluation of the bird flock %d ...", j+1);
+			EvaluateBirdFlock(B[j], EvaluateFun, FUNCTION_ID, arg);
+			fprintf(stderr," OK.");
+			
+			ShowBirdFlock(B[j]);
+			/*
+			for(i = 1; i <= (B[j])->max_iterations; i++){
+				fprintf(stderr,"\nRunning iteration %d/%d ... ", i, (B[j])->max_iterations);
+				va_copy(arg, argtmp);
+				
+				for(t = 1; t <= (B[j])->M; t++){
+					fprintf(stderr,"\n	-> tour %d/%d", t, (B[j])->M);
+					ImproveLeaderSolution((B[j]), EvaluateFun, FUNCTION_ID, arg);
+					ImproveOtherSolutions((B[j]), EvaluateFun, FUNCTION_ID, arg);
+				}
+	
+				fprintf(stderr, "\nOK (minimum fitness value %d: %lf)", (B[j])->best, (B[j])->best_fitness);
+				fprintf(stdout,"%d %lf\n", (B[j])->best, (B[j])->best_fitness);
+				
+				ShowBirdFlock((B[j]));
+				ReplaceLeader((B[j]));
+			}
+		}
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runEMBO.\n");
+    va_end(arg);
+}*/
 

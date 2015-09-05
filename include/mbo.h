@@ -17,9 +17,9 @@ typedef struct _BirdFlock{
     int k; /* number of neighbours solutions to be considered */
     int X; /* number of neighbor solutions to be shared with the next solution */
     int M; /* number of tours, i.e., the number of iterations for the leader */
-	int leftSide; /* a flag to know what bird will be changed */
-	int best; /* index of best bird fitness */
-	double best_fitness; /* value of best fitness */
+    int leftSide; /* a flag to know what bird will be changed */
+    int best; /* index of best bird fitness */
+    double best_fitness; /* value of best fitness */
     gsl_vector **left; /* indeces of the birds that are on the left of leader bird */
     gsl_vector **right; /* indeces of the birds that are on the right of leader bird */
     gsl_matrix *x; /* possible solutions (birds) */
@@ -49,5 +49,6 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It improves the other birds by evaluating its neighbours */
 void ReplaceLeader(BirdFlock *B); /* It replaces the leader bird by the next bird of V formation */
 void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the Migrating Birds Optimization for function minimization */
+void runEMBO(BirdFlock **B, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes "An Enhanced Migrating Birds Optimization Algorithm for No-wait Flow Shop Scheduling Problem" for function minimization */
 
 #endif
