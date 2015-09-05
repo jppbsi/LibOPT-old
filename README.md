@@ -7,4 +7,7 @@ LibOPT is an optimization library developed in C language for the development of
 * Harmony Search[]
 * Improved Harmony Search []
 * Global-best Harmony Search []
+* Self-Adaptive Global-best Harmony Search []
+* Parameter-Setting-Free Harmony Search []
+* Novel Global Harmony Search []
 
