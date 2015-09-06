@@ -28,6 +28,8 @@ FireflySwarm *CreateFireflySwarm(int m, int n){
 	F->best = 0;
 	F->max_iterations = 0;
 	F->best_fitness = DBL_MAX;
+	
+	return F;
 }
 
 /* It deallocates the FireflySwarm ---
@@ -52,33 +54,33 @@ fileName: name of the file that stores the swarm's configuration */
 FireflySwarm *ReadFireflySwarmFromFile(char *fileName){
 	FILE *fp = NULL;
 	int m, n;
-    FireflySwarm *F = NULL;
+	FireflySwarm *F = NULL;
 	double LB, UB;
-    char c;
+	char c;
         
-    fp = fopen(fileName, "r");
-    if(!fp){
-        fprintf(stderr,"\nunable to open file %s @ReadFireflySwarmFromFile.\n", fileName);
-        return NULL;
-    }
+	fp = fopen(fileName, "r");
+	if(!fp){
+	    fprintf(stderr,"\nunable to open file %s @ReadFireflySwarmFromFile.\n", fileName);
+	    return NULL;
+	}
         
-    fscanf(fp, "%d %d", &m, &n);
-    F = CreateFireflySwarm(m, n);
+	fscanf(fp, "%d %d", &m, &n);
+	F = CreateFireflySwarm(m, n);
 	fscanf(fp, "%d", &(F->max_iterations));
 	WaiveComment(fp);
 	
 	fscanf(fp, "%lf %lf %lf", &(F->gamma), &(F->beta_0), &(F->alpha));
 	WaiveComment(fp);
 		
-    for(n = 0; n < F->n; n++){
-        fscanf(fp, "%lf %lf", &LB, &UB);
-        gsl_vector_set(F->LB, n, LB);
-        gsl_vector_set(F->UB, n, UB);
-        WaiveComment(fp);
-    }
-    fclose(fp);
+	for(n = 0; n < F->n; n++){
+		fscanf(fp, "%lf %lf", &LB, &UB);
+		gsl_vector_set(F->LB, n, LB);
+		gsl_vector_set(F->UB, n, UB);
+		WaiveComment(fp);
+	}
+	fclose(fp);
         
-    return F;
+	return F;
 }
 
 /* It copies an entire search space
@@ -140,7 +142,7 @@ void InitializeFireflySwarm(FireflySwarm *F){
 		
 		for(i = 0; i < F->m; i++){
 			for(j = 0; j < F->n; j++){
-                p = (gsl_vector_get(F->UB, j)-gsl_vector_get(F->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(F->LB, j);
+				p = (gsl_vector_get(F->UB, j)-gsl_vector_get(F->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(F->LB, j);
 				gsl_matrix_set(F->x, i, j, p);
 			}
 			gsl_vector_set(F->fitness, i, DBL_MAX);
@@ -271,9 +273,10 @@ inline void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id){
     
     aux = gsl_rng_uniform(r);
     for(j = 0; j < F->n; j++){
-        tmp = gsl_matrix_get(F->x, best_firefly_id, j) + F->alpha * (aux-0.5);
+        tmp = gsl_matrix_get(F->x, best_firefly_id, j)+F->alpha*(aux-0.5);
         gsl_matrix_set(F->x, best_firefly_id, j, tmp);
     }
+    gsl_rng_free(r);
     
 }
 
@@ -301,9 +304,7 @@ void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
                 UpdateFireflyPosition(F, i); /* It updates the position of each firefly */
             
             UpdateBestFireflyPosition(F, F->best);
-            
-            CheckFireflySwarnLimits(F);
-
+            CheckFireflySwarmLimits(F);
             EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
                         
             fprintf(stderr, "OK (minimum fitness value %lf)", F->best_fitness);
