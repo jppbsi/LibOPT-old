@@ -6,7 +6,7 @@ UTIL=./util
 
 CC=gcc 
 
-FLAGS=  -g -O0 -fopenmp -pthread
+FLAGS=  -g -O0
 CFLAGS=''
 
 all: libopt
@@ -87,6 +87,6 @@ $(OBJ)/ga.o: $(SRC)/ga.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
     -L $(OPF_DIR)/lib -lOPF -L $(LIBDEEP_DIR)/lib -L /usr/local/lib -lDeep -lgsl -lgslcblas `pkg-config --cflags --libs opencv` `pkg-config --cflags --libs gsl` \
     -c $(SRC)/ga.c -o $(OBJ)/ga.o
-
+    
 clean:
 	rm -f $(LIB)/lib*.a; rm -f $(OBJ)/*.o
