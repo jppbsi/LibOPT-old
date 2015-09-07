@@ -16,4 +16,4 @@ LibOPT is an optimization library developed in C language for the development of
 
 [1] J. Kennedy, R. C. Eberhart and Y. Shi. Swarm Intelligence, Morgan Kaufmann Series in Artificial Intelligence, 2001.
 
-[2] X.-S. Yang. A New Metaheuristic Bat-Inspired Algorithm, arXiv, 2010 (http://arxiv.org/pdf/1004.4170.pdf)
+[2] X.-S. Yang and A. H. Gandomi, Bat algorithm: a novel approach for global engineering optimization, Engineering Computations, 5(29), pp.464 - 483, 2012.
