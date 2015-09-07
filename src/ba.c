@@ -28,6 +28,8 @@ Bats *CreateBats(int m, int n){
 	B->UB = gsl_vector_alloc(B->n);
 	B->step = gsl_vector_alloc(B->n);
         B->best_fitness = DBL_MAX;
+	
+	return B;
 }
 
 /* It deallocates the search space ---
@@ -120,7 +122,10 @@ Bats *CopyBats(Bats *B){
         gsl_vector_memcpy(cpy->step, B->step);
         
         return cpy;
-    }else fprintf(stderr,"\nThere is no search space allocated @CopyBats.\n");		
+    }else{
+	fprintf(stderr,"\nThere is no search space allocated @CopyBats.\n");
+	return NULL;
+    }
 }
 
 /* it checks the limits of each decision variable ---
@@ -250,16 +255,17 @@ inline void UpdateBatVelocity(Bats *B, int bat_id){
 }
 
 /* It updates the position of each bat ---
-Parameters: [B, bat_id]
+Parameters: [B, bat_id, tmp]
 B: search space
-bat_id: bat's index */ 
-inline void UpdateBatPosition(Bats *B, int bat_id){
-    double tmp;
+bat_id: bat's index
+tmp: array to store the new temporary position */ 
+inline void UpdateBatTemporaryPosition(Bats *B, int bat_id, gsl_vector *tmp){
+    double aux;
     int j;
     
     for(j = 0; j < B->n; j++){
-        tmp = gsl_matrix_get(B->x, bat_id, j)+gsl_matrix_get(B->v, bat_id, j);
-        gsl_matrix_set(B->x, bat_id, j, tmp);
+        aux = gsl_matrix_get(B->x, bat_id, j)+gsl_matrix_get(B->v, bat_id, j);
+        gsl_vector_set(tmp, j, aux);
     }
     
 }
@@ -281,9 +287,6 @@ void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
             n_epochs = va_arg(arg, int);
             batch_size = va_arg(arg, int);
             B->mean_A = 0;
-            fprintf(stderr,"\ng->nlabels: %d", g->nlabels);
-            fprintf(stderr,"\nn_epochs: %d", n_epochs);
-            fprintf(stderr,"\nbatch_size: %d", batch_size);
             
             for(i = 0; i < B->m; i++){
                 f = Evaluate(g, gsl_matrix_get(B->x, i, 0), gsl_matrix_get(B->x, i, 1), gsl_matrix_get(B->x, i, 2), gsl_matrix_get(B->x, i, 3), n_epochs, batch_size); 
@@ -343,6 +346,30 @@ void LocalSearchAndUpdateBest(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list
     gsl_rng_free(r);
 }
 
+/* It evaluates a new solution
+Parameters: [tmp, Evaluate, FUNCTION_ID, arg]
+tmp: array with the temporary bat position
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+arg: argument list */
+double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+	int i, n_epochs, batch_size;
+	double f = DBL_MAX;
+	Subgraph *g = NULL;
+    
+	switch(FUNCTION_ID){
+	    case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+	        g = va_arg(arg, Subgraph *);
+	        n_epochs = va_arg(arg, int);
+	        batch_size = va_arg(arg, int);
+		
+		f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), n_epochs, batch_size); 
+	        break;
+	}
+	
+	return f;
+}
+
 /* It updates the loudness
 Parameters: [B]
 B: search space */
@@ -368,6 +395,33 @@ void UpdatePulseRate(Bats *B, int t){
         gsl_vector_set(B->r, i, gsl_vector_get(B->r0, i)*(1-exp(-B->gamma*t))); /* Equation 5 */
 }
 
+/* It generates a local solution near the best solution
+Parameters: [B,t]
+B: search space
+best: index of the best solution so far
+tmp: array with temporary position for the current bat */
+inline void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp){
+	int j;
+	double aux;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+	
+	if(B){
+		srand(time(NULL));
+		gsl_rng_env_setup();
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, rand());
+		
+		for(j = 0; j < tmp->size; j++){
+			aux = gsl_matrix_get(B->x, best, j)+0.001*gsl_rng_uniform(r);
+			gsl_vector_set(tmp, j, aux);
+		}
+		gsl_rng_free(r);
+	}
+	else fprintf(stderr,"\nThere is no search space allocated @GenerateLocalSolutionNearBest.\n");
+}
+
 /* It executes the Bat Algorithm for function minimization ---
 Parameters: [B, EvaluateFun, FUNCTION_ID, ... ]
 B: search space
@@ -375,55 +429,69 @@ Evaluate: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h
 ... other parameters of the desired function */
 void runBA(Bats *B, prtFun Evaluate, int FUNCTION_ID, ...){
-    va_list arg, argtmp;
-    const gsl_rng_type *T = NULL;
-    gsl_rng *r;
-    double p;
+	va_list arg, argtmp;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+	double p, beta, prob, f;
+	int t, i;
+	gsl_vector *tmp = NULL;
+	gsl_vector_view row;
 		
-    va_start(arg, FUNCTION_ID);
-    va_copy(argtmp, arg);
-    if(B){
-        int t, i;
-        double beta, prob;
-        const gsl_rng_type *T = NULL;
-        gsl_rng *r = NULL;
-                    
-        srand(time(NULL));
-        gsl_rng_env_setup();
-        T = gsl_rng_default;
-        r = gsl_rng_alloc(T);
-        gsl_rng_set(r, rand());
+	va_start(arg, FUNCTION_ID);
+	va_copy(argtmp, arg);
+	if(B){
+		tmp = gsl_vector_calloc(B->n);
+                srand(time(NULL));
+		gsl_rng_env_setup();
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, rand());
+
+		EvaluateBats(B, Evaluate, FUNCTION_ID, arg);
         
-        EvaluateBats(B, Evaluate, FUNCTION_ID, arg);
-        
-        for(t = 1; t <= B->max_iterations; t++){
-            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, B->max_iterations);
-            va_copy(arg, argtmp);
+		for(t = 1; t <= B->max_iterations; t++){
+			
+			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, B->max_iterations);
+			va_copy(arg, argtmp);
             
-            /* for each bat */
-            for(i = 0; i < B->m; i++){
-                SetBatFrequency(B, i); /* Equation 1 */
-                UpdateBatVelocity(B, i); /* Equation 2 */
-                UpdateBatPosition(B, i); /* Equation 3 */
-                CheckBatsLimits(B);
-            
-                EvaluateBats(B, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
+			/* for each bat */
+			for(i = 0; i < B->m; i++){
+				SetBatFrequency(B, i); /* Equation 1 */
+				UpdateBatVelocity(B, i); /* Equation 2 */
+				UpdateBatTemporaryPosition(B, i, tmp); /* Equation 3 */
+				CheckBatsLimits(B);
+				
+				prob = gsl_rng_uniform(r);
+				if(prob > gsl_vector_get(B->r, i))
+					GenerateLocalSolutionNearBest(B, B->best, tmp); /* Equation 4 */
+
+				f = EvaluateNewSolution(tmp, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
+				prob = gsl_rng_uniform(r);
+				if((f <= gsl_vector_get(B->fitness, i)) && (rand < B->A)){ /* it updates if the new solution improves the old one */
+					row = gsl_matrix_row(B->x, i);
+					gsl_vector_memcpy(&row.vector, tmp);
+					gsl_vector_set(B->fitness, i, f);
+				}
+				
+				/* It updates the current best solution */
+				if(f < gsl_vector_get(B->fitness, B->best)){
+					B->best = i;
+					gsl_vector_set(B->fitness, i, f);
+				}
+						
+			}
+			
+			EvaluateBats(B, Evaluate, FUNCTION_ID, arg);
+			va_copy(arg, argtmp);            
                 
-                prob = gsl_rng_uniform(r);
-                if(prob > gsl_vector_get(B->r, i)){ /* Equation 4 */
-                    LocalSearchAndUpdateBest(B, Evaluate, FUNCTION_ID, arg);
-                    va_copy(arg, argtmp);
-                }
-                
-                UpdateLoudness(B); /* Equation 5 */
-                UpdatePulseRate(B, t); /* Equation 5 */
-            }
+			UpdateLoudness(B); /* Equation 5 */
+			UpdatePulseRate(B, t); /* Equation 5 */
+		}
                         
-            fprintf(stderr, "OK (minimum fitness value %lf)", B->best_fitness);
-            fprintf(stderr,"%d %lf\n", t, B->best_fitness);
-        }
-        gsl_rng_free(r);
-        
-    }else fprintf(stderr,"\nThere is no search space allocated @runBatAlgorithm.\n");
-    va_end(arg);
+		fprintf(stderr, "OK (minimum fitness value %lf)", B->best_fitness);
+		fprintf(stderr,"%d %lf\n", t, B->best_fitness);
+		gsl_rng_free(r);
+		gsl_vector_free(tmp);
+        }else fprintf(stderr,"\nThere is no search space allocated @runBatAlgorithm.\n");
+	va_end(arg);
 }

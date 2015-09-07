@@ -108,7 +108,10 @@ Swarm *CopySwarm(Swarm *S){
         gsl_vector_memcpy(cpy->UB, S->UB);
         
         return cpy;
-    }else fprintf(stderr,"\nThere is no search space allocated @CopySwarm.\n");		
+    }else{
+	fprintf(stderr,"\nThere is no search space allocated @CopySwarm.\n");
+	return NULL;
+    }
 }
 
 /* It checks the limits of each decision variable ---

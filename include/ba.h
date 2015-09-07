@@ -1,5 +1,5 @@
 /* The implementation of the Bat Algorithm is based on the paper "Bat algorithm: a novel approach for global engineering optimization",
-availabe at http://www.emeraldinsight.com/doi/abs/10.1108/02644401211235834 */
+available at http://www.emeraldinsight.com/doi/abs/10.1108/02644401211235834 */
 
 #ifndef BA_H
 #define BA_H
@@ -46,7 +46,9 @@ void ShowBatsInformation(Bats *H); /* It displays the search space's main inform
 /* Main algorithm */
 inline void SetBatFrequency(Bats *B, int bat_id); /* It sets the frequency of each bat */
 inline void UpdateBatVelocity(Bats *B, int bat_id); /* It updates the velocity of each bat */
-inline void UpdateBatPosition(Bats *B, int bat_id); /* It updates the position of each bat */
+inline void UpdateBatTemporaryPosition(Bats *B, int bat_id, gsl_vector *tmp); /* It updates the position of each bat */
+inline void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp); /* It generates a local solution near the best solution */
+double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a new solution */
 void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all bats */
 void LocalSearchAndUpdateBest(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It performs the local search and updates the best bat */
 void UpdateLoudness(Bats *B); /* It updates the loudness */
