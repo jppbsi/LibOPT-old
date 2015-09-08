@@ -570,7 +570,7 @@ FUNCTION_ID: id of the function registered at opt.h
 			fprintf(stderr," OK.");
 			
 			ShowBirdFlock(B[j]);
-			/*
+			
 			for(i = 1; i <= (B[j])->max_iterations; i++){
 				fprintf(stderr,"\nRunning iteration %d/%d ... ", i, (B[j])->max_iterations);
 				va_copy(arg, argtmp);

@@ -223,7 +223,7 @@ void InitializeBats(Bats *B){
 Parameters: [B, bat_id]
 B: search space
 bat_id: bat's index */ 
-inline void SetBatFrequency(Bats *B, int bat_id){
+void SetBatFrequency(Bats *B, int bat_id){
     double beta, tmp;
     const gsl_rng_type *T;
     gsl_rng *r;
@@ -244,7 +244,7 @@ inline void SetBatFrequency(Bats *B, int bat_id){
 Parameters: [B, bat_id]
 B: search space
 bat_id: bat's index */ 
-inline void UpdateBatVelocity(Bats *B, int bat_id){
+void UpdateBatVelocity(Bats *B, int bat_id){
     double tmp;
     int j;
     
@@ -259,7 +259,7 @@ Parameters: [B, bat_id, tmp]
 B: search space
 bat_id: bat's index
 tmp: array to store the new temporary position */ 
-inline void UpdateBatTemporaryPosition(Bats *B, int bat_id, gsl_vector *tmp){
+void UpdateBatTemporaryPosition(Bats *B, int bat_id, gsl_vector *tmp){
     double aux;
     int j;
     
@@ -467,7 +467,7 @@ void runBA(Bats *B, prtFun Evaluate, int FUNCTION_ID, ...){
 
 				f = EvaluateNewSolution(tmp, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
 				prob = gsl_rng_uniform(r);
-				if((f <= gsl_vector_get(B->fitness, i)) && (rand < B->A)){ /* it updates if the new solution improves the old one */
+				if((f <= gsl_vector_get(B->fitness, i)) && (prob < gsl_vector_get(B->A, i))){ /* it updates if the new solution improves the old one */
 					row = gsl_matrix_row(B->x, i);
 					gsl_vector_memcpy(&row.vector, tmp);
 					gsl_vector_set(B->fitness, i, f);

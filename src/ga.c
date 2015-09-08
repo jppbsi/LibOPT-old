@@ -27,6 +27,8 @@ Population *CreatePopulation(int m, int n){
 	P->best = 0;
 	P->max_iterations = 0;
 	P->best_fitness = DBL_MAX;
+	
+	return P;
 }
 
 /* It deallocates the Population ---
@@ -100,7 +102,10 @@ Population *CopyPopulation(Population *P){
         gsl_vector_memcpy(cpy->UB, P->UB);
         
         return cpy;
-    }else fprintf(stderr,"\nThere is no search space allocated @CopyPopulation.\n");		
+    }else{
+	fprintf(stderr,"\nThere is no search space allocated @CopyPopulation.\n");
+	return NULL;
+    }
 }
 
 /* It checks the limits of each decision variable ---

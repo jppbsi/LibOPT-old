@@ -38,7 +38,7 @@ GeneticProgramming *CreateGeneticProgramming(int n_trees){
 /* It deallocates a genetic programming structure
 Parameters: [gp]
 gp: Genetic Programming structure */
-GeneticProgramming DestroyGeneticProgramming(GeneticProgramming **gp){
+void DestroyGeneticProgramming(GeneticProgramming **gp){
     GeneticProgramming *aux = NULL;
     int i;
     
@@ -564,50 +564,6 @@ gsl_vector *RouletteSelection(GeneticProgramming *gp, int k){
     return selected;
 }
     
-/* It performs individual selection by means of Roulette-whell method
- Parameters:
- P1 = number of trees
- P3 = structure that stores the fitness and id of each tree
- P4 = number of elements to be selected */
-/*int *RouletteSelection(int N, Node4Fitness *tree, int k){
-    float sum = 0.0f, *accum = NULL, r;
-    int i, j, *selected = NULL, z = 0;
-    
-    selected = (int *)malloc(k*sizeof(int));
-    
-    /* it normalizes the fitness of each individual ***/
-    /*for(i = 0; i < N; i++)
-        sum+=tree[i].fitness;
-    for(i = 0; i < N; i++)
-        tree[i].fitness/=sum;
-    
-    /***/
-    
-    /* it sorts the population by descending fitness values */
-    /*qsort(tree, N, sizeof(Node4Fitness), compare_descending);
-    
-    /* it computes the accumulate normalized fitness */
-   /* accum = (float *)calloc(N,sizeof(float));
-    for(i = 0; i < N; i++){
-        for(j = i; j >= 0; j--)
-            accum[i]+=tree[j].fitness;
-    }
-    
-    srand(time(NULL));
-    for(z = 0; z < k; z++){
-        /* it picks up the selected individual */
-    /*    r = (rand()%100+1)/100.0;
-        i = 0;
-        while((accum[i] < r) && (i < N))
-            i++;
-        if(i) selected[z] = tree[i-1].id;
-        else selected[z] = tree[i].id;
-    }
-    free(accum);
-    
-    return selected;
-}*/
-
 void ShowTreePopulation(int N, Node **T, Node4Fitness *tree){
     int j;
 
@@ -937,15 +893,15 @@ float EvaluateTree4DescriptorCombination(Node *T, Subgraph *Train, Subgraph *Val
     f = fopen("gp.gfitness","a");
     
     i = 0;
-    //**********
+    
     int size1, size2;
     do{
         fprintf(stderr,"\nrunning generation %d -> ", i);
         
         best_fitness = FLT_MIN;
         for(j = 0; j < N; j++){
-            /* It evaluates the current tree */
-            /*tree[j].fitness = EvaluateTree4DescriptorCombination(T[j], Train, Val, D, M);
+             It evaluates the current tree 
+            tree[j].fitness = EvaluateTree4DescriptorCombination(T[j], Train, Val, D, M);
             tree[j].id = j;
             //fprintf(stderr,"\nTree %d: %.2f%%", j+1, tree[j].fitness*100);
             tmp[j] = CopyTree(T[j]);
@@ -962,22 +918,22 @@ float EvaluateTree4DescriptorCombination(Node *T, Subgraph *Train, Subgraph *Val
         fprintf(stderr,"Best accuracy rate of %.2f%% with tree %d", best_fitness*100, best_tree+1);
         ShowTreePopulation(N,tmp,tree);
         
-        /* it does not perform reproduction, mutation and crossover in the last iteration */
+         it does not perform reproduction, mutation and crossover in the last iteration */
        /* if(i < it-1){
             k1 = round(N*probReproduction); reproduction = RouletteSelection(N, tree, k1);
             k2 = round(N*probMutation); mutation = RouletteSelection(N, tree, k2);
             k3 = N-(k1+k2); crossover = RouletteSelection(N, tree, k3);
 
-            /* It performs the reproduction */
+             It performs the reproduction */
            /* for(j = 0; j < k1; j++){
                 //fprintf(stderr,"\nreproduction[%d]: %d", j, reproduction[j]+1);
                 T[j] = CopyTree(tmp[reproduction[j]]);
             }
         
-            /* it performs the mutation */
+             it performs the mutation */
            /* z = 0;
             for(j = k1; j < k1+k2; j++){
-                /* we do not mutate trivial trees */
+                 we do not mutate trivial trees */
             /*    if(getSizeTree(tmp[mutation[z]]) > 1)
                     T[j]= Mutation(tmp[mutation[z]], dmax, 0.9);
                 //else T[j] = CopyTree(tmp[mutation[z]]);
@@ -987,7 +943,7 @@ float EvaluateTree4DescriptorCombination(Node *T, Subgraph *Train, Subgraph *Val
                 z++;
             }
 
-            /* it performs the crossover */
+             it performs the crossover */
           /*  z = 0;
             for(j = k1+k2; j < k1+k2+k3; j+=2){
                 ctr = 1;
@@ -1000,13 +956,13 @@ float EvaluateTree4DescriptorCombination(Node *T, Subgraph *Train, Subgraph *Val
                 if((getSizeTree(tmp[crossover[father]]) > 1) && (getSizeTree(tmp[crossover[mother]]) > 1)){
                     aux = Crossover(tmp[crossover[father]], tmp[crossover[mother]], 0.9);
                     T[j] = CopyTree(aux[0]);
-                    if (j+1 < k1+k2+k3) T[j+1] = CopyTree(aux[1]); /* in case of an odd number of samples to do crossover */
+                    if (j+1 < k1+k2+k3) T[j+1] = CopyTree(aux[1]); in case of an odd number of samples to do crossover */
                   /*  DestroyTree(&aux[0]);
                     DestroyTree(&aux[1]);
                 }
                 else{
                     T[j] = CopyTree(tmp[crossover[father]]);
-                    if (j+1 < k1+k2+k3) T[j+1] = CopyTree(tmp[crossover[mother]]); /* in case of an odd number of samples to do crossover */
+                    if (j+1 < k1+k2+k3) T[j+1] = CopyTree(tmp[crossover[mother]]);  in case of an odd number of samples to do crossover */
              /*   }
                 z++;
             }
@@ -1307,7 +1263,7 @@ gsl_vector *ABS_VECTOR(gsl_vector *v){
     
     out = gsl_vector_calloc(v->size);
     for(i = 0; i < v->size; i++)
-    gsl_vector_set(out, i, abs(gsl_vector_get(v, i)));
+	gsl_vector_set(out, i, fabs(gsl_vector_get(v, i)));
     
     return out;
 }
@@ -1319,7 +1275,7 @@ gsl_vector *SQRT_VECTOR(gsl_vector *v){
     
     out = gsl_vector_calloc(v->size);
     for(i = 0; i < v->size; i++)
-	gsl_vector_set(out, i, sqrt(abs(gsl_vector_get(v, i))));
+	gsl_vector_set(out, i, sqrt(fabs(gsl_vector_get(v, i))));
     
     return out;
 }

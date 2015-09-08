@@ -30,6 +30,8 @@ Swarm *CreateSwarm(int m, int n){
 	S->best = 0;
 	S->max_iterations = 0;
 	S->best_fitness = DBL_MAX;
+	
+	return S;
 }
 
 /* It deallocates the swarm ---

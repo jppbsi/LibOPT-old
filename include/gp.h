@@ -54,7 +54,7 @@ typedef struct _GeneticProgramming{
 
 /* Allocation and deallocation */
 GeneticProgramming *CreateGeneticProgramming(int n_trees); /* It allocates a genetic programming structure */
-GeneticProgramming DestroyGeneticProgramming(GeneticProgramming **gp); /* It deallocates a genetic programming structure */
+void DestroyGeneticProgramming(GeneticProgramming **gp); /* It deallocates a genetic programming structure */
 GeneticProgramming *ReadGeneticProgrammingFromFile(char *fileName); /* Tt creates a genetic programming specified in a file */
 
 /* Tree-related functions */
@@ -79,8 +79,7 @@ void VerifyBounds(float **M, int n);
 int compare_descending(const void *a, const void *b); /* function used by Quicksort */
 
 /* GP-specific functions */
-//int *RouletteSelection(int N, Node4Fitness *fitness, int k); /* It performs individual selection by means of Roulette-whell method */
-gsl_vector *RouletteSelection(GeneticProgramming *gp, int k);
+gsl_vector *RouletteSelection(GeneticProgramming *gp, int k); /* It performs individual selection by means of Roulette-whell method */
 Node *Mutation(GeneticProgramming *gp, Node *T, float p); /* It performs the mutation of a given tree using other tree with dmax as max depth */
 Node **Crossover(Node *Father, Node *Mother, float p); /* It performs the crossover of two trees, and it returns another two children tress */
 void runGP(GeneticProgramming *gp, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the Genetic Programming algorithm for function minimization */

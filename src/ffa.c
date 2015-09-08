@@ -104,7 +104,10 @@ FireflySwarm *CopyFireflySwarm(FireflySwarm *F){
         gsl_vector_memcpy(cpy->UB, F->UB);
         
         return cpy;
-    }else fprintf(stderr,"\nThere is no search space allocated @CopyFireflySwarm.\n");		
+    }else{
+	fprintf(stderr,"\nThere is no search space allocated @CopyFireflySwarm.\n");
+	return NULL;
+    }
 }
 
 /* It checks the limits of each decision variable ---

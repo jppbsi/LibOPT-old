@@ -1,8 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "numerical.h"
 #include "opt.h"
-
 
 typedef struct _StringSet{
     struct _StringSet *prox;

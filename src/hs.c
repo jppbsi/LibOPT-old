@@ -40,6 +40,8 @@ HarmonyMemory *CreateHarmonyMemory(int m, int n){
 	H->worst_fitness = DBL_MIN;
 	H->_HMCR = NULL;
 	H->_PAR = NULL;
+	
+	return H;
 }
 
 /* It deallocates the harmony memory ---
@@ -1279,9 +1281,9 @@ arg: argument list, being the first parameter of this list the search space */
 		va_copy(argtmp, arg);
 		
 		switch(HEURISTIC_ID){
-			case 2: /* Bat Algorithm */
-				/*gsl_ran_choose(r, hybrid_id, n_hybrids, tmp , H->m, sizeof (int)); /* it samples n_hybrids harmonies */
-				/*for(i = 0; i < n_hybrids; i++){
+			case 2:  Bat Algorithm 
+				 gsl_ran_choose(r, hybrid_id, n_hybrids, tmp , H->m, sizeof (int)); it samples n_hybrids harmonies 
+				for(i = 0; i < n_hybrids; i++){
 					fprintf(stderr,"\ngo hybrid %d with %d", i, hybrid_id[i]);
 					va_copy(arg, argtmp);
 					if(FUNCTION_ID == 1){
@@ -1294,8 +1296,8 @@ arg: argument list, being the first parameter of this list the search space */
 						fprintf(stderr,"\ng->nlabels: %d", g->nlabels);
 					tmpB = CopyBats(B);
 						
-					/* it generates news bats */
-					/*for(j = 0; j < B->m; j++){
+					 it generates news bats
+					for(j = 0; j < B->m; j++){
 						GenerateRandomSolution(newSol, HS, hybrid_id[i], H);
 						for(z = 0; z < B->n; z++)
 							gsl_matrix_set(B->x, j, z, gsl_matrix_get(H->HM, hybrid_id[i], z)+gsl_vector_get(newSol, z));
@@ -1304,12 +1306,12 @@ arg: argument list, being the first parameter of this list the search space */
 					ShowBats(tmpB);
 					va_copy(arg, argtmp);
 					runBA(tmpB, EvaluateFun, FUNCTION_ID, arg);
-					/*if(tmpB->best_fitness < gsl_vector_get(H->fitness, hybrid_id[i])){ /* if the harmony has been improved */
-						/*for(z = 0; z < B->n; z++)
+					if(tmpB->best_fitness < gsl_vector_get(H->fitness, hybrid_id[i])){  if the harmony has been improved
+						for(z = 0; z < B->n; z++)
 							gsl_matrix_set(H->HM, hybrid_id[i], z, gsl_matrix_get(B->x, B->best, z));
 						gsl_vector_set(B->fitness, hybrid_id[i], tmpB->best_fitness);
-						UpdateHarmonyMemoryIndices(H); /* it updates the best and worst harmonies */
-					/*}
+						UpdateHarmonyMemoryIndices(H);  it updates the best and worst harmonies 
+					}
 					fprintf(stderr,"\ntmpB->best_fitness: %lf, gsl_vector_get(H->fitness, hybrid_id[i]): %lf", tmpB->best_fitness, gsl_vector_get(H->fitness, hybrid_id[i]));
 					*//*DestroyBats(&tmpB);
 				}
@@ -1368,7 +1370,7 @@ p: percentage of the harmonies that might be improved by hybridization
 		}
 		gsl_rng_free(r);
 		
-		/*switch(FUNCTION_ID){
+		switch(FUNCTION_ID){
 			case 1:
 				m = va_arg(arg, RBM **);
 				*m = CreateRBM(, gsl_matrix_get(H->HM, H->best, 0), g->nlabels);

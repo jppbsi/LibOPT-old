@@ -44,10 +44,10 @@ void ShowBats(Bats *H); /* It displays the search space's content */
 void ShowBatsInformation(Bats *H); /* It displays the search space's main information */
 
 /* Main algorithm */
-inline void SetBatFrequency(Bats *B, int bat_id); /* It sets the frequency of each bat */
-inline void UpdateBatVelocity(Bats *B, int bat_id); /* It updates the velocity of each bat */
-inline void UpdateBatTemporaryPosition(Bats *B, int bat_id, gsl_vector *tmp); /* It updates the position of each bat */
-inline void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp); /* It generates a local solution near the best solution */
+void SetBatFrequency(Bats *B, int bat_id); /* It sets the frequency of each bat */
+void UpdateBatVelocity(Bats *B, int bat_id); /* It updates the velocity of each bat */
+void UpdateBatTemporaryPosition(Bats *B, int bat_id, gsl_vector *tmp); /* It updates the position of each bat */
+void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp); /* It generates a local solution near the best solution */
 double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a new solution */
 void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all bats */
 void LocalSearchAndUpdateBest(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It performs the local search and updates the best bat */
