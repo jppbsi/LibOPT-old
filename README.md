@@ -12,6 +12,10 @@ LibOPT is an optimization library developed in C language for the development of
 * Parameter-Setting-Free Harmony Search []
 * Novel Global Harmony Search []
 
+Additionally, the library also implements the following procedures:
+
+* Deep Belief Networks fine-tuning parameters []
+
 **References**
 
 [1] J. Kennedy, R. C. Eberhart and Y. Shi. Swarm Intelligence, Morgan Kaufmann Series in Artificial Intelligence, 2001.
