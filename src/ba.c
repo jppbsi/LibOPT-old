@@ -272,9 +272,9 @@ B: search space
 EvaluateFun: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
-    
-    int i, n_epochs, batch_size;
+    int i, j, l, z, L, n_epochs, n_gibbs_sampling, batch_size;
     double f;
+    gsl_matrix *Param = NULL;
     Subgraph *g = NULL;
     
     switch(FUNCTION_ID){
@@ -294,7 +294,37 @@ void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 }
             }
             B->mean_A/=B->m; /* it updates the mean loudness */
-            break;
+        break;
+	case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+								
+		Param = gsl_matrix_alloc(L, 6);
+		for(i = 0; i < B->m; i++){
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+			gsl_vector_set(B->fitness, i, f);
+			if(f < B->best_fitness){
+				B->best = i;
+				B->best_fitness = f;
+			}
+		}
+
+		gsl_matrix_free(Param);
+	break;
     }
 }
 
@@ -349,10 +379,11 @@ EvaluateFun: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h
 arg: argument list */
 double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va_list arg){
-	int i, n_epochs, batch_size;
-	double f = DBL_MAX;
+	int i, j, l, z, L, n_epochs, n_gibbs_sampling, batch_size;
+	double f;
+	gsl_matrix *Param = NULL;
 	Subgraph *g = NULL;
-    
+	
 	switch(FUNCTION_ID){
 	    case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
 	        g = va_arg(arg, Subgraph *);
@@ -361,6 +392,27 @@ double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va
 		
 		f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), n_epochs, batch_size); 
 	        break;
+	case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+								
+		Param = gsl_matrix_alloc(L, 6);
+
+		/* setting Param matrix */
+		z = 0;
+		for(l = 0; l < L; l++){
+			for(j = 0; j < 4; j++)
+				gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+			z+=4;
+		}
+							
+		f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+
+		gsl_matrix_free(Param);
+		break;	
 	}
 	
 	return f;

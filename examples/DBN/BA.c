@@ -25,7 +25,7 @@ int main(int argc, char **argv){
     Train = ReadSubgraph(argv[1]);
     Test = ReadSubgraph(argv[2]);
     
-    fprintf(stderr,"\nInitializing harmony memory ... ");
+    fprintf(stderr,"\nInitializing bats ... ");
     InitializeBats(B);
     fprintf(stderr,"\nOK\n");
     
