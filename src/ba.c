@@ -26,7 +26,6 @@ Bats *CreateBats(int m, int n){
 	B->fitness = gsl_vector_alloc(B->m);
 	B->LB = gsl_vector_alloc(B->n);
 	B->UB = gsl_vector_alloc(B->n);
-	B->step = gsl_vector_alloc(B->n);
         B->best_fitness = DBL_MAX;
 	
 	return B;
@@ -48,7 +47,6 @@ void DestroyBats(Bats **B){
                 gsl_vector_free(aux->A);
 		gsl_vector_free(aux->LB);
 		gsl_vector_free(aux->UB);
-		gsl_vector_free(aux->step);
 		free(aux);
                 aux = NULL;
 	}
@@ -61,12 +59,12 @@ Bats *ReadBatsFromFile(char *fileName){
 	FILE *fp = NULL;
 	int m, n;
         Bats *B = NULL;
-	double LB, UB, step;
+	double LB, UB;
         char c;
         
         fp = fopen(fileName, "r");
         if(!fp){
-                fprintf(stderr,"\nunable to open file %s @ReadHarmonyMemoryFromFile.\n", fileName);
+                fprintf(stderr,"\nunable to open file %s @ReadBatsFromFile.\n", fileName);
                 return NULL;
         }
         
@@ -80,10 +78,9 @@ Bats *ReadBatsFromFile(char *fileName){
         fscanf(fp, "%lf %lf", &(B->A_min), &(B->A_max)); WaiveComment(fp);
 	
         for(n = 0; n < B->n; n++){
-                fscanf(fp, "%lf %lf %lf", &LB, &UB, &step);
+                fscanf(fp, "%lf %lf", &LB, &UB);
                 gsl_vector_set(B->LB, n, LB);
                 gsl_vector_set(B->UB, n, UB);
-		gsl_vector_set(B->step, n, step);
                 WaiveComment(fp);
         }
         fclose(fp);
@@ -119,7 +116,6 @@ Bats *CopyBats(Bats *B){
         gsl_vector_memcpy(cpy->fitness, B->fitness);
         gsl_vector_memcpy(cpy->LB, B->LB);
         gsl_vector_memcpy(cpy->UB, B->UB);
-        gsl_vector_memcpy(cpy->step, B->step);
         
         return cpy;
     }else{
@@ -175,7 +171,7 @@ void ShowBatsInformation(Bats *B){
                 fprintf(stderr,"\nA_min: %lf      A_max: %lf", B->A_min, B->A_max);
                 fprintf(stderr,"\nA_min: %lf      A_max: %lf", B->alpha, B->gamma);
 		for(i = 0; i < B->n; i++)
-		        fprintf(stderr, "\nVariable %d: [%f,%f] with step of %f.", i+1, gsl_vector_get(B->LB, i), gsl_vector_get(B->UB, i), gsl_vector_get(B->step, i));
+		        fprintf(stderr, "\nVariable %d: [%f,%f].", i+1, gsl_vector_get(B->LB, i), gsl_vector_get(B->UB, i));
 		fprintf(stderr,"\n---\n");
 	}else fprintf(stderr,"\nThere is no search space allocated @ShowHarmonyBatsInformation.\n");	
 	

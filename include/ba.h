@@ -28,7 +28,6 @@ typedef struct _Bats{
     gsl_vector *fitness; /* fitness values */
     gsl_vector *LB; /* lower bound for each decision variable */
     gsl_vector *UB; /* upper bound for each decision variable */
-    gsl_vector *step; /* step size for each decision variable */
 }Bats;
 
 /* Allocation and deallocation */
