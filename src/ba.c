@@ -528,10 +528,7 @@ void runBA(Bats *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				}
 						
 			}
-			
-			EvaluateBats(B, Evaluate, FUNCTION_ID, arg);
-			va_copy(arg, argtmp);            
-                
+			                
 			UpdateLoudness(B); /* Equation 5 */
 			UpdatePulseRate(B, t); /* Equation 5 */
 		}
