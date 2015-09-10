@@ -1,4 +1,5 @@
 #include "mbo.h"
+
 #define LEADER 0
 
 /* It allocates the flock of birds 
