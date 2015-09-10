@@ -21,8 +21,10 @@ Swarm *CreateSwarm(int m, int n){
 	S->v = gsl_matrix_calloc(S->m, S->n);
 	S->y = gsl_matrix_calloc(S->m, S->n);
 	S->fitness = gsl_vector_calloc(S->m);
+	S->fitness_previous = gsl_vector_calloc(S->m);
 	S->LB = gsl_vector_alloc(S->n);
 	S->UB = gsl_vector_alloc(S->n);
+	S->S = (char *)malloc(S->m*sizeof(char));
 	
 	S->c1 = 0;
 	S->c2 = 0;
@@ -45,6 +47,7 @@ void DestroySwarm(Swarm **S){
 		gsl_matrix_free(aux->v);
 		gsl_matrix_free(aux->y);
 		gsl_vector_free(aux->fitness);
+		gsl_vector_free(aux->fitness_previous);
 		gsl_vector_free(aux->LB);
 		gsl_vector_free(aux->UB);
 		free(aux);
@@ -73,7 +76,10 @@ Swarm *ReadSwarmFromFile(char *fileName){
 	fscanf(fp, "%d", &(S->max_iterations));
 	WaiveComment(fp);
 	
-	fscanf(fp, "%lf %lf %lf", &(S->c1), &(S->c2), &(S->w));
+	fscanf(fp, "%lf %lf", &(S->c1), &(S->c2));
+	WaiveComment(fp);
+	
+	fscanf(fp, "%lf %lf %lf", &(S->w), &(S->w_min), &(S->w_max));
 	WaiveComment(fp);
 		
 	for(n = 0; n < S->n; n++){
@@ -106,8 +112,10 @@ Swarm *CopySwarm(Swarm *S){
         gsl_matrix_memcpy(cpy->v, S->v);
         gsl_matrix_memcpy(cpy->v, S->y);
         gsl_vector_memcpy(cpy->fitness, S->fitness);
+	gsl_vector_memcpy(cpy->fitness_previous, S->fitness_previous);
         gsl_vector_memcpy(cpy->LB, S->LB);
         gsl_vector_memcpy(cpy->UB, S->UB);
+	memcpy(cpy->S, S->S, S->m*sizeof(char));
         
         return cpy;
     }else{
@@ -395,6 +403,32 @@ void UpdateParticlePosition(Swarm *S, int particle_id){
     }    
 }
 
+/* It computes the success of each particle at iteration t  - AIWPSO 
+Parameters: [S]
+S: search space */
+void ComputeSuccess(Swarm *S){
+	int i;
+	
+	for(i = 0; i < S->m; i++){
+		if(gsl_vector_get(S->fitness, i) < gsl_vector_get(S->fitness_previous, i)) S->S[i] = 1;
+		else S->S[i] = 0;
+	}
+}
+
+/* It computes the success percentage of the whole Swarm  - AIWPSO 
+Parameters: [S]
+S: search space */
+double ComputeSuccessPercentage(Swarm *S){
+	int i;
+	double p = 0;
+	
+	for(i = 0; i < S->m; i++)
+		p+= S->S[i];
+	p/=S->m;
+	
+	return p;
+}
+
 /* It executes the Particle Swarm Optimization for function minimization ---
 Parameters: [S, EvaluateFun, FUNCTION_ID, ... ]
 S: search space
@@ -436,6 +470,59 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
 	         
             EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
 	    fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
+        }
+        gsl_rng_free(r);
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runPSO.\n");
+    va_end(arg);
+}
+
+/* It executes the Particle Swarm Optimization with Adpative Inertia Weight for function minimization for function minimization ---
+Parameters: [S, EvaluateFun, FUNCTION_ID, ... ]
+S: search space
+Evaluate: pointer to the function used to evaluate particles
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+void runAIWPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
+    va_list arg, argtmp;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r;
+    double p;
+    		
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+    if(S){
+        int t, i;
+        double beta, prob;
+        const gsl_rng_type *T = NULL;
+        gsl_rng *r = NULL;
+                    
+        srand(time(NULL));
+        gsl_rng_env_setup();
+        T = gsl_rng_default;
+        r = gsl_rng_alloc(T);
+        gsl_rng_set(r, rand());
+        
+        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg);
+	gsl_vector_memcpy(S->fitness_previous, S->fitness);
+        
+        for(t = 1; t <= S->max_iterations; t++){
+            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
+            va_copy(arg, argtmp);
+            
+            /* for each particle */
+            for(i = 0; i < S->m; i++){
+                UpdateParticleVelocity(S, i);
+                UpdateParticlePosition(S, i);
+            }
+	    CheckSwarmLimits(S);
+	         
+            EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
+	    fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
+	    
+	    ComputeSuccess(S); /* Equation 17 */
+	    p = ComputeSuccessPercentage(S); /* Equation 18 */
+	    S->w = (S->w_max-S->w_min)*p-S->w_min; /* Equation 20 */
         }
         gsl_rng_free(r);
         
