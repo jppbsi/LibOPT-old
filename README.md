@@ -4,7 +4,8 @@ LibOPT
 LibOPT is an optimization library developed in C language for the development of meta-heuristic-based applications. Currently, we have the following techniques implemented and tested:
 
 * Particle Swarm Optimization [1]
-* Bat Algorithm [2]
+* Particle Swarm Optimization with Adaptive Inertia Weight [2]
+* Bat Algorithm [3]
 * Harmony Search []
 * Improved Harmony Search []
 * Global-best Harmony Search []
@@ -14,10 +15,13 @@ LibOPT is an optimization library developed in C language for the development of
 
 Additionally, the library also implements the following procedures:
 
-* Deep Belief Networks fine-tuning parameters []
+* Restricted Boltzmann Machines fine-tuning parameters with Contrastive Divergence, Persistent Contrastive Divergence and Fast Persistent Contrastive Digervence []
+* Deep Belief Networks fine-tuning parameters with Contrastive Divergence, Persistent Contrastive Divergence and Fast Persistent Contrastive Digervence []
 
 **References**
 
 [1] J. Kennedy, R. C. Eberhart and Y. Shi. Swarm Intelligence, Morgan Kaufmann Series in Artificial Intelligence, 2001.
 
-[2] X.-S. Yang and A. H. Gandomi, Bat algorithm: a novel approach for global engineering optimization, Engineering Computations, 5(29), pp.464 - 483, 2012.
+[2] A. Nickabadi, M. M. Ebadzadeh and R. Safabakhsh, A novel particle swarm optimization algorithm with adaptive inertia weight, Applied Soft Computing, 11(4), pp.3658 - 3670, 2011.
+
+[3] X.-S. Yang and A. H. Gandomi, Bat algorithm: a novel approach for global engineering optimization, Engineering Computations, 5(29), pp.464 - 483, 2012.
