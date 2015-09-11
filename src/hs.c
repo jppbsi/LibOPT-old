@@ -677,7 +677,7 @@ H: harmony memory
 h: new harmony to be evaluated */
 void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	if((H) && (h)){
-		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L;
+		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
 		Subgraph *g = NULL;
 		double f, x, y;
 		gsl_vector *sigma = NULL;
@@ -931,6 +931,27 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				}
 
 				gsl_matrix_free(Param);
+			break;
+			case 11: /* Logistic Regression */
+				g = va_arg(arg, Subgraph *);
+				FUNCTION_ID2 = va_arg(arg, int);
+				f = Evaluate(g, FUNCTION_ID2, gsl_vector_get(h, 0));
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
 			break;
 		}
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");

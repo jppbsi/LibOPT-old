@@ -719,7 +719,8 @@ gsl_vector *LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_
     switch (FUNCTION_ID){
         case 5: // Gradient Descent
             alpha = va_arg(arg, double);
-            GradientDescent(X, Y, alpha, 7, w); // 7 is the Linear Regression ID at LibOPT
+	    fprintf(stderr,"\nUNDER CONSTRUCTION!");
+            //GradientDescent(X, Y, alpha, 7, w); // 7 is the Linear Regression ID at LibOPT
         break;
     }
     
@@ -730,15 +731,14 @@ gsl_vector *LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_
 }
 
 /* It fits a logistic regression model using the Equation 21 as the error function optimized by FUNCTION_ID
-Parameters: [X, Y, w, Optimization_Func, ...]
-X: training set
-Y: target values
+Parameters: [g, w, Optimization_Func, ...]
+g: training graph
 w: parameters of the linear function
 Optimization_Func: function used to find the parameters that best fits the linear model
 remaining parameters of each specific optimization function
 ---
 Output: learned set of parameters w */
-gsl_vector *LogisticRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...){
+gsl_vector *LogisticRegression_Fitting(Subgraph *g, int FUNCTION_ID, ...){
     gsl_vector *w = NULL;
     va_list arg;
     const gsl_rng_type *T = NULL;
@@ -751,7 +751,7 @@ gsl_vector *LogisticRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTIO
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    w = gsl_vector_calloc(X->size2); // w has size 1x(n+1)
+    w = gsl_vector_calloc(g->nnodes); // w has size 1x(n+1)
     for(i = 0; i < w->size; i++) // it initalizes w with a uniform distribution [0,1] -> small values{
         gsl_vector_set(w, i, gsl_rng_uniform(r));
     
@@ -760,7 +760,7 @@ gsl_vector *LogisticRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTIO
     switch (FUNCTION_ID){
         case 5: // Gradient Descent
             alpha = va_arg(arg, double);
-            GradientDescent(X, Y, alpha, 11, w); // 11 is the Logistic Regression ID at LibOPT 
+            GradientDescent(g, alpha, 11, w); // 11 is the Logistic Regression ID at LibOPT 
         break;
     }
     
