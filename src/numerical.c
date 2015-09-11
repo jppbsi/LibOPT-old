@@ -5,8 +5,10 @@ Parameters: [g, alpha, ...]
 g: traing graph
 alpha: learning rate
 FUNCTION_ID: identifier of the function to be optimized
-remaining parameters of the function to be optimized */
-void GradientDescent(Subgraph *g, double alpha, int FUNCTION_ID, ...){
+remaining parameters of the function to be optimized
+
+Output: error */
+double GradientDescent(Subgraph *g, double alpha, int FUNCTION_ID, ...){
     va_list arg;
     gsl_vector *w = NULL, *w_tmp = NULL;
     double error = 0.0, old_error = DBL_MAX, tmp;
@@ -52,7 +54,7 @@ void GradientDescent(Subgraph *g, double alpha, int FUNCTION_ID, ...){
 					
 					gsl_vector_memcpy(w_tmp, w);
 					error = Logistic_Regression(g, w);
-					fprintf(stderr,"\nIteration: %d -> cost function value: %lf", i, error);
+					//fprintf(stderr,"\nIteration: %d -> cost function value: %lf", i, error);
 					i++;
 				}
 				fprintf(stderr,"\nError over the training set %.7lf", error);
@@ -62,4 +64,6 @@ void GradientDescent(Subgraph *g, double alpha, int FUNCTION_ID, ...){
     
     va_end(arg);
     gsl_vector_free(w_tmp);
+    
+    return error;
 }

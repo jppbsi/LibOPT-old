@@ -4,20 +4,19 @@
 
 int main(int argc, char **argv){
 
-    if(argc != 8){
+    if(argc != 7){
         fprintf(stderr,"\nusage HS <training set> <test set> <output results file name> <cross-validation iteration number> \
                 <harmony memory configuration file> <output best parameters file name>\n");
         exit(-1);
     }
     HarmonyMemory *H = NULL;
-    int iteration = atoi(argv[4]);
+    int i, iteration = atoi(argv[4]);
     double errorTRAIN, errorTEST;
-    gsl_matrix *X = NULL, *XTest = NULL;
-    gsl_vector *Y = NULL, *YTest = NULL, *w = NULL, *predict = NULL;
     FILE *fp = NULL, *fpParameters = NULL;
+    Subgraph *Train = NULL, *Test = NULL;
+    gsl_vector *w = NULL;
     
     H = ReadHarmoniesFromFile(argv[5]);
-    Subgraph *Train = NULL, *Test = NULL;
     Train = ReadSubgraph(argv[1]);
     Test = ReadSubgraph(argv[2]);
     
@@ -25,12 +24,12 @@ int main(int argc, char **argv){
     InitializeHarmonyMemory(H);
     fprintf(stderr,"\nOK\n");
     
-    runHS(H, LogisticRegression_Fitting, LOGISTIC_REGRESSION, Train, GRADIENT_DESCENT);
-    
-    
-    w = LogisticRegression_Fitting(X, Y, GRADIENT_DESCENT, gsl_matrix_get(H->HM, H->best, 0));
+    w = gsl_vector_alloc(Train->nfeats);
+    runHS(H, LogisticRegression_Fitting, LOGISTIC_REGRESSION, Train, GRADIENT_DESCENT, w); /* It learns the best value of alpha */
+    errorTRAIN = LogisticRegression_Fitting(Train, GRADIENT_DESCENT, gsl_matrix_get(H->HM, H->best, 0), w);
     Logistic_Regression4Classification(Test, w);
       
+    fprintf(stderr,"\nBest learning rate: %lf", gsl_matrix_get(H->HM, H->best, 0));
     fp = fopen(argv[3], "a");
     fprintf(fp,"\n%d %lf %lf", iteration, errorTRAIN, errorTEST);
     fclose(fp);
@@ -44,6 +43,7 @@ int main(int argc, char **argv){
     DestroyHarmonyMemory(&H);
     DestroySubgraph(&Train);
     DestroySubgraph(&Test);
+    gsl_vector_free(w);
     
     return 0;
 }

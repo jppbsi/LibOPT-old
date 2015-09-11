@@ -738,35 +738,36 @@ Optimization_Func: function used to find the parameters that best fits the linea
 remaining parameters of each specific optimization function
 ---
 Output: learned set of parameters w */
-gsl_vector *LogisticRegression_Fitting(Subgraph *g, int FUNCTION_ID, ...){
-    gsl_vector *w = NULL;
+double LogisticRegression_Fitting(Subgraph *g, ...){
+    gsl_vector *w = NULL; // w has size 1x(n+1)
     va_list arg;
     const gsl_rng_type *T = NULL;
     gsl_rng *r = NULL;
-    int i;
-    double alpha;
+    int i, FUNCTION_ID;
+    double alpha, error;
 	               
     srand(time(NULL));
     T = gsl_rng_default;
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    w = gsl_vector_calloc(g->nnodes); // w has size 1x(n+1)
-    for(i = 0; i < w->size; i++) // it initalizes w with a uniform distribution [0,1] -> small values{
-        gsl_vector_set(w, i, gsl_rng_uniform(r));
+    va_start(arg, g);
+    FUNCTION_ID = va_arg(arg, int);
     
-    va_start(arg, FUNCTION_ID);
-
     switch (FUNCTION_ID){
         case 5: // Gradient Descent
             alpha = va_arg(arg, double);
-            GradientDescent(g, alpha, 11, w); // 11 is the Logistic Regression ID at LibOPT 
+	    w = va_arg(arg, gsl_vector *);
+	    for(i = 0; i < w->size; i++) // it initalizes w with a uniform distribution [0,1] -> small values{
+		gsl_vector_set(w, i, gsl_rng_uniform(r));
+    
+            error = GradientDescent(g, alpha, 11, w); // 11 is the Logistic Regression ID at LibOPT 
         break;
     }
     
     va_end(arg);
     gsl_rng_free(r);
     
-    return w;
+    return error;
 }
 
