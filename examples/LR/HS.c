@@ -28,6 +28,7 @@ int main(int argc, char **argv){
     runHS(H, LogisticRegression_Fitting, LOGISTIC_REGRESSION, Train, GRADIENT_DESCENT, w); /* It learns the best value of alpha */
     errorTRAIN = LogisticRegression_Fitting(Train, GRADIENT_DESCENT, gsl_matrix_get(H->HM, H->best, 0), w);
     Logistic_Regression4Classification(Test, w);
+    errorTEST = (double)opf_Accuracy(Test);
       
     fprintf(stderr,"\nBest learning rate: %lf", gsl_matrix_get(H->HM, H->best, 0));
     fp = fopen(argv[3], "a");
