@@ -688,46 +688,56 @@ void CheckLimits(gsl_vector *x, gsl_vector *LB, gsl_vector *UB){
     }
 }
 
-/* It fits a linear regression model using the Minimum Square Error as the error function optimized by FUNCTION_ID
-Parameters: [X, Y, w, Optimization_Func, ...]
-X: training set
-Y: target values
+/* It fits a linear regression model using Equation 5 as the error function optimized by FUNCTION_ID
+Parameters: [g, w, Optimization_Func, ...]
+g: training graph
 w: parameters of the linear function
 Optimization_Func: function used to find the parameters that best fits the linear model
 remaining parameters of each specific optimization function
 ---
 Output: learned set of parameters w */
-gsl_vector *LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...){
-    gsl_vector *w = NULL;
+double LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...){
+    gsl_vector *w = NULL; // w has size 1x(n+1)
     va_list arg;
     const gsl_rng_type *T = NULL;
     gsl_rng *r = NULL;
-    int i;
-    double alpha;
+    int i, j;
+    double alpha, error;
+    Subgraph *g = NULL;
 	               
     srand(time(NULL));
     T = gsl_rng_default;
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    w = gsl_vector_calloc(X->size2); // w has size 1x(n+1)
-    for(i = 0; i < w->size; i++) // it initalizes w with a uniform distribution [0,1] -> small values{
-        gsl_vector_set(w, i, gsl_rng_uniform(r));
+    /* mapping data to another format */
+    g = CreateSubgraph(X->size1);
+    g->nfeats = X->size2+1; g->nlabels = 1;
+    for(i = 0; i < X->size1; i++){
+	g->node[i].feat = AllocFloatArray(X->size2+1);
+	for(j = 0; j < X->size2; j++)
+	    g->node[i].feat[j] = gsl_matrix_get(X, i, j);
+	g->node[i].feat[j] = gsl_vector_get(Y, i); //last position stores the target
+    }
     
     va_start(arg, FUNCTION_ID);
-
+    
     switch (FUNCTION_ID){
         case 5: // Gradient Descent
             alpha = va_arg(arg, double);
-	    fprintf(stderr,"\nUNDER CONSTRUCTION!");
-            //GradientDescent(X, Y, alpha, 7, w); // 7 is the Linear Regression ID at LibOPT
+	    w = va_arg(arg, gsl_vector *);
+	    for(i = 0; i < w->size; i++) // it initalizes w with a uniform distribution [0,1] -> small values{
+		gsl_vector_set(w, i, gsl_rng_uniform(r));
+    
+            error = GradientDescent(g, alpha, 7, w); // 7 is the Linear Regression ID at LibOPT 
         break;
     }
     
     va_end(arg);
     gsl_rng_free(r);
+    DestroySubgraph(&g);
     
-    return w;
+    return error;
 }
 
 /* It fits a logistic regression model using the Equation 21 as the error function optimized by FUNCTION_ID

@@ -43,7 +43,7 @@ double kMeans4Optimization(Subgraph *g, ...); /* It executes the k-Means cluster
 void GenerateRandomSolution(gsl_vector *x, int HEURISTIC_ID, int pos, ...); /* It generates a new solution around a position */
 
 /* Linear Regression */
-gsl_vector *LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...); /* It fits a linear regression model using the Minimum Square Error as the error function optimized by FUNCTION_ID */
+double LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, ...); /* It fits a linear regression model using the Minimum Square Error as the error function optimized by FUNCTION_ID */
 
 /* Logistic Regression */
 double LogisticRegression_Fitting(Subgraph *g, ...); /* It executes the Logistic Regression classifier optimized by FUNCTION_ID */
