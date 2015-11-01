@@ -741,9 +741,9 @@ double LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, .
 }
 
 /* It fits a logistic regression model using the Equation 21 as the error function optimized by FUNCTION_ID
-Parameters: [g, w, Optimization_Func, ...]
+Parameters: [g, p, Optimization_Func, ...]
 g: training graph
-w: parameters of the linear function
+p: parameters of the linear function
 Optimization_Func: function used to find the parameters that best fits the linear model
 remaining parameters of each specific optimization function
 ---
