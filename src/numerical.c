@@ -134,7 +134,7 @@ double ForwardPropagation(gsl_matrix *X, gsl_vector *Y, gsl_matrix **W, int L, g
 			z+=gsl_vector_get(a[l-1], k)*gsl_matrix_get(W[l-1], k, s);
 		    gsl_vector_set(a[l], s, z);
 		 }
-	} CALCULAR O ERRO ONDE AGORA?
+	} //CALCULAR O ERRO ONDE AGORA?
     }
     
     return error;

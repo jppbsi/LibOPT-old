@@ -214,17 +214,82 @@ FUNCTION_ID: identifier of the function to be evaluated
 arg: argument list */
 double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	double f;
-	int n_epochs, batch_size;
+	int n_epochs, batch_size, n_gibbs_sampling, z, i, j, l, L;
 	Subgraph *g = NULL;
+	gsl_matrix *Param = NULL;
 
 	switch(FUNCTION_ID){
-		case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+		case 6: /* Bernoulli_BernoulliDBN4Reconstruction using CD */
 			g = va_arg(arg, Subgraph *);
 			n_epochs = va_arg(arg, int);
 			batch_size = va_arg(arg, int);
-									
-			f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), n_epochs, batch_size, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 		
-			break;
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+			
+			Param = gsl_matrix_alloc(L, 6);
+
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+			
+			gsl_matrix_free(Param);
+		break;
+	
+		case 9: /* Bernoulli_BernoulliDBN4Reconstruction using PCD */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+			
+			Param = gsl_matrix_alloc(L, 6);
+
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
+			
+			gsl_matrix_free(Param);
+		break;
+	
+		case 10: /* Bernoulli_BernoulliDBN4Reconstruction using FPCD */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+			
+			Param = gsl_matrix_alloc(L, 6);
+
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 3, L, Param, n_epochs, batch_size); 
+			
+			gsl_matrix_free(Param);
+		break;
 
 		case 8: /* f1 */ 
 			g = va_arg(arg, Subgraph *);
