@@ -114,8 +114,8 @@ W: array containing the weights of each layer
 L: number of layers
 a: output for each neuron at each layer */
 double ForwardPropagation(gsl_matrix *X, gsl_vector *Y, gsl_matrix **W, int L, gsl_vector **a){
-    double error, z;
-    int i, l, s, k;
+    double error = 0, z, max_output;
+    int i, l, s, k, predicted_label;
     gsl_vector_view row;
     
     /* for each dataset sample */
@@ -134,8 +134,24 @@ double ForwardPropagation(gsl_matrix *X, gsl_vector *Y, gsl_matrix **W, int L, g
 			z+=gsl_vector_get(a[l-1], k)*gsl_matrix_get(W[l-1], k, s);
 		    gsl_vector_set(a[l], s, z);
 		 }
-	} //CALCULAR O ERRO ONDE AGORA?
+	}
+	
+	/* computing the error */
+	if(a[L-1]->size == 1) /* regression problem, i.e. we have one output neuron only */
+	    error+=fabs(gsl_vector_get(a[L-1], 0)-gsl_vector_get(Y,i));
+	else{ /* classification problem */
+	    max_output = gsl_vector_get(a[L-1], 0);
+	    predicted_label = 1;
+	    for(k = 1; k < a[L-1]->size; k++){
+		if(gsl_vector_get(a[L-1], k) > max_output){
+		    max_output = gsl_vector_get(a[L-1], k);
+		    predicted_label = k+1;
+		}
+	    }
+	    if(predicted_label != (int)gsl_vector_get(Y,i)) error++;
+	}
     }
+    error/=X->size1;
     
     return error;
 }
