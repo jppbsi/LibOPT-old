@@ -12,11 +12,10 @@ int main(int argc, char **argv){
     Swarm *S = NULL;
     int iteration = atoi(argv[5]), i;
     double accTRAIN, accTEST;
-    gsl_vector_view row;
+    Subgraph *Train = NULL, *Val = NULL, *Test = NULL;
     FILE *fp = NULL, *fpParameters = NULL;
     
     S = ReadSwarmFromFile(argv[5]);
-    Subgraph *Train = NULL, *Val = NULL, *Test = NULL;
     Train = ReadSubgraph(argv[1]);
     Val = ReadSubgraph(argv[2]);
     Test = ReadSubgraph(argv[3]);
@@ -28,14 +27,20 @@ int main(int argc, char **argv){
     runPSO(S, OPFknn4Optimization, OPFKNN, Train, Val);
     
     fprintf(stderr,"\nRunning OPFknn once more over the training set ... ");
-    //opf_OPFknnTraining(Train, gsl_matrix_get(S->x, S->best, 0));
+    Train->bestk = gsl_matrix_get(S->x, S->best, 0);
+    opf_CreateArcs(Train, Train->bestk);
+    opf_PDF(Train);
+    opf_OPFClustering4SupervisedLearning(Train);
+    opf_DestroyArcs(Train);
     
     fprintf(stderr,"\nRunning OPFknn classification over the training set ... ");
-    //accTRAIN = BernoulliDBNReconstruction(DatasetTest, d);
+    opf_OPFknnClassify(Train, Val);
+    accTRAIN = (double)opf_Accuracy(Val);
     fprintf(stderr,"\nOK\n");
     
     fprintf(stderr,"\nRunning OPFknn classification over the testing set ... ");
-    //accTEST = BernoulliDBNReconstruction(DatasetTest, d);
+    opf_OPFknnClassify(Train, Test);
+    accTEST = (double)opf_Accuracy(Test);
     fprintf(stderr,"\nOK\n");
         
     fp = fopen(argv[3], "a");
