@@ -50,6 +50,7 @@ void DestroySwarm(Swarm **S){
 		gsl_vector_free(aux->fitness_previous);
 		gsl_vector_free(aux->LB);
 		gsl_vector_free(aux->UB);
+		free(aux->S);
 		free(aux);
 		aux = NULL;
 	}

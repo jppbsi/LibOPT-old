@@ -21,10 +21,10 @@ int main(int argc, char **argv){
     Test = ReadSubgraph(argv[3]);
     
     fprintf(stderr,"\nInitializing swarm ... ");
-    InitializeSwarm(S);
+    //InitializeSwarm(S);
     fprintf(stderr,"\nOK\n");
         
-    runPSO(S, OPFknn4Optimization, OPFKNN, Train, Val);
+    /*runPSO(S, OPFknn4Optimization, OPFKNN, Train, Val);
     
     fprintf(stderr,"\nRunning OPFknn once more over the training set with the best k ... ");
     Train->bestk = gsl_matrix_get(S->x, S->best, 0);
@@ -52,7 +52,7 @@ int main(int argc, char **argv){
     fprintf(fpParameters,"%d ", S->n);
     for(i = 0; i < S->n; i++)
         fprintf(fpParameters, "%lf ", gsl_matrix_get(S->x, S->best, i));
-    fclose(fpParameters);
+    fclose(fpParameters);*/
     
     DestroySwarm(&S);
     DestroySubgraph(&Train);
