@@ -6,11 +6,11 @@ int main(int argc, char **argv){
 
     if(argc != 12){
         fprintf(stderr,"\nusage PSO <training set> <validating set> <test set> <output results file name> \
-                <cross-validation iteration number> <particle swarm configuration file> <output best parameters file name> <kmax> \n");
+                <cross-validation iteration number> <particle swarm configuration file> <output best parameters file name>\n");
         exit(-1);
     }
     Swarm *S = NULL;
-    int iteration = atoi(argv[5]), kmax = atoi(argv[8]), i;
+    int iteration = atoi(argv[5]), i;
     double accTRAIN, accTEST;
     gsl_vector_view row;
     FILE *fp = NULL, *fpParameters = NULL;
@@ -25,43 +25,18 @@ int main(int argc, char **argv){
     InitializeSwarm(S);
     fprintf(stderr,"\nOK\n");
         
-    //runPSO(S, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_CD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+    runPSO(S, OPFknn4Optimization, OPFKNN, Train, Val);
     
-    /*fprintf(stderr,"\nRunning DBN once more over the training set ... ");
-    n_hidden_units = gsl_vector_alloc(n_layers);
-    j = 0;
-    for(i = 0; i < n_layers; i++){
-        gsl_vector_set(n_hidden_units, i, gsl_matrix_get(S->x, S->best, j));
-        j+=4;
-    }
-
-    d = CreateDBN(Train->nfeats, n_hidden_units, Train->nlabels, n_layers);
-    InitializeDBN(d); j = 1; z = 1;
-    for(i = 0; i < d->n_layers; i++){
-        d->m[i]->eta = gsl_matrix_get(S->x, S->best, j); j++;
-        d->m[i]->lambda = gsl_matrix_get(S->x, S->best, j); j++;
-        d->m[i]->alpha = gsl_matrix_get(S->x, S->best, j); j+=2;
-        d->m[i]->eta_min = gsl_vector_get(S->LB, z);
-        d->m[i]->eta_max = gsl_vector_get(S->UB, z);
-        z+=4;
-    }
+    fprintf(stderr,"\nRunning OPFknn once more over the training set ... ");
+    //opf_OPFknnTraining(Train, gsl_matrix_get(S->x, S->best, 0));
     
-    switch (op){
-        case 1:
-            errorTRAIN = BernoulliDBNTrainingbyContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-        case 2:
-            errorTRAIN = BernoulliDBNTrainingbyPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-        case 3:
-            errorTRAIN = BernoulliDBNTrainingbyFastPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-    }
+    fprintf(stderr,"\nRunning OPFknn classification over the training set ... ");
+    //accTRAIN = BernoulliDBNReconstruction(DatasetTest, d);
     fprintf(stderr,"\nOK\n");
     
-    fprintf(stderr,"\nRunning DBN for reconstruction ... ");
-    errorTEST = BernoulliDBNReconstruction(DatasetTest, d);
-    fprintf(stderr,"\nOK\n");*/
+    fprintf(stderr,"\nRunning OPFknn classification over the testing set ... ");
+    //accTEST = BernoulliDBNReconstruction(DatasetTest, d);
+    fprintf(stderr,"\nOK\n");
         
     fp = fopen(argv[3], "a");
     fprintf(fp,"\n%d %lf %lf", iteration, accTRAIN, accTEST);

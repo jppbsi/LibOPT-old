@@ -798,7 +798,12 @@ double OPFknn4Optimization(Subgraph *Train, ...){
     Val = va_arg(arg, Subgraph *);
     k = va_arg(arg, int);
     
-    opf_OPFknnTraining(Train, k);
+    Train->bestk = k;
+    opf_CreateArcs(Train, Train->bestk);
+    opf_PDF(Train);
+    opf_OPFClustering4SupervisedLearning(Train);
+    opf_DestroyArcs(Train);
+  
     opf_OPFknnClassify(Train, Val);
     error = (double)opf_Accuracy(Val);
     
