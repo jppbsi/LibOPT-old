@@ -24,8 +24,6 @@ int main(int argc, char **argv){
     InitializeSwarm(S);
     fprintf(stderr,"\nOK\n");
     
-    ShowSwarm(S);
-        
     runPSO(S, OPFknn4Optimization, OPFKNN, Train, Val);
     
     fprintf(stderr,"\nRunning OPFknn once more over the training set with the best k ... ");

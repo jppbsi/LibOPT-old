@@ -22,6 +22,8 @@ typedef struct _Swarm{
     gsl_vector *LB; /* lower bound for each decision variable */
     gsl_vector *UB; /* upper bound for each decision variable */
     char *S; /* success of particles in a given iteration */
+    char *computed; /* it is used to avoid re-computation when we work with natural numbers */
+    gsl_vector *computed_fitness; /* it is used to avoid re-computation when we work with natural numbers */
 }Swarm;
 
 /* Allocation and deallocation */

@@ -24,7 +24,7 @@ Swarm *CreateSwarm(int m, int n){
 	S->fitness_previous = gsl_vector_calloc(S->m);
 	S->LB = gsl_vector_alloc(S->n);
 	S->UB = gsl_vector_alloc(S->n);
-	S->S = (char *)malloc(S->m*sizeof(char));
+	S->S = (char *)calloc(S->m,sizeof(char));
 	
 	S->c1 = 0;
 	S->c2 = 0;
@@ -50,7 +50,9 @@ void DestroySwarm(Swarm **S){
 		gsl_vector_free(aux->fitness_previous);
 		gsl_vector_free(aux->LB);
 		gsl_vector_free(aux->UB);
+		gsl_vector_free(aux->computed_fitness);
 		free(aux->S);
+		free(aux->computed);
 		free(aux);
 		aux = NULL;
 	}
@@ -90,6 +92,8 @@ Swarm *ReadSwarmFromFile(char *fileName){
 	    WaiveComment(fp);
 	}
 	fclose(fp);
+	S->computed = (char *)calloc(gsl_vector_get(S->UB, 0)+1,sizeof(char));
+	S->computed_fitness = gsl_vector_calloc(gsl_vector_get(S->UB, 0)+1);
         
     return S;
 }
@@ -365,7 +369,12 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		row = gsl_vector_alloc(S->n);
 		
 		for(i = 0; i < S->m; i++){
-			f = Evaluate(g, Val, (int)gsl_matrix_get(S->x, i, 0));
+			if(!S->computed[(int)gsl_matrix_get(S->x, i, 0)]){
+				f = Evaluate(g, Val, (int)gsl_matrix_get(S->x, i, 0));
+				S->computed[(int)gsl_matrix_get(S->x, i, 0)] = 1;
+				gsl_vector_set(S->computed_fitness, (int)gsl_matrix_get(S->x, i, 0), f);
+			}
+			else f = gsl_vector_get(S->computed_fitness, (int)gsl_matrix_get(S->x, i, 0));
 				
 			/* it updates the best position of the agent */
 			if(f < gsl_vector_get(S->fitness, i)){
