@@ -26,12 +26,13 @@ int main(int argc, char **argv){
         
     runPSO(S, OPFknn4Optimization, OPFKNN, Train, Val);
     
-    fprintf(stderr,"\nRunning OPFknn once more over the training set ... ");
+    fprintf(stderr,"\nRunning OPFknn once more over the training set with the best k ... ");
     Train->bestk = gsl_matrix_get(S->x, S->best, 0);
     opf_CreateArcs(Train, Train->bestk);
     opf_PDF(Train);
     opf_OPFClustering4SupervisedLearning(Train);
     opf_DestroyArcs(Train);
+    fprintf(stderr,"\nOK\n");
     
     fprintf(stderr,"\nRunning OPFknn classification over the training set ... ");
     opf_OPFknnClassify(Train, Val);
