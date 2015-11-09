@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     Subgraph *Train = NULL, *Val = NULL, *Test = NULL;
     FILE *fp = NULL, *fpParameters = NULL;
     
-    S = ReadSwarmFromFile(argv[5]);
+    S = ReadSwarmFromFile(argv[6]);
     Train = ReadSubgraph(argv[1]);
     Val = ReadSubgraph(argv[2]);
     Test = ReadSubgraph(argv[3]);
