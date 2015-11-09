@@ -781,3 +781,29 @@ double LogisticRegression_Fitting(Subgraph *g, ...){
     return error;
 }
 
+/* It optimizes the k learning step for OPFknn
+Parameters: [g, p, Optimization_Func, ...]
+Train: training graph
+Val: validating graph
+k: neighborhood size
+---
+Output: learned set of parameters w */
+double OPFknn4Optimization(Subgraph *Train, ...){
+    va_list arg;
+    double error;
+    Subgraph *Val = NULL;
+    int k;
+    
+    va_start(arg, Train);
+    Val = va_arg(arg, Subgraph *);
+    k = va_arg(arg, int);
+    
+    opf_OPFknnTraining(Train, k);
+    opf_OPFknnClassify(Train, Val);
+    error = (double)opf_Accuracy(Val);
+    
+    va_end(arg);
+    
+    return 1/error;
+}
+

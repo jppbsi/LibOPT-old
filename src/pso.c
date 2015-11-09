@@ -211,7 +211,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
     int i, j, z, l, n_epochs, batch_size, n_gibbs_sampling, L;
     double f;
-    Subgraph *g = NULL;
+    Subgraph *g = NULL, *Val = NULL;
     gsl_matrix *Param = NULL;
     gsl_vector *row = NULL;
     
@@ -360,6 +360,28 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 
 		gsl_matrix_free(Param);
 		gsl_vector_free(row);
+	break;
+	case 12: /* OPF with knn adjacency relation */
+		g = va_arg(arg, Subgraph *);
+		Val = va_arg(arg, Subgraph *);
+		
+		for(i = 0; i < S->m; i++){
+			f = Evaluate(g, Val, gsl_matrix_get(S->x, i, 0));
+				
+			/* it updates the best position of the agent */
+			if(f < gsl_vector_get(S->fitness, i)){
+				gsl_matrix_get_row(row, S->x, i);
+				gsl_matrix_set_row(S->y, i, row);
+			}
+							
+			gsl_vector_set(S->fitness, i, f);
+				
+			/* it updates the global optimum */
+			if(f < S->best_fitness){
+				S->best = i;
+				S->best_fitness = f;
+			}
+		}
 	break;
     }
 }

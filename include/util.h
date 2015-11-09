@@ -48,6 +48,9 @@ double LinearRegression_Fitting(gsl_matrix *X, gsl_vector *Y, int FUNCTION_ID, .
 /* Logistic Regression */
 double LogisticRegression_Fitting(Subgraph *g, ...); /* It executes the Logistic Regression classifier optimized by FUNCTION_ID */
 
+/* OPF knn */
+double OPFknn4Optimization(Subgraph *g, ...); /* It optimizes the k learning step for OPFknn */
+
 double f1(Subgraph *g, ...);
 
 #endif
