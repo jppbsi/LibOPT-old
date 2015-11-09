@@ -215,16 +215,13 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     Subgraph *g = NULL, *Val = NULL;
     gsl_matrix *Param = NULL;
     gsl_vector *row = NULL;
-    
+        
     switch(FUNCTION_ID){
         case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
                         
             g = va_arg(arg, Subgraph *);
             n_epochs = va_arg(arg, int);
             batch_size = va_arg(arg, int);
-            fprintf(stderr,"\ng->nlabels: %d", g->nlabels);
-            fprintf(stderr,"\nn_epochs: %d", n_epochs);
-            fprintf(stderr,"\nbatch_size: %d", batch_size);
             
             for(i = 0; i < S->m; i++){
                 f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), n_epochs, batch_size); 
@@ -365,9 +362,10 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 	case 12: /* OPF with knn adjacency relation */
 		g = va_arg(arg, Subgraph *);
 		Val = va_arg(arg, Subgraph *);
+		row = gsl_vector_alloc(S->n);
 		
 		for(i = 0; i < S->m; i++){
-			f = Evaluate(g, Val, gsl_matrix_get(S->x, i, 0));
+			f = Evaluate(g, Val, (int)gsl_matrix_get(S->x, i, 0));
 				
 			/* it updates the best position of the agent */
 			if(f < gsl_vector_get(S->fitness, i)){
@@ -383,6 +381,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 				S->best_fitness = f;
 			}
 		}
+		gsl_vector_free(row);
 	break;
     }
 }
@@ -477,7 +476,7 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
         T = gsl_rng_default;
         r = gsl_rng_alloc(T);
         gsl_rng_set(r, rand());
-        
+	        
         EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg);
         
         for(t = 1; t <= S->max_iterations; t++){
