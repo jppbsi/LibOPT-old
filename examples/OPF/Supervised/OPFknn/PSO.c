@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv){
 
-    if(argc != 12){
+    if(argc != 8){
         fprintf(stderr,"\nusage PSO <training set> <validating set> <test set> <output results file name> \
                 <cross-validation iteration number> <particle swarm configuration file> <output best parameters file name>\n");
         exit(-1);
