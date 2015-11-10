@@ -221,7 +221,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     gsl_vector *row = NULL;
         
     switch(FUNCTION_ID){
-        case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+        case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
                         
             g = va_arg(arg, Subgraph *);
             n_epochs = va_arg(arg, int);
@@ -240,7 +240,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 }
             }
         break;
-	case 6: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
+	case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
 		g = va_arg(arg, Subgraph *);
 		n_epochs = va_arg(arg, int);
 		batch_size = va_arg(arg, int);
@@ -281,7 +281,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		gsl_matrix_free(Param);
 		gsl_vector_free(row);
 	break;
-	case 9: /* Bernoulli_BernoulliDBN4Reconstruction trained with Persistent Contrastive Divergence */
+	case BBDBN_PCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Persistent Contrastive Divergence */
 		g = va_arg(arg, Subgraph *);
 		n_epochs = va_arg(arg, int);
 		batch_size = va_arg(arg, int);
@@ -322,7 +322,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		gsl_matrix_free(Param);
 		gsl_vector_free(row);
 	break;
-	case 10: /* Bernoulli_BernoulliDBN4Reconstruction trained with Fast Persistent Contrastive Divergence */
+	case BBDBN_FPCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Fast Persistent Contrastive Divergence */
 		g = va_arg(arg, Subgraph *);
 		n_epochs = va_arg(arg, int);
 		batch_size = va_arg(arg, int);
@@ -363,7 +363,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		gsl_matrix_free(Param);
 		gsl_vector_free(row);
 	break;
-	case 12: /* OPF with knn adjacency relation */
+	case OPFKNN: /* OPF with knn adjacency relation */
 		g = va_arg(arg, Subgraph *);
 		Val = va_arg(arg, Subgraph *);
 		row = gsl_vector_alloc(S->n);
