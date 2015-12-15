@@ -35,6 +35,9 @@ double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Berno
 /* Deep Belief Networks */
 double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g */
 
+/* Deep Boltzmann Machines */
+double Bernoulli_BernoulliDBM4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Bernoulli DBM and returns the reconstruction error of dataset in g */
+
 /* k-Means */
 double kMeans(Subgraph *g, ...); /* It executes the k-Means clustering algorithm */
 double kMeans4Optimization(Subgraph *g, ...); /* It executes the k-Means clustering algorithm for optimization purposes */
@@ -52,5 +55,25 @@ double LogisticRegression_Fitting(Subgraph *g, ...); /* It executes the Logistic
 double OPFknn4Optimization(Subgraph *g, ...); /* It optimizes the k learning step for OPFknn */
 
 double f1(Subgraph *g, ...);
+
+/* Feature Selection */
+
+Subgraph *CreateSubgraphFromSelectedFeatures(Subgraph *sg, gsl_vector *feat);
+
+/* Transfer functions used for feature selection */
+typedef Subgraph* (*TransferFunc)(Subgraph *sg, gsl_vector *feat);
+
+Subgraph *S1TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *S2TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *S3TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *S4TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *V1TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *V2TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *V3TransferFunction(Subgraph *sg, gsl_vector *feat);
+Subgraph *V4TransferFunction(Subgraph *sg, gsl_vector *feat);
+
+double FeatureSelection(Subgraph *g, ...); /* It executes Feature Selection optimized by FUNCTION_ID */
+
+/*****************/
 
 #endif

@@ -1008,7 +1008,43 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 						H->Rehearsal[H->worst][0] = H->op_type[0];
 					}
 				}
+			break;
+			case 14: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
 				
+				/* setting Param matrix */
+				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
+				for(l = 0; l < L; l++){
+					for(j = 0; j < 4; j++)
+						gsl_matrix_set(Param, l, j, gsl_vector_get(h, j+z));
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
+				}
+				
+				f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+				gsl_matrix_free(Param);
 			break;
 		}
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");
@@ -1458,7 +1494,7 @@ p: percentage of the harmonies that might be improved by hybridization
 				(*m)->lambda = gsl_matrix_get(H->HM, H->best, 2);
 				(*m)->alpha = gsl_matrix_get(H->HM, H->best, 3);
 				
-				//inicializar RBM aqui e trein‡-la mais uma vez
+				//inicializar RBM aqui e trein\87-la mais uma vez
 			break;
 		}*/
 		

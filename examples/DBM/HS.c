@@ -7,7 +7,7 @@ int main(int argc, char **argv){
     if(argc != 12){
         fprintf(stderr,"\nusage HS <training set> <test set> <output results file name> <cross-validation iteration number> \
                 <harmony memory configuration file> <output best parameters file name> <n_epochs> <batch_size> \
-                <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD> <number of DBN layers>\n");
+                <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD> <number of DBM layers>\n");
         exit(-1);
     }
     HarmonyMemory *H = NULL;
@@ -18,7 +18,7 @@ int main(int argc, char **argv){
     gsl_vector *n_hidden_units = NULL;
     FILE *fp = NULL, *fpParameters = NULL;
     Dataset *DatasetTrain = NULL, *DatasetTest = NULL;
-    DBN *d = NULL;
+    DBM *d = NULL;
     
     H = ReadHarmoniesFromFile(argv[5]);
     Subgraph *Train = NULL, *Test = NULL;
@@ -36,15 +36,9 @@ int main(int argc, char **argv){
         case 1:
             runHS(H, Bernoulli_BernoulliDBM4Reconstruction, BBDBM_CD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
-        case 2:
-            runHS(H, Bernoulli_BernoulliDBM4Reconstruction, BBDBM_PCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
-        break;
-        case 3:
-            runHS(H, Bernoulli_BernoulliDBM4Reconstruction, BBDBM_FPCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
-        break;
-    }   
+    }
     
-    fprintf(stderr,"\nRunning DBN once more over the training set ... ");
+    fprintf(stderr,"\nRunning DBM once more over the training set ... ");
     n_hidden_units = gsl_vector_alloc(n_layers);
     j = 0;
     for(i = 0; i < n_layers; i++){
@@ -52,8 +46,10 @@ int main(int argc, char **argv){
         j+=4;
     }
 
-    d = CreateDBN(Train->nfeats, n_hidden_units, Train->nlabels, n_layers);
-    InitializeDBN(d); j = 1; z = 1;
+    d = CreateDBM(Train->nfeats, n_hidden_units, Train->nlabels);
+    
+    InitializeDBM(d); j = 1; z = 1;
+    
     for(i = 0; i < d->n_layers; i++){
         d->m[i]->eta = gsl_matrix_get(H->HM, H->best, j); j++;
         d->m[i]->lambda = gsl_matrix_get(H->HM, H->best, j); j++;
@@ -65,19 +61,13 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            errorTRAIN = BernoulliDBNTrainingbyContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-        case 2:
-            errorTRAIN = BernoulliDBNTrainingbyPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-        case 3:
-            errorTRAIN = BernoulliDBNTrainingbyFastPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
+            errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, 1);
         break;
     }
     fprintf(stderr,"\nOK\n");
     
-    fprintf(stderr,"\nRunning DBN for reconstruction ... ");
-    errorTEST = BernoulliDBNReconstruction(DatasetTest, d);
+    fprintf(stderr,"\nRunning DBM for reconstruction ... ");
+    errorTEST = BernoulliDBMReconstruction(DatasetTest, d);
     fprintf(stderr,"\nOK\n");
         
     fp = fopen(argv[3], "a");
@@ -95,7 +85,7 @@ int main(int argc, char **argv){
     DestroyDataset(&DatasetTest);
     DestroySubgraph(&Train);
     DestroySubgraph(&Test);
-    DestroyDBN(&d);
+    DestroyDBM(&d);
     gsl_vector_free(n_hidden_units);
     
     return 0;

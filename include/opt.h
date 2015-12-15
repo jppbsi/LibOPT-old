@@ -19,6 +19,8 @@ extern "C" {
 #define BBDBN_FPCD 10 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Fast Persistent Contrastive Divergence */
 #define LOGISTIC_REGRESSION 11 /* Logistic Regression */
 #define OPFKNN 12 /* OPF with knn adjacency relation */
+#define FEATURESELECTION 13 /* Single-objective feature selection */
+#define BBDBM_CD 14 /* Bernoulli_Bernoulli DBM for data reconstruction trained by Contrastive Divergence */
 
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */
@@ -52,6 +54,7 @@ extern "C" {
 #include "OPF.h"
 
 typedef double (*prtFun)(Subgraph *, ...);
+typedef gsl_vector *(*prtFun2)(Subgraph *, ...);
 
 #include "hs.h"
 #include "ba.h"

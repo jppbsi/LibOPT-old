@@ -365,8 +365,9 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     Param = va_arg(arg,gsl_matrix *);
     n_epochs = va_arg(arg,int);
     batch_size = va_arg(arg,int);
-        
+    
     column = gsl_matrix_column(Param, 0); /* the first column stands for the number of hidden units */
+    
     d = CreateDBN(g->nfeats, &column.vector, g->nlabels, L);
     
     InitializeDBN(d);
@@ -390,7 +391,63 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
             reconstruction_error = BernoulliDBNTrainingbyFastPersistentContrastiveDivergence(D, d, n_epochs, 1, batch_size);
         break;
     }
+    
     DestroyDBN(&d);
+    DestroyDataset(&D);
+    va_end(arg);
+    
+    fprintf(stderr,"\nreconstruction_error: %lf", reconstruction_error);
+    return reconstruction_error;
+}
+
+/*********************************/
+
+/* Deep Boltzmann Machines */
+
+/* It executes a Bernoulli-Berboulli DBM and returns the reconstruction error of dataset in g
+Parameters: [g, op, L, Param, n_epochs, batch_size = va_arg(arg,int);]
+g: dataset in the OPF format
+op: 1 - CD|2 - PCD|3 - FPCD
+L: number of RBMs
+Param: a matrix containing the parameters of each stacked RBM. Each row of this matrix stands for the configuration of each RBM.
+n_epochs: number of epochs for training
+batch_size: size of the mini-batch */
+double Bernoulli_BernoulliDBM4Reconstruction(Subgraph *g, ...){
+    va_list arg;
+    int n_hidden_units, n_epochs, batch_size, L, i, op;
+    double reconstruction_error;
+    DBM *d = NULL;
+    Dataset *D = NULL;
+    gsl_matrix *Param = NULL;
+    gsl_vector_view column;
+    
+    /* reading input parameters */
+    va_start(arg, g);
+    op = va_arg(arg,int);
+    L = va_arg(arg,int);
+    Param = va_arg(arg,gsl_matrix *);
+    n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
+        
+    column = gsl_matrix_column(Param, 0); /* the first column stands for the number of hidden units */
+    d = CreateDBM(g->nfeats, &column.vector, g->nlabels);
+    
+    InitializeDBM(d);
+    for(i = 0; i < d->n_layers; i++){
+        d->m[i]->eta = gsl_matrix_get(Param, i, 1);
+        d->m[i]->lambda = gsl_matrix_get(Param, i, 2);
+        d->m[i]->alpha = gsl_matrix_get(Param, i, 3);
+        d->m[i]->eta_min = gsl_matrix_get(Param, i, 4);
+        d->m[i]->eta_max = gsl_matrix_get(Param, i, 5);
+    }
+    
+    D = Subgraph2Dataset(g);
+    switch (op){
+        case 1:
+            reconstruction_error = GreedyPreTrainingDBM(D, d, n_epochs, 1, batch_size, 1);
+        break;
+    }
+    DestroyDBM(&d);
     DestroyDataset(&D);
     va_end(arg);
     
@@ -812,3 +869,374 @@ double OPFknn4Optimization(Subgraph *Train, ...){
     return 1/error;
 }
 
+/*********************************/
+
+/* Feature Selection */
+
+/* It creates a subgraph only with the selected features*/
+Subgraph *CreateSubgraphFromSelectedFeatures(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k;
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = 0;
+
+	for (i = 0; i < sg->nfeats; i++){
+	    if(gsl_vector_get(feat, i)) newsg->nfeats++;
+	}
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+
+	return newsg;
+}
+
+/* Transfer functions used for feature selection */
+Subgraph *S1TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+        if(gsl_rng_uniform(r) < 1.0/(1.0+exp(-2*gsl_vector_get(feat, j)))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *S2TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+
+	for(j = 0; j < sg->nfeats; j++){
+        if(gsl_rng_uniform(r) < 1.0/(1.0+exp(-1*gsl_vector_get(feat, j)))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+	gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *S3TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+        if(gsl_rng_uniform(r) < 1.0/(1.0+exp((-1*gsl_vector_get(feat, j))/2))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *S4TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+        if(gsl_rng_uniform(r) < 1.0/(1.0+exp((-1*gsl_vector_get(feat, j))/3))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *V1TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+	    if(gsl_rng_uniform(r) < fabs(erf(sqrt(3.1415926535)/2*(-1*(gsl_vector_get(feat, j)))))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *V2TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+	    if(gsl_rng_uniform(r) < fabs(tanhf(-1*(gsl_vector_get(feat, j))))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *V3TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+	    if(gsl_rng_uniform(r) < fabs(-1*(gsl_vector_get(feat, j))/sqrt(1 + (-1*((gsl_vector_get(feat, j))*(gsl_vector_get(feat, j))))))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+Subgraph *V4TransferFunction(Subgraph *sg, gsl_vector *feat){
+	Subgraph *newsg = CreateSubgraph(sg->nnodes);
+	int i, j, k, nfeats = 0;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+	
+	for(j = 0; j < sg->nfeats; j++){
+	    if(gsl_rng_uniform(r) < fabs(2/3.1415926535  * atan(3.1415926535/2 * (-1*(gsl_vector_get(feat, j)))))){
+            gsl_vector_set(feat, j, 1);
+            nfeats++;
+        }else{
+            gsl_vector_set(feat, j, 0);
+        }
+    }
+
+	newsg->nlabels = sg->nlabels;
+	newsg->nfeats = nfeats;
+
+	for (i = 0; i < newsg->nnodes; i++){
+	    newsg->node[i].feat = AllocFloatArray(newsg->nfeats);
+        newsg->node[i].truelabel = sg->node[i].truelabel;
+        newsg->node[i].position = sg->node[i].position;
+
+        k = 0;
+        for (j = 0; j < sg->nfeats; j++){
+            if(gsl_vector_get(feat, j)) newsg->node[i].feat[k++] = sg->node[i].feat[j];
+        }
+	}
+    gsl_rng_free(r);
+	return newsg;
+}
+
+/* It executes the Feature Selection evaluating through the FUNCTION_ID
+Parameters: [g, gTest, op, feats, optTransfer, ...]
+g: training set
+gTest: test set
+op: classifier option
+feats: feature vector
+optTransfer: Transfer function
+---
+Output: classification error rate */
+double FeatureSelection(Subgraph *g, ...){
+    gsl_vector *feats = NULL;
+    TransferFunc optTransfer = NULL;
+    va_list arg;
+    Subgraph *sgTrain = NULL, *gTest = NULL, *sgTest = NULL;
+    int op;
+    double classification_error;
+    
+    va_start(arg, g);
+    gTest = va_arg(arg, Subgraph *);
+    op = va_arg(arg, int);
+    feats = va_arg(arg, gsl_vector *);
+    optTransfer = va_arg(arg, TransferFunc);
+    
+    switch (op){
+        case 1: // OPF classifier       
+            sgTrain = optTransfer(g,feats);
+            sgTest = optTransfer(gTest,feats);
+            opf_OPFTraining(sgTrain);
+            opf_OPFClassifying(sgTrain, sgTest);
+            classification_error = opf_Accuracy(sgTest);
+            DestroySubgraph(&sgTrain);
+            DestroySubgraph(&sgTest);
+        break;
+    }
+
+    va_end(arg);
+    return classification_error;
+}
