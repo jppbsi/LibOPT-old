@@ -392,6 +392,49 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		}
 		gsl_vector_free(row);
 	break;
+	case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+		//daqui pra baixo
+		row = gsl_vector_alloc(S->n);
+								
+		Param = gsl_matrix_alloc(L, 6);
+		for(i = 0; i < S->m; i++){
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_matrix_get(S->x, i, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(S->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(S->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+			
+			/* it updates the best position of the agent */
+			if(f < gsl_vector_get(S->fitness, i)){
+				gsl_matrix_get_row(row, S->x, i);
+				gsl_matrix_set_row(S->y, i, row);
+			}
+						
+			gsl_vector_set(S->fitness, i, f);
+			
+			/* it updates the global optimum */
+			if(f < S->best_fitness){
+				S->best = i;
+				S->best_fitness = f;
+			}
+		}
+
+		gsl_matrix_free(Param);
+		gsl_vector_free(row);
+
+	break;
     }
 }
 
