@@ -441,11 +441,10 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 
 				gsl_matrix_free(Param);
 			break;
-			case 11: /* Logistic Regression */
+			case LOGISTIC_REGRESSION: /* Logistic Regression */
 				g = va_arg(arg, Subgraph *);
 				FUNCTION_ID2 = va_arg(arg, int);
 				w = va_arg(arg, gsl_vector *);
-				fprintf(stderr,"\nFUNCTION_ID2: %d", FUNCTION_ID2);
 
 				for(i = 0; i < H->m; i++){
 					f = Evaluate(g, FUNCTION_ID2, gsl_matrix_get(H->HM, i, 0), w); 

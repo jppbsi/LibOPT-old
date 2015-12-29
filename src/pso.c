@@ -214,11 +214,11 @@ EvaluateFun: pointer to the function used to evaluate particles
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
-    int i, j, z, l, n_epochs, batch_size, n_gibbs_sampling, L;
+    int i, j, z, l, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
     double f;
     Subgraph *g = NULL, *Val = NULL;
     gsl_matrix *Param = NULL;
-    gsl_vector *row = NULL;
+    gsl_vector *row = NULL, *w = NULL;
         
     switch(FUNCTION_ID){
         case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
@@ -434,6 +434,22 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 		gsl_matrix_free(Param);
 		gsl_vector_free(row);
 
+	break;
+
+	case LOGISTIC_REGRESSION: /* Logistic Regression */
+		g = va_arg(arg, Subgraph *);
+		FUNCTION_ID2 = va_arg(arg, int);
+		w = va_arg(arg, gsl_vector *);
+		
+		for(i = 0; i < S->m; i++){
+			f = Evaluate(g, FUNCTION_ID2, gsl_matrix_get(S->x, i, 0), w); 
+				
+			gsl_vector_set(S->fitness, i, f);
+			if(f < S->best_fitness){
+				S->best = i;
+				S->best_fitness = f;
+			}
+		}
 	break;
     }
 }
