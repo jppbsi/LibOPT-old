@@ -319,6 +319,7 @@ void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list a
 Parameters: [B]
 B: bird flock */
 void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+	va_list arg_tmp;
 	if(B){
 		double f;
 		int i, j;		
@@ -334,10 +335,11 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 
 		/* it generates the neighbors of the leader */
 		for(i = 0; i < B->k; i++){
+			va_copy(arg_tmp, arg);
 			row_leader = gsl_matrix_row(B->x, 0);
 			row_nb = gsl_matrix_row(B->nb_left, i);
 			GenerateRandomNeighbour(&row_nb.vector, &row_leader.vector, 0, B->m, MBO, B);
-			f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
+			f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg_tmp);
 			gsl_vector_set(B->nb_fitness_left, i, f);
 		}
 		
@@ -385,7 +387,6 @@ void ImproveLeaderSolution(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 		
 		gsl_matrix_free(nb_temp);
 		gsl_vector_free(nb_fitness_temp);			
-		va_end(arg);
 	}
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @ImproveLeaderSolution.\n");
@@ -401,9 +402,8 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 		gsl_vector_view row_nb, row_bird;
 		gsl_matrix *nb_temp = NULL;
 		gsl_vector *temp = NULL, *nb_fitness_temp = NULL;
-		//va_list arg;
+		va_list arg_tmp;
 
-		//va_start(arg, FUNCTION_ID);
 		nb_temp = gsl_matrix_alloc(B->k, B->n);
 		nb_fitness_temp = gsl_vector_alloc(B->k);
 		temp = gsl_vector_alloc(B->k);
@@ -418,9 +418,10 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 
 			/* it generates and evaluates k-X neighbours for bird t */
 			for(i = B->X; i < B->k; i++){
+				va_copy(arg_tmp, arg);
 				row_nb = gsl_matrix_row(B->nb_left, i);
 				GenerateRandomNeighbour(&row_nb.vector, &row_bird.vector, t, B->m, MBO, B);
-				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
+				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg_tmp);
 				gsl_vector_set(B->nb_fitness_left, i, f);
 			}
 
@@ -465,9 +466,10 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 
 			/* it generates and evaluates k-X neighbours for bird t */
 			for(i = B->X; i < B->k; i++){
+				va_copy(arg_tmp, arg);
 				row_nb = gsl_matrix_row(B->nb_right, i);
 				GenerateRandomNeighbour(&row_nb.vector, &row_bird.vector, t, B->m, MBO, B);
-				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg);
+				f = EvaluateBird(B, &row_nb.vector, Evaluate, FUNCTION_ID, arg_tmp);
 				gsl_vector_set(B->nb_fitness_right, i, f);
 			}
 		
@@ -514,7 +516,6 @@ void ImproveOtherSolutions(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_li
 		gsl_matrix_free(nb_temp);
 		gsl_vector_free(nb_fitness_temp);		
 		gsl_vector_free(temp);		
-		va_end(arg);
 	}
 	else
 		fprintf(stderr, "\nThere is no bird flock allocated @ImproveLeaderSolution.\n");
