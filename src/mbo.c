@@ -26,7 +26,7 @@ BirdFlock *CreateBirdFlock(int m, int n, int k){
 	B->max_iterations = 0;
 	B->X = 0;
 	B->x = gsl_matrix_calloc(B->m, B->n);
-	B->fitness = gsl_vector_alloc(B->m);
+	B->fitness = gsl_vector_calloc(B->m);
 
 	/* the next three lines allocate the left and right sides of the V formation */
 	size = ceil((B->m-1)/(double)2);
@@ -103,7 +103,7 @@ BirdFlock *ReadBirdFlockFromFile(char *fileName){
 		return NULL;
 	}
 
-	for (n=0; n<(B->n); n++){
+	for (n=0; n < B->n; n++){
 		fscanf(fp, "%lf %lf", &LB, &UB);
 		gsl_vector_set(B->LB, n, LB);
 		gsl_vector_set(B->UB, n, UB);
@@ -146,9 +146,9 @@ void InitializeBirdFlock(BirdFlock *B){
 			for (i = 1; i <= size; i++){
 				row = gsl_matrix_row(B->x, i);
 				B->left[i-1] = &row.vector;
-				fprintf(stderr,"\n Bird left %d", i);
+				/*fprintf(stderr,"\n Bird left %d", i);
 				for (jj = 0; jj < B->n; jj++)
-					fprintf(stderr, " %lf ", gsl_vector_get(B->left[i-1], jj));
+					fprintf(stderr, " %lf ", gsl_vector_get(B->left[i-1], jj));*/
 			}
 	
 			/* it defines the right side of V formation */
@@ -156,9 +156,9 @@ void InitializeBirdFlock(BirdFlock *B){
 			for (i = size+1; i < B->m; i++){
 				row = gsl_matrix_row(B->x, i);
 				B->right[j++] = &row.vector;
-				fprintf(stderr, "\nBird Right: %d \n", i);
+				/*fprintf(stderr, "\nBird Right: %d \n", i);
 				for (jj = 0; jj < B->n; jj++)
-					fprintf(stderr, "%lf ", gsl_vector_get(B->right[j-1], jj));
+					fprintf(stderr, "%lf ", gsl_vector_get(B->right[j-1], jj));*/
 			}
 	
 			gsl_rng_free(r);
@@ -219,7 +219,7 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 	gsl_matrix *Param = NULL;
 
 	switch(FUNCTION_ID){
-		case 6: /* Bernoulli_BernoulliDBN4Reconstruction using CD */
+		case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction using CD */
 			g = va_arg(arg, Subgraph *);
 			n_epochs = va_arg(arg, int);
 			batch_size = va_arg(arg, int);
@@ -237,9 +237,7 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
 				z+=4;
 			}
-							
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
-			
 			gsl_matrix_free(Param);
 		break;
 	
@@ -307,13 +305,14 @@ void EvaluateBirdFlock(BirdFlock *B, prtFun Evaluate, int FUNCTION_ID, va_list a
 	int i;
 	double f;
 	gsl_vector_view row;
+	va_list arg_tmp;
 	
 	for (i = 0; i < B->m; i++){
-		row = gsl_matrix_row (B->x, i);
-		f = EvaluateBird(B, &row.vector, Evaluate, FUNCTION_ID, arg);
+		va_copy(arg_tmp, arg);
+		row = gsl_matrix_row(B->x, i);
+		f = EvaluateBird(B, &row.vector, Evaluate, FUNCTION_ID, arg_tmp);
 		gsl_vector_set(B->fitness, i, f);
 	}
-	va_end(arg);
 }
 
 /* It improves the lead bird by evaluating its neighbours ---
@@ -575,12 +574,12 @@ FUNCTION_ID: id of the function registered at opt.h
 void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...){
 	va_list arg, argtmp;
 		
-    va_start(arg, FUNCTION_ID);
-    va_copy(argtmp, arg);
+	va_start(arg, FUNCTION_ID);
+	va_copy(argtmp, arg); 
 	if(B){
 		int t, i;
 		double p;
-		gsl_vector *b = NULL; // que isso?
+		gsl_vector *b = NULL;
                    
 		fprintf(stderr,"\nInitial evaluation of the bird flock ...");
 		EvaluateBirdFlock(B, EvaluateFun, FUNCTION_ID, arg);
