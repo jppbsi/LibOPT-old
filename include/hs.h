@@ -74,9 +74,6 @@ HarmonyMemory *CreateHarmonyMemory(int m, int n); /*It allocates the harmony mem
 void DestroyHarmonyMemory(HarmonyMemory **H); /* It deallocates the harmony memory */
 HarmonyMemory *ReadHarmoniesFromFile(char *fileName); /* it creates a harmony memory specified in a file */
 
-QHarmonyMemory *CreateQHarmonyMemory(int m, int n); /*It allocates the quaternion-based harmony memory*/
-void DestroyQHarmonyMemory(QHarmonyMemory **H); /* It deallocates the quaternion-based harmony memory */
-
 /* Auxiliary functions */
 void InitializeHarmonyMemory(HarmonyMemory *H); /* it initializes the harmony memory */
 void InitializeHarmonyMemoryFromDatasetSamples4Kmeans(HarmonyMemory *H, Subgraph *g); /* It initializes the harmony memory with random dataset samples for k-Means algorithm */
@@ -103,5 +100,13 @@ void runPSF_HS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...);  /* 
 /* Hybrid */
 void runHybridHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, int HEURISTIC_ID, double p, ...); /* It executes hybrid HS */
 void goHybridHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, int HEURISTIC_ID, double p, va_list arg); /* It executes the hybridization of HS */
+
+/* Quaternion-based Harmony Memory **********/
+QHarmonyMemory *CreateQHarmonyMemory(int m, int n); /*It allocates the quaternion-based harmony memory*/
+void DestroyQHarmonyMemory(QHarmonyMemory **H); /* It deallocates the quaternion-based harmony memory */
+QHarmonyMemory *ReadQHarmoniesFromFile(char *fileName); /* it creates a quaternion-based harmony memory specified in a file */
+
+void InitializeQHarmonyMemory(QHarmonyMemory *H); /* it initializes the quaternion-based harmony memory */
+/********************************************/
 
 #endif

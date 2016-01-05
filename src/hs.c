@@ -103,77 +103,6 @@ HarmonyMemory *ReadHarmoniesFromFile(char *fileName){
         return H;
 }
 
-/* It allocates the quaternion-based harmony memory --
-Parameters: [m,n]
-m: number of harmonies (Harmony Memory Size)
-n: number of decision variables to be optimized (dimension of the search space) */
-QHarmonyMemory *CreateQHarmonyMemory(int m, int n){
-	
-	if((m < 1) || (n < 1)){
-		fprintf(stderr,"\nInvalid parameters @CreateHarmonyMemory.\n");
-		return NULL;
-	}
-	
-	QHarmonyMemory *H = NULL;
-	int i;
-	
-	H = (QHarmonyMemory *)malloc(sizeof(QHarmonyMemory));
-	H->m = m;
-	H->n = n;
-	
-	/*In quarternion-based HS, the harmony memory is a tridimensional matrix, where H->HM[i][j][0] stands for
-	the x0 quaternion coeffcient related to ith harmony memory and jth decision variable */
-	H->HM = (gsl_matrix **)malloc(H->m*sizeof(gsl_matrix *));
-	for(i = 0; i < H->m; i++)
-		H->HM[i] = gsl_matrix_alloc(4, H->n);
-	
-	H->fitness = gsl_vector_calloc(H->m);
-	H->LB = gsl_vector_alloc(H->n);
-	H->UB = gsl_vector_alloc(H->n);
-	
-	H->LP = 0;
-	H->HMCR = 0;
-	H->HMCRm = 0;
-	H->PAR = 0;
-	H->PARm = 0;
-	H->PAR_min = 0;
-	H->PAR_max = 0;
-	H->bw = 0;
-	H->bw_min = 0;
-	H->bw_max = 0;
-	H->worst = 0;
-	H->best = 0;
-	H->pm = 0;
-	H->max_iterations = 0;
-	H->best_fitness = DBL_MAX;
-	H->worst_fitness = DBL_MIN;
-	H->_HMCR = NULL;
-	H->_PAR = NULL;
-	
-	return H;
-}
-
-/* It deallocates the quaternion-based harmony memory ---
-Parameters: [H]
-H: harmony memory */
-void DestroyQHarmonyMemory(QHarmonyMemory **H){
-	QHarmonyMemory *aux = *H;
-	int i;
-	
-	if(aux){
-		for(i = 0; i < aux->m; i++)
-			gsl_matrix_free(aux->HM[i]);
-		free(aux->HM);
-		gsl_vector_free(aux->fitness);
-		gsl_vector_free(aux->LB);
-		gsl_vector_free(aux->UB);
-		if(aux->_HMCR) gsl_vector_free(aux->_HMCR);
-		if(aux->_PAR) gsl_vector_free(aux->_PAR);
-		free(aux);
-		aux = NULL;
-	}
-}
-
 /* It displays the harmomy memory's content ---
 Parameters: [H]
 H: harmony memory */
@@ -1588,4 +1517,148 @@ void UpdateIndividualHMCR_PAR(HarmonyMemory *H){
 		gsl_vector_set(H->_HMCR, j, ctr[opt_MEMORY]/(double)H->m);
 		gsl_vector_set(H->_PAR, j, ctr[opt_PITCH]/(double)H->m);
 	}
+}
+
+
+/* Quaternion-based Harmony Memory */
+
+/* It allocates the quaternion-based harmony memory --
+Parameters: [m,n]
+m: number of harmonies (Harmony Memory Size)
+n: number of decision variables to be optimized (dimension of the search space) */
+QHarmonyMemory *CreateQHarmonyMemory(int m, int n){
+	
+	if((m < 1) || (n < 1)){
+		fprintf(stderr,"\nInvalid parameters @CreateHarmonyMemory.\n");
+		return NULL;
+	}
+	
+	QHarmonyMemory *H = NULL;
+	int i;
+	
+	H = (QHarmonyMemory *)malloc(sizeof(QHarmonyMemory));
+	H->m = m;
+	H->n = n;
+	
+	/*In quarternion-based HS, the harmony memory is a tridimensional matrix, where H->HM[i][j][0] stands for
+	the x0 quaternion coeffcient related to ith harmony memory and jth decision variable */
+	H->HM = (gsl_matrix **)malloc(H->m*sizeof(gsl_matrix *));
+	for(i = 0; i < H->m; i++)
+		H->HM[i] = gsl_matrix_alloc(4, H->n);
+	
+	H->fitness = gsl_vector_calloc(H->m);
+	H->LB = gsl_vector_alloc(H->n);
+	H->UB = gsl_vector_alloc(H->n);
+	
+	H->LP = 0;
+	H->HMCR = 0;
+	H->HMCRm = 0;
+	H->PAR = 0;
+	H->PARm = 0;
+	H->PAR_min = 0;
+	H->PAR_max = 0;
+	H->bw = 0;
+	H->bw_min = 0;
+	H->bw_max = 0;
+	H->worst = 0;
+	H->best = 0;
+	H->pm = 0;
+	H->max_iterations = 0;
+	H->best_fitness = DBL_MAX;
+	H->worst_fitness = DBL_MIN;
+	H->_HMCR = NULL;
+	H->_PAR = NULL;
+	
+	return H;
+}
+
+/* It deallocates the quaternion-based harmony memory ---
+Parameters: [H]
+H: harmony memory */
+void DestroyQHarmonyMemory(QHarmonyMemory **H){
+	QHarmonyMemory *aux = *H;
+	int i;
+	
+	if(aux){
+		for(i = 0; i < aux->m; i++)
+			gsl_matrix_free(aux->HM[i]);
+		free(aux->HM);
+		gsl_vector_free(aux->fitness);
+		gsl_vector_free(aux->LB);
+		gsl_vector_free(aux->UB);
+		if(aux->_HMCR) gsl_vector_free(aux->_HMCR);
+		if(aux->_PAR) gsl_vector_free(aux->_PAR);
+		free(aux);
+		aux = NULL;
+	}
+}
+
+/* Tt creates a quaternion-based harmony memory specified in a file ---
+Parameters: [fileName]
+fileName: name of the file that stores the harmony memory's configuration */
+QHarmonyMemory *ReadQHarmoniesFromFile(char *fileName){
+	FILE *fp = NULL;
+	int m, n;
+        QHarmonyMemory *H = NULL;
+	double LB, UB;
+        char c;
+        
+        fp = fopen(fileName, "r");
+        if(!fp){
+                fprintf(stderr,"\nunable to open file %s @ReadHarmonyMemoryFromFile.\n", fileName);
+                return NULL;
+        }
+        
+        fscanf(fp, "%d %d", &m, &n);
+        H = CreateQHarmonyMemory(m, n);
+	fscanf(fp, "%d", &(H->max_iterations));
+	WaiveComment(fp);
+	
+	fscanf(fp, "%lf %lf", &(H->HMCR), &(H->HMCRm));
+	WaiveComment(fp);
+	fscanf(fp, "%lf %lf %lf %lf", &(H->PAR), &(H->PAR_min), &(H->PAR_max), &(H->PARm));
+	WaiveComment(fp);
+	fscanf(fp, "%lf %lf %lf", &(H->bw), &(H->bw_min), &(H->bw_max));
+	WaiveComment(fp);
+	fscanf(fp, "%d %lf", &(H->LP), &(H->pm));
+	WaiveComment(fp);
+	
+        for(n = 0; n < H->n; n++){
+                fscanf(fp, "%lf %lf", &LB, &UB);
+                gsl_vector_set(H->LB, n, LB);
+                gsl_vector_set(H->UB, n, UB);
+                WaiveComment(fp);
+        }
+        fclose(fp);
+        
+        return H;
+}
+
+/* It initializes the quaternion-based harmony memory ---
+Parameters: [H]
+H: harmony memory */
+void InitializeQHarmonyMemory(QHarmonyMemory *H){
+	if(H){
+		int i, j;
+		const gsl_rng_type *T;
+		gsl_rng *r;
+		double p;
+		
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+		
+		for(i = 0; i < H->m; i++){
+			for(j = 0; j < H->n; j++){
+				p = (gsl_vector_get(H->UB, j)-gsl_vector_get(H->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(H->LB, j);
+				//gsl_matrix_set(H->HM, i, j, p);MEXER AQUI!!!!
+			}
+			
+		}
+		
+		gsl_rng_free(r);
+		
+		
+	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeHarmonyMemory.\n");		
 }
