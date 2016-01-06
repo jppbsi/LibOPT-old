@@ -12,11 +12,14 @@ LibOPT is an optimization library developed in C language for the development of
 * Self-Adaptive Global-best Harmony Search []
 * Parameter-Setting-Free Harmony Search []
 * Novel Global Harmony Search []
+* Firefly Algorithm []
 
 Additionally, the library also implements the following procedures:
 
 * Restricted Boltzmann Machines fine-tuning parameters with Contrastive Divergence, Persistent Contrastive Divergence and Fast Persistent Contrastive Digervence []
 * Deep Belief Networks fine-tuning parameters with Contrastive Divergence, Persistent Contrastive Divergence and Fast Persistent Contrastive Digervence []
+* Deep Boltzmann Machines fine-tuning parameters with Contrastive Divergence []
+* Feature selection []
 
 **References**
 
