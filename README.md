@@ -25,6 +25,6 @@ Additionally, the library also implements the following procedures:
 
 [1] J. Kennedy, R. C. Eberhart and Y. Shi. Swarm Intelligence, Morgan Kaufmann Series in Artificial Intelligence, 2001.
 
-[2] A. Nickabadi, M. M. Ebadzadeh and R. Safabakhsh, A novel particle swarm optimization algorithm with adaptive inertia weight, Applied Soft Computing, 11(4), pp.3658 - 3670, 2011.
+[2] A. Nickabadi, M. M. Ebadzadeh and R. Safabakhsh. A novel particle swarm optimization algorithm with adaptive inertia weight, Applied Soft Computing, 11(4), pp.3658 - 3670, 2011.
 
-[3] X.-S. Yang and A. H. Gandomi, Bat algorithm: a novel approach for global engineering optimization, Engineering Computations, 5(29), pp.464 - 483, 2012.
+[3] X.-S. Yang and A. H. Gandomi. Bat algorithm: a novel approach for global engineering optimization, Engineering Computations, 5(29), pp.464 - 483, 2012.
