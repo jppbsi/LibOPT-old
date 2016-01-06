@@ -1653,7 +1653,7 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 			for(j = 0; j < H->n; j++){
 				for(z = 0; z < 4; z++){
 					p = gsl_rng_uniform(r);
-					fprintf(stderr,"p: %lf	");
+					fprintf(stderr,"p: %lf	", p);
 					gsl_matrix_set(H->HM[i], z, j, p);
 				}
 			}
