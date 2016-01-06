@@ -1677,7 +1677,7 @@ void ShowQHarmonyMemory(QHarmonyMemory *H){
 			for (j = 0; j < H->n; j++){
 				fprintf(stderr,"\n	->Decision variable %d: ",j);
 				for(z = 0; z < 4; z++)
-					fprintf(stderr,"%lf + %lf i + %lf j + %lf k", gsl_matrix_get(H->HM[i], j, z), gsl_matrix_get(H->HM[i], j, z), gsl_matrix_get(H->HM[i], j, z), gsl_matrix_get(H->HM[i], j, z));
+					fprintf(stderr,"q = %lf + %lf i + %lf j + %lf k", gsl_matrix_get(H->HM[i], z, j), gsl_matrix_get(H->HM[i], z, j), gsl_matrix_get(H->HM[i], z, j), gsl_matrix_get(H->HM[i], z, j));
 			}
 			
 			fprintf(stderr,"| f: %lf  ", gsl_vector_get(H->fitness, i));
