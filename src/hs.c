@@ -1544,7 +1544,7 @@ QHarmonyMemory *CreateQHarmonyMemory(int m, int n){
 	the x0 quaternion coeffcient related to ith harmony memory and jth decision variable */
 	H->HM = (gsl_matrix **)malloc(H->m*sizeof(gsl_matrix *));
 	for(i = 0; i < H->m; i++)
-		H->HM[i] = gsl_matrix_alloc(4, H->n);
+		H->HM[i] = gsl_matrix_calloc(4, H->n);
 	
 	H->fitness = gsl_vector_calloc(H->m);
 	H->LB = gsl_vector_alloc(H->n);
