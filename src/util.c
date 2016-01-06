@@ -1240,3 +1240,20 @@ double FeatureSelection(Subgraph *g, ...){
     va_end(arg);
     return classification_error;
 }
+
+/* Quaternion */
+
+/* It computes the norm of a given quaternion
+Parameters:
+q: vector with x0, x1, x2 and x3 values */
+double QNorm(gsl_vector *q){
+    double norm;
+    
+    if(q->size != 4){
+	fprintf(stderr,"\nA quaternion needs four coefficients @QNorm");
+	return -1;
+    }
+    norm = sqrt(pow(gsl_vector_get(q,0),2)+pow(gsl_vector_get(q,1),2)+pow(gsl_vector_get(q,2),2)+pow(gsl_vector_get(q,3),2));
+    
+    return norm;
+}

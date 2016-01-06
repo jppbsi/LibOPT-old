@@ -12,7 +12,8 @@ int main(int argc, char **argv){
     }*/
     QHarmonyMemory *H = NULL;
     
-    H = CreateQHarmonyMemory(10,3);
+    H = CreateQHarmonyMemory(2,3);
+    ShowQHarmonyMemory(H);
     DestroyQHarmonyMemory(&H);
     
     return 0;

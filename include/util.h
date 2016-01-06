@@ -74,6 +74,9 @@ Subgraph *V4TransferFunction(Subgraph *sg, gsl_vector *feat);
 
 double FeatureSelection(Subgraph *g, ...); /* It executes Feature Selection optimized by FUNCTION_ID */
 
+/* Quaternion */
+double QNorm(gsl_vector *q); /* It computes the norm of a given quaternion */
+
 /*****************/
 
 #endif

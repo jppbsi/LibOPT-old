@@ -1639,7 +1639,7 @@ Parameters: [H]
 H: harmony memory */
 void InitializeQHarmonyMemory(QHarmonyMemory *H){
 	if(H){
-		int i, j;
+		int i, j, z;
 		const gsl_rng_type *T;
 		gsl_rng *r;
 		double p;
@@ -1651,8 +1651,10 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 		
 		for(i = 0; i < H->m; i++){
 			for(j = 0; j < H->n; j++){
-				p = (gsl_vector_get(H->UB, j)-gsl_vector_get(H->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(H->LB, j);
-				//gsl_matrix_set(H->HM, i, j, p);MEXER AQUI!!!!
+				for(z = 0; z < 4; z++){
+					p = gsl_rng_uniform(r);
+					gsl_matrix_set(H->HM[i], j, z, p);
+				}
 			}
 			
 		}
@@ -1661,4 +1663,24 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 		
 		
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeHarmonyMemory.\n");		
+}
+
+/* It displays the quaternion-based harmomy memory's content ---
+Parameters: [H]
+H: harmony memory */
+void ShowQHarmonyMemory(QHarmonyMemory *H){
+	if(H){
+		int i, j, z;
+	
+		for (i = 0; i < H->m; i++){
+			fprintf(stderr,"\nHarmony %d:\n",i);
+			for (j = 0; j < H->n; j++){
+				fprintf(stderr,"\n	->Decision variable %d: ",j);
+				for(z = 0; z < 4; z++)
+					fprintf(stderr,"%lf + %lf i + %lf j + %lf k", gsl_matrix_get(H->HM[i], j, z), gsl_matrix_get(H->HM[i], j, z), gsl_matrix_get(H->HM[i], j, z), gsl_matrix_get(H->HM[i], j, z));
+			}
+			
+			fprintf(stderr,"| f: %lf  ", gsl_vector_get(H->fitness, i));
+		}
+	}else fprintf(stderr,"\nThere is no harmony memory allocated @ShowQHarmonyMemory.\n");	
 }
