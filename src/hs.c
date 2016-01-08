@@ -1653,11 +1653,9 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 			for(j = 0; j < H->n; j++){
 				for(z = 0; z < 4; z++){
 					p = gsl_rng_uniform(r);
-					fprintf(stderr,"p: %lf	", p);
 					gsl_matrix_set(H->HM[i], z, j, p);
 				}
 			}
-			
 		}
 		
 		gsl_rng_free(r);
@@ -1677,8 +1675,7 @@ void ShowQHarmonyMemory(QHarmonyMemory *H){
 			fprintf(stderr,"\nHarmony %d:\n",i);
 			for (j = 0; j < H->n; j++){
 				fprintf(stderr,"\n	->Decision variable %d: ",j);
-				for(z = 0; z < 4; z++)
-					fprintf(stderr,"q = %lf + %lf i + %lf j + %lf k", gsl_matrix_get(H->HM[i], z, j), gsl_matrix_get(H->HM[i], z, j), gsl_matrix_get(H->HM[i], z, j), gsl_matrix_get(H->HM[i], z, j));
+				fprintf(stderr,"q = %lf + %lfi + %lfj + %lfk", gsl_matrix_get(H->HM[i], 0, j), gsl_matrix_get(H->HM[i], 1, j), gsl_matrix_get(H->HM[i], 2, j), gsl_matrix_get(H->HM[i], 3, j));
 				fprintf(stderr,"\n");
 			}
 			
