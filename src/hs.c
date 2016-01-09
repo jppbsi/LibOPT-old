@@ -1652,7 +1652,7 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 		for(i = 0; i < H->m; i++){
 			for(j = 0; j < H->n; j++){
 				for(z = 0; z < 4; z++){
-					p = gsl_rng_uniform(r);
+					p = gsl_rng_uniform(r); /* Equation 8 */
 					gsl_matrix_set(H->HM[i], z, j, p);
 				}
 			}
@@ -1682,4 +1682,62 @@ void ShowQHarmonyMemory(QHarmonyMemory *H){
 			fprintf(stderr,"| f: %lf  ", gsl_vector_get(H->fitness, i));
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @ShowQHarmonyMemory.\n");	
+}
+
+/* It creates a new quaternion-based harmony
+Parameters: [H]
+H: harmony memory */
+gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H){
+	if(H){
+		int i, j, index;
+		gsl_matrix *h = NULL;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p, signal;
+			    
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+		
+		h = gsl_matrix_alloc(4, H->n);
+		for(i = 0; i < H->n; i++){
+			p = gsl_rng_uniform(r);
+			if(H->HMCR >= p){
+				
+				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
+				for(j = 0; j < 4; j++){
+					gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i));
+					p = gsl_rng_uniform(r);
+				}
+				
+				if(H->PAR >= p){
+					signal = gsl_rng_uniform(r);
+					p = gsl_rng_uniform(r);
+					if(signal >= 0.5){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(h, j, i, gsl_matrix_get(h, j, i)+p*H->bw);
+					}
+					else{
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(h, j, i, gsl_matrix_get(h, j, i)-p*H->bw);
+					}
+					
+					/* quaternions are constrained to the interval [0,1] -> Equation 8 */
+					if(gsl_matrix_get(h, j, i) < 0) gsl_matrix_set(h, j, i, 0);
+					else if(gsl_matrix_get(h, j, i) > 1) gsl_matrix_set(h, j, i, 1);
+				}
+			}else{
+				for(j = 0; j < 4; j++){
+					p = gsl_rng_uniform(r);
+					gsl_matrix_set(h, j, i, p);
+				}
+			}
+		}
+		gsl_rng_free(r);
+		return h;
+	}else{
+		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewQHarmony.\n");
+		return NULL;
+	}
 }

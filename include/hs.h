@@ -1,3 +1,6 @@
+/* Implementation detais
+Quaternion Harmony Search is based on the work "Modified bat algorithm with quaternion representation" */
+
 #ifndef HS_H
 #define HS_H
 
@@ -106,7 +109,7 @@ QHarmonyMemory *CreateQHarmonyMemory(int m, int n); /*It allocates the quaternio
 void DestroyQHarmonyMemory(QHarmonyMemory **H); /* It deallocates the quaternion-based harmony memory */
 QHarmonyMemory *ReadQHarmoniesFromFile(char *fileName); /* it creates a quaternion-based harmony memory specified in a file */
 void ShowQHarmonyMemory(QHarmonyMemory *H); /* It displays the quaternion-based harmomy memory's content */
-
+gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H); /* It creates a new quaternion-based harmony */
 void InitializeQHarmonyMemory(QHarmonyMemory *H); /* it initializes the quaternion-based harmony memory */
 /********************************************/
 

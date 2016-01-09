@@ -15,7 +15,9 @@ int main(int argc, char **argv){
     H = CreateQHarmonyMemory(2,3);
     InitializeQHarmonyMemory(H);
     ShowQHarmonyMemory(H);
+    gsl_matrix *h = CreateNewQHarmony(H);
     DestroyQHarmonyMemory(&H);
+    gsl_matrix_free(h);
     
     return 0;
 }
