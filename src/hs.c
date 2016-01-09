@@ -1754,3 +1754,52 @@ void UpdateQHarmonyMemoryIndices(QHarmonyMemory *H){
 		H->worst_fitness = gsl_vector_get(H->fitness, H->worst);
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @UpdateQHarmonyMemoryIndices.\n");
 }
+
+/* It evaluates the new harmony and updates the harmony memory concerning the quaternion-based Harmony Search
+Parameters: [H,h]
+H: quaternion-based harmony memory
+h: new harmony to be evaluated */
+void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+	if((H) && (h)){
+		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
+		Subgraph *g = NULL, *Val = NULL;
+		double f, x, y;
+		gsl_vector *sigma = NULL, *w = NULL;
+		gsl_matrix *Param = NULL;
+		gsl_vector_view *column = NULL;
+		
+		switch(FUNCTION_ID){
+			case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
+				
+				for(j = 0; j < 4; j++)
+					column[j] = gsl_matrix_column(h, j);
+				
+				f = Evaluate(g, QNorm(&column[0].vector), QNorm(&column[1].vector), QNorm(&column[2].vector), QNorm(&column[3].vector), n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(H->HM[H->worst], j, i, gsl_matrix_get(h, j, i)); /* it copies the new harmony to the harmony memory */
+					}
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateQHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+				free(column);
+			break;
+			
+		}
+	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");
+}

@@ -16,6 +16,7 @@ int main(int argc, char **argv){
     InitializeQHarmonyMemory(H);
     ShowQHarmonyMemory(H);
     gsl_matrix *h = CreateNewQHarmony(H);
+    EvaluateNewQHarmony(H, h, BBRBM4RECONSTRUCTION, ...); ARRUMAR AQUI!
     DestroyQHarmonyMemory(&H);
     gsl_matrix_free(h);
     
