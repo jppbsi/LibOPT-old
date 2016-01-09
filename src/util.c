@@ -1245,7 +1245,8 @@ double FeatureSelection(Subgraph *g, ...){
 
 /* It computes the norm of a given quaternion
 Parameters:
-q: vector with x0, x1, x2 and x3 values */
+q: vector with x0, x1, x2 and x3 values
+It implements Equation 8 of the paper which is QHS is based on */
 double QNorm(gsl_vector *q){
     double norm;
     
@@ -1256,4 +1257,23 @@ double QNorm(gsl_vector *q){
     norm = sqrt(pow(gsl_vector_get(q,0),2)+pow(gsl_vector_get(q,1),2)+pow(gsl_vector_get(q,2),2)+pow(gsl_vector_get(q,3),2));
     
     return norm;
+}
+
+/* it maps the quaternion value to a real one bounded by [L,U]
+Parameters:
+L: lower bound
+U: upper bound
+q: vector with x0, x1, x2 and x3 values
+It implements Equation 17 of the paper which is QHS is based on */
+double Span(double L, double U, gsl_vector *q){
+    double out;
+    
+    if(q->size != 4){
+	fprintf(stderr,"\nA quaternion needs four coefficients @Span");
+	return -1;
+    }
+    
+    out = (U-L)/2*sin(QNorm(q));
+    
+    return out;
 }
