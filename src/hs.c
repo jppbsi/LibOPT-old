@@ -1846,3 +1846,43 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateQHarmonies.\n");	
 }
+
+/* It executes the quaternion-based Harmony Search for function minimization ---
+Parameters: [H, EvaluateFun, FUNCTION_ID, ... ]
+H: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+void runQHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
+    va_list arg, argtmp;
+		
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+    if(H){
+        int t, i;
+        double p;
+		gsl_matrix *h = NULL;
+                            
+		fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+		EvaluateQHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
+		fprintf(stderr," OK.");
+		
+		ShowQHarmonyMemory(H);
+		
+		for(t = 1; t <= H->max_iterations; t++){
+			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
+			va_copy(arg, argtmp);
+				
+			h = CreateNewQHarmony(H);
+			EvaluateNewQHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
+			gsl_matrix_free(h);
+							
+			fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
+			fprintf(stdout,"%d %lf\n", t, H->best_fitness);
+			
+			ShowQHarmonyMemory(H);
+		}
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
+    va_end(arg);
+}
