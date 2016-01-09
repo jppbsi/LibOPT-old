@@ -1741,3 +1741,16 @@ gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H){
 		return NULL;
 	}
 }
+
+/* It updates the best and worst harmonies concerning quaternion-based Harmony Search
+Parameter: [H]
+H: quaternion-based harmony memory */
+void UpdateQHarmonyMemoryIndices(QHarmonyMemory *H){
+	if(H){		
+		H->best = gsl_vector_min_index(H->fitness);
+		H->best_fitness = gsl_vector_get(H->fitness, H->best);
+		
+		H->worst = gsl_vector_max_index(H->fitness);
+		H->worst_fitness = gsl_vector_get(H->fitness, H->worst);
+	}else fprintf(stderr,"\nThere is no harmony memory allocated @UpdateQHarmonyMemoryIndices.\n");
+}

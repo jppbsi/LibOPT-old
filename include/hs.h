@@ -111,6 +111,7 @@ QHarmonyMemory *ReadQHarmoniesFromFile(char *fileName); /* it creates a quaterni
 void ShowQHarmonyMemory(QHarmonyMemory *H); /* It displays the quaternion-based harmomy memory's content */
 gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H); /* It creates a new quaternion-based harmony */
 void InitializeQHarmonyMemory(QHarmonyMemory *H); /* it initializes the quaternion-based harmony memory */
+void UpdateQHarmonyMemoryIndices(QHarmonyMemory *H); /* It updates the best and worst harmonies concerning quaternion-based Harmony Search*/
 /********************************************/
 
 #endif
