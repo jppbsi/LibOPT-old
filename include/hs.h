@@ -112,6 +112,7 @@ void ShowQHarmonyMemory(QHarmonyMemory *H); /* It displays the quaternion-based 
 gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H); /* It creates a new quaternion-based harmony */
 void InitializeQHarmonyMemory(QHarmonyMemory *H); /* it initializes the quaternion-based harmony memory */
 void UpdateQHarmonyMemoryIndices(QHarmonyMemory *H); /* It updates the best and worst harmonies concerning quaternion-based Harmony Search*/
+void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates the new harmony and updates the harmony memory concerning the quaternion-bqsed harmony memory */
 void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all harmonies concerning quaternion-based Harmony Search */
 /********************************************/
 

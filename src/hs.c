@@ -1767,7 +1767,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 		gsl_vector *sigma = NULL, *w = NULL;
 		gsl_matrix *Param = NULL;
 		gsl_vector_view *column = NULL;
-		
+
 		switch(FUNCTION_ID){
 			case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
 				g = va_arg(arg, Subgraph *);
@@ -1801,5 +1801,48 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 			break;
 			
 		}
-	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");
+	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateQNewHarmony.\n");
+}
+
+/* It evaluates all harmonies concerning the quaternion-based Harmony Memory
+Parameters: [H, EvaluateFun, FUNCTION_ID]
+H: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h */
+void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg){
+	if(H){
+		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
+		double f, x, y;
+		gsl_vector_view row;
+		gsl_vector *sigma = NULL, *w = NULL;
+		gsl_matrix *Param = NULL;	
+		Subgraph *g = NULL, *Val = NULL;
+		gsl_vector_view *column = NULL;
+		
+		switch(FUNCTION_ID){
+			case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
+										
+				for(i = 0; i < H->m; i++){
+					
+					for(j = 0; j < 4; j++)
+						column[j] = gsl_matrix_column(H->HM[i], j);
+
+					f = Evaluate(g, QNorm(&column[0].vector), QNorm(&column[1].vector), QNorm(&column[2].vector), QNorm(&column[3].vector), n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+				free(column);
+			break;
+		}
+	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateQHarmonies.\n");	
 }
