@@ -7,20 +7,35 @@ extern "C" {
 
 #define N_ITE 30
 
+/* Machine learning functions ***********************************/
+
+/* Deep learning */
 #define BBRBM4RECONSTRUCTION 1 /* Bernoulli-Bernoulli RBM for data reconstruction */
-#define KMEANS 2 /* K-Means for data clustering */
 #define GBDRBM 3 /* Gaussian-Bernoulli DRBM */
 #define BBRBM_PCD 4 /* Bernoulli-Bernoulli RBM trained by Persistent Contrastive Divergence */
 #define BBRBM_FPCD 5 /* Bernoulli-Bernoulli RBM trained by Fast Persistent Contrastive Divergence */
 #define BBDBN_CD 6 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Contrastive Divergence */
-#define LINEAR_REGRESSION 7 /* Linear Regression */
-#define F1 8
 #define BBDBN_PCD 9 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Persistent Contrastive Divergence */
 #define BBDBN_FPCD 10 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Fast Persistent Contrastive Divergence */
-#define LOGISTIC_REGRESSION 11 /* Logistic Regression */
-#define OPFKNN 12 /* OPF with knn adjacency relation */
 #define FEATURESELECTION 13 /* Single-objective feature selection */
 #define BBDBM_CD 14 /* Bernoulli_Bernoulli DBM for data reconstruction trained by Contrastive Divergence */
+
+/* k-means */
+#define KMEANS 2 /* K-Means for data clustering */
+
+/* Optimum-Path Forest */
+#define OPFKNN 12 /* OPF with knn adjacency relation */
+
+/* Regression */
+#define LINEAR_REGRESSION 7 /* Linear Regression */
+
+/* Logistic regression */
+#define LOGISTIC_REGRESSION 11 /* Logistic Regression */
+/*****************************************************************/
+
+/* Mathematical functions ****************************************/
+#define F1 8
+#define SPHERE 15
 
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */

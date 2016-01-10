@@ -133,29 +133,6 @@ void convert2upper(char *s){
         s[i] = toupper(s[i]);
 }
 
-double f1(Subgraph *g, ...){
-	va_list arg;	
-	double x, y, n, e, output;
-
-	va_start(arg, g);
-	x = va_arg(arg,double);
-	y = va_arg(arg,double);
-	
-/*
-    n = -1*((x-M_PI)*(x-M_PI)+(y-M_PI)*(y-M_PI));
-	//fprintf(stderr, "%lf", n);
-	e = exp(n);
-
-	va_end(arg);
-
-	return (-1*cos(x)*cos(y)*e);
-	output = pow(x+2*y-7, 2)+pow(2*x+y-5, 2);
-	
-*/
-	output = 0.26 * (x*x+y*y) - 0.48*x*y;
-	return output;
-}
-
 /* Restricted Boltzmann Machines */
 
 /* It executes a Bernoulli-Berboulli RBM and returns the reconstruction error of dataset in g
@@ -1277,3 +1254,23 @@ double Span(double L, double U, gsl_vector *q){
     
     return out;
 }
+
+/* Mathematical functions ****************************************/
+
+double f1(Subgraph *g, ...){
+	va_list arg;	
+	double x, y, n, e, output;
+
+	va_start(arg, g);
+	x = va_arg(arg,double);
+	y = va_arg(arg,double);
+	
+	output = 0.26 * (x*x+y*y) - 0.48*x*y;
+	return output;
+}
+
+double Sphere(double x, double y){
+    return pow(x, 2) + pow(y, 2);
+}
+
+

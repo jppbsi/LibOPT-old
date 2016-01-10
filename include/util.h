@@ -54,8 +54,6 @@ double LogisticRegression_Fitting(Subgraph *g, ...); /* It executes the Logistic
 /* OPF knn */
 double OPFknn4Optimization(Subgraph *g, ...); /* It optimizes the k learning step for OPFknn */
 
-double f1(Subgraph *g, ...);
-
 /* Feature Selection */
 
 Subgraph *CreateSubgraphFromSelectedFeatures(Subgraph *sg, gsl_vector *feat);
@@ -80,4 +78,8 @@ double Span(double L, double U, gsl_vector *q); /* It maps the quaternion value 
 
 /*****************/
 
+/* Mathematical functions ****************************************/
+double f1(Subgraph *g, ...);
+double Sphere(double x, double y);
+/*****************************************************************/
 #endif
