@@ -14,16 +14,12 @@ int main(int argc, char **argv){
     Subgraph *Train = NULL;
     
     Train = ReadSubgraph(argv[1]);
-    H = CreateQHarmonyMemory(2,3);
+    H = ReadQHarmoniesFromFile(argv[2]);
     InitializeQHarmonyMemory(H);
-    ShowQHarmonyMemory(H);
     
-    gsl_matrix *h = CreateNewQHarmony(H);
-    PAREI AQUI! FALTA runQHS
-    //EvaluateQHarmonies(H, Bernoulli_BernoulliRBM4Reconstruction, BBRBM4RECONSTRUCTION, Train, 2, 10, 1, 1);
+    runHQS(H, Bernoulli_BernoulliRBM4Reconstruction, BBRBM4RECONSTRUCTION, Train, 2, 10, 1, 1);
     
     DestroyQHarmonyMemory(&H);
-    gsl_matrix_free(h);
     DestroySubgraph(&Train);
     
     return 0;
