@@ -80,6 +80,6 @@ double Span(double L, double U, gsl_vector *q); /* It maps the quaternion value 
 
 /* Mathematical functions ****************************************/
 double f1(Subgraph *g, ...);
-double Sphere(double x, double y);
+double Sphere(Subgraph *g, ...);
 /*****************************************************************/
 #endif

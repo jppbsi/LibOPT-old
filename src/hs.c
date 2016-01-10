@@ -40,6 +40,7 @@ HarmonyMemory *CreateHarmonyMemory(int m, int n){
 	H->worst_fitness = DBL_MIN;
 	H->_HMCR = NULL;
 	H->_PAR = NULL;
+	H->Rehearsal = NULL;
 	
 	return H;
 }
@@ -476,6 +477,21 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 					}					
 				}
 				
+			break;
+			case SPHERE:
+				for(i = 0; i < H->m; i++){
+					/* Evaluate(NULL, x,y) */
+					f = Evaluate(NULL, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1));
+					
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}					
+				}
 			break;
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateHarmonies.\n");	
@@ -1568,6 +1584,7 @@ QHarmonyMemory *CreateQHarmonyMemory(int m, int n){
 	H->worst_fitness = DBL_MIN;
 	H->_HMCR = NULL;
 	H->_PAR = NULL;
+	H->Rehearsal = NULL;
 	
 	return H;
 }
@@ -1765,21 +1782,28 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
 		Subgraph *g = NULL, *Val = NULL;
 		double f, x, y;
+		double decision_variable1, decision_variable2, decision_variable3, decision_variable4; 
 		gsl_vector *sigma = NULL, *w = NULL;
 		gsl_matrix *Param = NULL;
 		gsl_vector_view *column = NULL;
 
+		column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
+		
 		switch(FUNCTION_ID){
 			case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
-				column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
 				
-				for(j = 0; j < 4; j++)
+				for(j = 0; j < H->n; j++)
 					column[j] = gsl_matrix_column(h, j);
 				
-				f = Evaluate(g, QNorm(&column[0].vector), QNorm(&column[1].vector), QNorm(&column[2].vector), QNorm(&column[3].vector), n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));
+				decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
+				decision_variable2 = Span(gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1), &column[1].vector);
+				decision_variable3 = Span(gsl_vector_get(H->LB, 2), gsl_vector_get(H->UB, 2), &column[2].vector);
+				decision_variable4 = Span(gsl_vector_get(H->LB, 3), gsl_vector_get(H->UB, 3), &column[3].vector);
+				
+				f = Evaluate(g, decision_variable1, decision_variable2, decision_variable3, decision_variable4, n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));
 				
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
@@ -1798,10 +1822,40 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 							H->Rehearsal[H->worst][i] = H->op_type[i];
 					}
 				}
-				free(column);
+			break;
+			case SPHERE:
+				for(i = 0; i < H->m; i++){
+					
+					for(j = 0; j < H->n; j++)
+						column[j] = gsl_matrix_column(h, j);
+
+					decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
+					decision_variable2 = Span(gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1), &column[1].vector);
+					
+					f = Evaluate(NULL, decision_variable1, decision_variable2);
+					
+					if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+						H->HMCRm+=H->HMCR; /* used for SGHS */
+						H->PARm+=H->PAR; /* used for SGHS */
+						H->aux++; /* used for SGHS */
+						for(i = 0; i < H->n; i++){
+							for(j = 0; j < 4; j++)
+								gsl_matrix_set(H->HM[H->worst], j, i, gsl_matrix_get(h, j, i)); /* it copies the new harmony to the harmony memory */
+						}
+						gsl_vector_set(H->fitness, H->worst, f);
+					
+						UpdateQHarmonyMemoryIndices(H);
+					
+						if(H->Rehearsal){ /* used for PSF_HS */
+							for(i = 0; i < H->n; i++)
+								H->Rehearsal[H->worst][i] = H->op_type[i];
+						}
+					}					
+				}
 			break;
 			
 		}
+		free(column);
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateQNewHarmony.\n");
 }
 
@@ -1821,20 +1875,15 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 		Subgraph *g = NULL, *Val = NULL;
 		gsl_vector_view *column = NULL;
 		
+		column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
 		switch(FUNCTION_ID){
 			case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
-				column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
-				
-				fprintf(stderr,"\ng->nfeats: %d", g->nfeats);
-				fprintf(stderr,"\nn_epochs: %d", n_epochs);
-				fprintf(stderr,"\nbatch_size: %d", batch_size);
-														
+																		
 				for(i = 0; i < H->m; i++){
-					
-					for(j = 0; j < 4; j++)
+					for(j = 0; j < H->n; j++)
 						column[j] = gsl_matrix_column(H->HM[i], j);
 
 					decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
@@ -1853,9 +1902,29 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						H->worst_fitness = f;
 					}
 				}
-				free(column);
+			break;
+			case SPHERE:
+				for(i = 0; i < H->m; i++){
+					for(j = 0; j < H->n; j++)
+						column[j] = gsl_matrix_column(H->HM[i], j);
+
+					decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
+					decision_variable2 = Span(gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1), &column[1].vector);
+					
+					f = Evaluate(NULL, decision_variable1, decision_variable2);
+					
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}					
+				}
 			break;
 		}
+		free(column);
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateQHarmonies.\n");	
 }
 

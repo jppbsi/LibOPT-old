@@ -1269,7 +1269,14 @@ double f1(Subgraph *g, ...){
 	return output;
 }
 
-double Sphere(double x, double y){
+double Sphere(Subgraph *g, ...){
+    va_list arg;	
+    double x, y, output;
+    
+    va_start(arg, g);
+    x = va_arg(arg,double);
+    y = va_arg(arg,double);
+	
     return pow(x, 2) + pow(y, 2);
 }
 

@@ -36,7 +36,9 @@ extern "C" {
 /* Mathematical functions ****************************************/
 #define F1 8
 #define SPHERE 15
+/*****************************************************************/
 
+/* Meta-heuristics ***********************************************/
 #define HS 1 /*Harmony Search */
 #define BA 2 /* Bat Algorithm */
 #define GP 3 /* Genetic Programming */
@@ -45,6 +47,8 @@ extern "C" {
 #define PSO 6 /* Particle Swarm Optimization */
 #define FFA 7 /* Firefly Algorithm */
 #define GA 8 /* Genetic Algorithm */
+#define QHS 9 /* Quaternion-based Harmony Search */
+/*****************************************************************/
     
 #include <stdio.h>
 #include <stdlib.h>
