@@ -17,7 +17,7 @@ int main(int argc, char **argv){
     H = ReadQHarmoniesFromFile(argv[2]);
     InitializeQHarmonyMemory(H);
     
-    runHQS(H, Bernoulli_BernoulliRBM4Reconstruction, BBRBM4RECONSTRUCTION, Train, 2, 10, 1, 1);
+    runQHS(H, Bernoulli_BernoulliRBM4Reconstruction, BBRBM4RECONSTRUCTION, Train, 2, 10, 1);
     
     DestroyQHarmonyMemory(&H);
     DestroySubgraph(&Train);

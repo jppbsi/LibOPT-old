@@ -1706,11 +1706,10 @@ gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H){
 			if(H->HMCR >= p){
 				
 				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
-				for(j = 0; j < 4; j++){
+				for(j = 0; j < 4; j++)
 					gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i));
-					p = gsl_rng_uniform(r);
-				}
-				
+			
+				p = gsl_rng_uniform(r);
 				if(H->PAR >= p){
 					signal = gsl_rng_uniform(r);
 					p = gsl_rng_uniform(r);
@@ -1724,8 +1723,10 @@ gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H){
 					}
 					
 					/* quaternions are constrained to the interval [0,1] -> Equation 8 */
-					if(gsl_matrix_get(h, j, i) < 0) gsl_matrix_set(h, j, i, 0);
-					else if(gsl_matrix_get(h, j, i) > 1) gsl_matrix_set(h, j, i, 1);
+					for(j = 0; j < 4; j++){
+						if(gsl_matrix_get(h, j, i) < 0) gsl_matrix_set(h, j, i, 0);
+						else if(gsl_matrix_get(h, j, i) > 1) gsl_matrix_set(h, j, i, 1);
+					}
 				}
 			}else{
 				for(j = 0; j < 4; j++){
@@ -1813,6 +1814,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 	if(H){
 		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
 		double f, x, y;
+		double decision_variable1, decision_variable2, decision_variable3, decision_variable4;
 		gsl_vector_view row;
 		gsl_vector *sigma = NULL, *w = NULL;
 		gsl_matrix *Param = NULL;	
@@ -1825,13 +1827,23 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
 				column = (gsl_vector_view *)malloc(4*sizeof(gsl_vector_view));
-										
+				
+				fprintf(stderr,"\ng->nfeats: %d", g->nfeats);
+				fprintf(stderr,"\nn_epochs: %d", n_epochs);
+				fprintf(stderr,"\nbatch_size: %d", batch_size);
+														
 				for(i = 0; i < H->m; i++){
 					
 					for(j = 0; j < 4; j++)
 						column[j] = gsl_matrix_column(H->HM[i], j);
 
-					f = Evaluate(g, QNorm(&column[0].vector), QNorm(&column[1].vector), QNorm(&column[2].vector), QNorm(&column[3].vector), n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));
+					decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
+					decision_variable2 = Span(gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1), &column[1].vector);
+					decision_variable3 = Span(gsl_vector_get(H->LB, 2), gsl_vector_get(H->UB, 2), &column[2].vector);
+					decision_variable4 = Span(gsl_vector_get(H->LB, 3), gsl_vector_get(H->UB, 3), &column[3].vector);
+
+					f = Evaluate(g, decision_variable1, decision_variable2, decision_variable3, decision_variable4, n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));
+					
 					gsl_vector_set(H->fitness, i, f);
 					if(f < H->best_fitness){
 						H->best = i;
