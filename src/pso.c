@@ -20,7 +20,7 @@ Swarm *CreateSwarm(int m, int n){
 	S->x = gsl_matrix_alloc(S->m, S->n);
 	S->v = gsl_matrix_calloc(S->m, S->n);
 	S->y = gsl_matrix_calloc(S->m, S->n);
-	S->g = gsl_matrix_calloc(S->n);
+	S->g = gsl_vector_calloc(S->n);
 	S->fitness = gsl_vector_calloc(S->m);
 	S->fitness_previous = gsl_vector_calloc(S->m);
 	S->LB = gsl_vector_alloc(S->n);
@@ -220,6 +220,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     Subgraph *g = NULL, *Val = NULL;
     gsl_matrix *Param = NULL;
     gsl_vector *row = NULL, *w = NULL;
+    gsl_vector_view tmp;
         
     switch(FUNCTION_ID){
         case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
@@ -235,9 +236,10 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                     for(j = 0; j < S->m; j++)
                         gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
                 }
-                if(gsl_vector_get(S->fitness, i) < S->best_fitness){
-                    gsl_vector_memcpy(S->g, S->x);
-                    S->best_fitness = f;
+                if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
+			tmp = gsl_matrix_row(S->x, i);
+			gsl_vector_memcpy(S->g, &tmp.vector);
+			S->best_fitness = f;
                 }
             }
         break;
@@ -274,7 +276,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				gsl_vector_memcpy(S->g, S->x);
+				tmp = gsl_matrix_row(S->x, i);
+				gsl_vector_memcpy(S->g, &tmp.vector);
 				S->best_fitness = f;
 			}
 		}
@@ -315,7 +318,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				gsl_vector_memcpy(S->g, S->x);
+				tmp = gsl_matrix_row(S->x, i);
+				gsl_vector_memcpy(S->g, &tmp.vector);
 				S->best_fitness = f;
 			}
 		}
@@ -356,7 +360,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				gsl_vector_memcpy(S->g, S->x);
+				tmp = gsl_matrix_row(S->x, i);
+				gsl_vector_memcpy(S->g, &tmp.vector);
 				S->best_fitness = f;
 			}
 		}
@@ -387,7 +392,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 				
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				gsl_vector_memcpy(S->g, S->x);
+				tmp = gsl_matrix_row(S->x, i);
+				gsl_vector_memcpy(S->g, &tmp.vector);
 				S->best_fitness = f;
 			}
 		}
@@ -427,7 +433,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				gsl_vector_memcpy(S->g, S->x);
+				tmp = gsl_matrix_row(S->x, i);
+				gsl_vector_memcpy(S->g, &tmp.vector);
 				S->best_fitness = f;
 			}
 		}
@@ -447,7 +454,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 				
 			gsl_vector_set(S->fitness, i, f);
 			if(f < S->best_fitness){
-				gsl_vector_memcpy(S->g, S->x);
+				tmp = gsl_matrix_row(S->x, i);
+				gsl_vector_memcpy(S->g, &tmp.vector);	
 				S->best_fitness = f;
 			}
 		}
@@ -474,7 +482,7 @@ void UpdateParticleVelocity(Swarm *S, int particle_id){
     r1 = gsl_rng_uniform(r);
     r2 = gsl_rng_uniform(r);
     for(j = 0; j < S->n; j++){
-        tmp = S->w*gsl_matrix_get(S->v, particle_id, j) + S->c1*r1*(gsl_matrix_get(S->y, particle_id, j)-gsl_matrix_get(S->x, particle_id, j)) + S->c2*r2*(gsl_matrix_get(S->g, particle_id, j)-gsl_matrix_get(S->x, particle_id, j));
+        tmp = S->w*gsl_matrix_get(S->v, particle_id, j) + S->c1*r1*(gsl_matrix_get(S->y, particle_id, j)-gsl_matrix_get(S->x, particle_id, j)) + S->c2*r2*(gsl_vector_get(S->g, j)-gsl_matrix_get(S->x, particle_id, j));
         gsl_matrix_set(S->v, particle_id, j, tmp);
     }
     gsl_rng_free(r);
