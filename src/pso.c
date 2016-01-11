@@ -20,6 +20,7 @@ Swarm *CreateSwarm(int m, int n){
 	S->x = gsl_matrix_alloc(S->m, S->n);
 	S->v = gsl_matrix_calloc(S->m, S->n);
 	S->y = gsl_matrix_calloc(S->m, S->n);
+	S->g = gsl_matrix_calloc(S->n);
 	S->fitness = gsl_vector_calloc(S->m);
 	S->fitness_previous = gsl_vector_calloc(S->m);
 	S->LB = gsl_vector_alloc(S->n);
@@ -29,7 +30,6 @@ Swarm *CreateSwarm(int m, int n){
 	S->c1 = 0;
 	S->c2 = 0;
 	S->w = 0;
-	S->best = 0;
 	S->max_iterations = 0;
 	S->best_fitness = DBL_MAX;
 	
@@ -46,6 +46,7 @@ void DestroySwarm(Swarm **S){
 		gsl_matrix_free(aux->x);
 		gsl_matrix_free(aux->v);
 		gsl_matrix_free(aux->y);
+		gsl_vector_free(aux->g);
 		gsl_vector_free(aux->fitness);
 		gsl_vector_free(aux->fitness_previous);
 		gsl_vector_free(aux->LB);
@@ -108,7 +109,6 @@ Swarm *CopySwarm(Swarm *S){
         cpy = CreateSwarm(S->m, S->n);
     
         cpy->max_iterations = S->max_iterations;
-        cpy->best = S->best;
         cpy->best_fitness = S->best_fitness;
         cpy->c1 = S->c1;
         cpy->c2 = S->c2;
@@ -116,6 +116,7 @@ Swarm *CopySwarm(Swarm *S){
         gsl_matrix_memcpy(cpy->x, S->x);
         gsl_matrix_memcpy(cpy->v, S->v);
         gsl_matrix_memcpy(cpy->v, S->y);
+	gsl_vector_memcpy(cpy->g, S->g);
         gsl_vector_memcpy(cpy->fitness, S->fitness);
 	gsl_vector_memcpy(cpy->fitness_previous, S->fitness_previous);
         gsl_vector_memcpy(cpy->LB, S->LB);
@@ -235,7 +236,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                         gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
                 }
                 if(gsl_vector_get(S->fitness, i) < S->best_fitness){
-                    S->best = i;
+                    gsl_vector_memcpy(S->g, S->x);
                     S->best_fitness = f;
                 }
             }
@@ -273,7 +274,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				S->best = i;
+				gsl_vector_memcpy(S->g, S->x);
 				S->best_fitness = f;
 			}
 		}
@@ -314,7 +315,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				S->best = i;
+				gsl_vector_memcpy(S->g, S->x);
 				S->best_fitness = f;
 			}
 		}
@@ -355,7 +356,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				S->best = i;
+				gsl_vector_memcpy(S->g, S->x);
 				S->best_fitness = f;
 			}
 		}
@@ -386,7 +387,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 				
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				S->best = i;
+				gsl_vector_memcpy(S->g, S->x);
 				S->best_fitness = f;
 			}
 		}
@@ -426,7 +427,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			
 			/* it updates the global optimum */
 			if(f < S->best_fitness){
-				S->best = i;
+				gsl_vector_memcpy(S->g, S->x);
 				S->best_fitness = f;
 			}
 		}
@@ -446,7 +447,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 				
 			gsl_vector_set(S->fitness, i, f);
 			if(f < S->best_fitness){
-				S->best = i;
+				gsl_vector_memcpy(S->g, S->x);
 				S->best_fitness = f;
 			}
 		}
@@ -473,7 +474,7 @@ void UpdateParticleVelocity(Swarm *S, int particle_id){
     r1 = gsl_rng_uniform(r);
     r2 = gsl_rng_uniform(r);
     for(j = 0; j < S->n; j++){
-        tmp = S->w*gsl_matrix_get(S->v, particle_id, j) + S->c1*r1*(gsl_matrix_get(S->y, particle_id, j)-gsl_matrix_get(S->x, particle_id, j)) + S->c2*r2*(gsl_matrix_get(S->x, S->best, j)-gsl_matrix_get(S->x, particle_id, j));
+        tmp = S->w*gsl_matrix_get(S->v, particle_id, j) + S->c1*r1*(gsl_matrix_get(S->y, particle_id, j)-gsl_matrix_get(S->x, particle_id, j)) + S->c2*r2*(gsl_matrix_get(S->g, particle_id, j)-gsl_matrix_get(S->x, particle_id, j));
         gsl_matrix_set(S->v, particle_id, j, tmp);
     }
     gsl_rng_free(r);

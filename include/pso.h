@@ -7,7 +7,6 @@ typedef struct _Swarm{
     int m; /* number of particles */
     int n; /* number decision variables */
     int max_iterations; /* maximum number of iterations */
-    int best; /* index of the best particle */
     double best_fitness; /* value of best fitness */
     double c1; /* learning factor */
     double c2; /* learning factor */
@@ -17,6 +16,7 @@ typedef struct _Swarm{
     gsl_matrix *x; /* position */
     gsl_matrix *v; /* velocity */
     gsl_matrix *y; /* personal best position */
+    gsl_vector *g; /* global best position */
     gsl_vector *fitness; /* fitness values */
     gsl_vector *fitness_previous; /* fitness values of the previous iteration */
     gsl_vector *LB; /* lower bound for each decision variable */
