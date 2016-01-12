@@ -48,6 +48,8 @@ extern "C" {
 #define FFA 7 /* Firefly Algorithm */
 #define GA 8 /* Genetic Algorithm */
 #define QHS 9 /* Quaternion-based Harmony Search */
+#define CS 10 /* Cuckoo Search */
+#define WCA 11 /* Water Cycle Algorithm */
 /*****************************************************************/
     
 #include <stdio.h>
@@ -83,6 +85,8 @@ typedef gsl_vector *(*prtFun2)(Subgraph *, ...);
 #include "pso.h"
 #include "ffa.h"
 #include "ga.h"
+#include "cs.h"
+#include "wca.h"
 #include "util.h"
 
 #ifdef __cplusplus

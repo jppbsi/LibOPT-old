@@ -25,6 +25,8 @@ $(OBJ)/numerical.o \
 $(OBJ)/pso.o \
 $(OBJ)/ffa.o \
 $(OBJ)/ga.o \
+$(OBJ)/cs.o \
+$(OBJ)/wca.o \
 
 	ar csr $(LIB)/libopt.a \
 $(OBJ)/opt.o \
@@ -37,6 +39,8 @@ $(OBJ)/numerical.o \
 $(OBJ)/pso.o \
 $(OBJ)/ffa.o \
 $(OBJ)/ga.o \
+$(OBJ)/cs.o \
+$(OBJ)/wca.o \
 
 $(OBJ)/opt.o: $(SRC)/opt.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
@@ -77,6 +81,14 @@ $(OBJ)/ffa.o: $(SRC)/ffa.c
 $(OBJ)/ga.o: $(SRC)/ga.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
     -c $(SRC)/ga.c -o $(OBJ)/ga.o
-    
+
+$(OBJ)/cs.o: $(SRC)/cs.c
+	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
+    -c $(SRC)/cs.c -o $(OBJ)/cs.o
+
+$(OBJ)/wca.o: $(SRC)/wca.c
+	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
+    -c $(SRC)/wca.c -o $(OBJ)/wca.o
+
 clean:
 	rm -f $(LIB)/lib*.a; rm -f $(OBJ)/*.o

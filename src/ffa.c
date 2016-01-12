@@ -197,30 +197,180 @@ EvaluateFun: pointer to the function used to evaluate fireflies
 FUNCTION_ID: id of the function registered at opt.h */
 void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
-    int i, j, n_epochs, batch_size;
+    int i, j, z, l, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
     double f;
-    Subgraph *g = NULL;
-    
+    Subgraph *g = NULL, *Val = NULL, *gTrain = NULL, *gTest = NULL;
+    TransferFunc optTransfer = NULL;
+    gsl_matrix *Param = NULL;
+    gsl_vector *row = NULL, *w = NULL;
+        
     switch(FUNCTION_ID){
-        case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+        case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
                         
             g = va_arg(arg, Subgraph *);
             n_epochs = va_arg(arg, int);
             batch_size = va_arg(arg, int);
-            fprintf(stderr,"\ng->nlabels: %d", g->nlabels);
-            fprintf(stderr,"\nn_epochs: %d", n_epochs);
-            fprintf(stderr,"\nbatch_size: %d", batch_size);
             
             for(i = 0; i < F->m; i++){
                 f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), n_epochs, batch_size); 
-                if(f < gsl_vector_get(F->fitness, i)){
-                    gsl_vector_set(F->fitness, i, f);
-                }
-                if(gsl_vector_get(F->fitness, i) < F->best_fitness){
-                    F->best = i;
-                    F->best_fitness = f;
-                }
-            }
+    			gsl_vector_set(F->fitness, i, f);
+    		}
+            
+            F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+        break;
+	    case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
+	    	g = va_arg(arg, Subgraph *);
+	    	n_epochs = va_arg(arg, int);
+	    	batch_size = va_arg(arg, int);
+	    	n_gibbs_sampling = va_arg(arg, int);
+	    	L = va_arg(arg, int);
+	    						
+	    	Param = gsl_matrix_alloc(L, 6);
+
+	    	for(i = 0; i < F->m; i++){			
+	    		/* setting Param matrix */
+    			z = 0;
+    			for(l = 0; l < L; l++){
+    				for(j = 0; j < 4; j++)
+    					gsl_matrix_set(Param, l, j, gsl_matrix_get(F->x, i, j+z));
+    				gsl_matrix_set(Param, l, j++, gsl_vector_get(F->LB, z+1)); // setting up eta_min 
+    				gsl_matrix_set(Param, l, j, gsl_vector_get(F->UB, z+1)); // setting up eta_max
+    				z+=4;
+    			}
+							
+    			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+						
+    			gsl_vector_set(F->fitness, i, f);
+			}
+    		
+    		F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+
+    		gsl_matrix_free(Param);
+    	break;
+    	case BBDBN_PCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Persistent Contrastive Divergence */
+    		g = va_arg(arg, Subgraph *);
+    		n_epochs = va_arg(arg, int);
+    		batch_size = va_arg(arg, int);
+    		n_gibbs_sampling = va_arg(arg, int);
+    		L = va_arg(arg, int);
+    							
+    		Param = gsl_matrix_alloc(L, 6);
+
+    		for(i = 0; i < F->m; i++){	
+    			/* setting Param matrix */
+    			z = 0;
+    			for(l = 0; l < L; l++){
+    				for(j = 0; j < 4; j++)
+    					gsl_matrix_set(Param, l, j, gsl_matrix_get(F->x, i, j+z));
+    				gsl_matrix_set(Param, l, j++, gsl_vector_get(F->LB, z+1)); // setting up eta_min 
+    				gsl_matrix_set(Param, l, j, gsl_vector_get(F->UB, z+1)); // setting up eta_max
+    				z+=4;
+    			}
+							
+    			f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
+					
+    			gsl_vector_set(F->fitness, i, f);
+			}
+    		
+    		F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+    		
+    		gsl_matrix_free(Param);
+    	break;
+    	case BBDBN_FPCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Fast Persistent Contrastive Divergence */
+    		g = va_arg(arg, Subgraph *);
+    		n_epochs = va_arg(arg, int);
+    		batch_size = va_arg(arg, int);
+    		n_gibbs_sampling = va_arg(arg, int);
+    		L = va_arg(arg, int);
+    							
+    		Param = gsl_matrix_alloc(L, 6);
+
+    		for(i = 0; i < F->m; i++){				
+    			/* setting Param matrix */
+    			z = 0;
+    			for(l = 0; l < L; l++){
+    				for(j = 0; j < 4; j++)
+    					gsl_matrix_set(Param, l, j, gsl_matrix_get(F->x, i, j+z));
+    				gsl_matrix_set(Param, l, j++, gsl_vector_get(F->LB, z+1)); // setting up eta_min 
+    				gsl_matrix_set(Param, l, j, gsl_vector_get(F->UB, z+1)); // setting up eta_max
+    				z+=4;
+    			}
+							
+    			f = Evaluate(g, 3, L, Param, n_epochs, batch_size);
+						
+    			gsl_vector_set(F->fitness, i, f);
+			}
+    		
+    		F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+    		
+    		gsl_matrix_free(Param);
+    	break;
+    	case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
+    		g = va_arg(arg, Subgraph *);
+    		n_epochs = va_arg(arg, int);
+    		batch_size = va_arg(arg, int);
+    		n_gibbs_sampling = va_arg(arg, int);
+    		L = va_arg(arg, int);
+    		
+    		Param = gsl_matrix_alloc(L, 6);
+
+    		for(i = 0; i < F->m; i++){
+    			/* setting Param matrix */
+	    		z = 0;
+	    		for(l = 0; l < L; l++){
+	    			for(j = 0; j < 4; j++)
+	    				gsl_matrix_set(Param, l, j, gsl_matrix_get(F->x, i, j+z));
+	    			gsl_matrix_set(Param, l, j++, gsl_vector_get(F->LB, z+1)); // setting up eta_min 
+	    			gsl_matrix_set(Param, l, j, gsl_vector_get(F->UB, z+1)); // setting up eta_max
+	    			z+=4;
+	    		}
+							
+	    		f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+    						
+    			gsl_vector_set(F->fitness, i, f);
+			}
+    		
+    		F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+    		
+    		gsl_matrix_free(Param);
+    		gsl_vector_free(row);
+    	break;
+	    case LOGISTIC_REGRESSION: /* Logistic Regression */
+	    	g = va_arg(arg, Subgraph *);
+	    	FUNCTION_ID2 = va_arg(arg, int);
+	    	w = va_arg(arg, gsl_vector *);
+		
+    		for(i = 0; i < F->m; i++){
+	    		f = Evaluate(g, FUNCTION_ID2, gsl_matrix_get(F->x, i, 0), w); 
+				
+	    		gsl_vector_set(F->fitness, i, f);
+	    	}	
+	    	F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+    	break;
+	    case FEATURESELECTION: /* Feature_Selection */
+	        optTransfer = va_arg(arg, TransferFunc);
+	        
+            gTrain = va_arg(arg, Subgraph *);
+            gTest = va_arg(arg, Subgraph *);
+            
+            row = gsl_vector_alloc(F->n);
+            
+            for(i = 0; i < F->m; i++){
+                gsl_matrix_get_row(row, F->x, i);
+                f = Evaluate(gTrain, gTest, 1, row, optTransfer);
+            
+                gsl_vector_set(F->fitness, i, f);
+    		}
+    		F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+
+    		gsl_vector_free(row);
         break;
     }
 }
@@ -255,7 +405,7 @@ inline void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
             }
         }
     }
-    
+    gsl_rng_free(r);
 }
 
 /* It updates the position of the best firefly ---
@@ -307,7 +457,7 @@ void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
                 UpdateFireflyPosition(F, i); /* It updates the position of each firefly */
             
             UpdateBestFireflyPosition(F, F->best);
-            CheckFireflySwarmLimits(F);
+            
             EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
                         
             fprintf(stderr, "OK (minimum fitness value %lf)", F->best_fitness);

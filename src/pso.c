@@ -217,7 +217,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     
     int i, j, z, l, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
     double f;
-    Subgraph *g = NULL, *Val = NULL;
+    Subgraph *g = NULL, *Val = NULL, *gTrain = NULL, *gTest = NULL;
+    TransferFunc optTransfer = NULL;
     gsl_matrix *Param = NULL;
     gsl_vector *row = NULL, *w = NULL;
     gsl_vector_view tmp;
@@ -460,6 +461,32 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			}
 		}
 	break;
+	case FEATURESELECTION: /* Feature_Selection */
+	        optTransfer = va_arg(arg, TransferFunc);
+	        row = gsl_vector_alloc(S->n);
+            
+            gTrain = va_arg(arg, Subgraph *);
+            gTest = va_arg(arg, Subgraph *);
+            
+            for(i = 0; i < S->m; i++){
+                gsl_matrix_get_row(row, S->x, i);
+                f = Evaluate(gTrain, gTest, 1, row, optTransfer);
+            
+                /* it updates the best position of the agent */
+    		    if(f < gsl_vector_get(S->fitness, i))
+    			    gsl_matrix_set_row(S->y, i, row);
+    		
+    		    gsl_vector_set(S->fitness, i, f);
+    		
+    		    /* it updates the global optimum */
+    		    if(f < S->best_fitness){
+				    tmp = gsl_matrix_row(S->x, i);
+				    gsl_vector_memcpy(S->g, &tmp.vector);	
+				    S->best_fitness = f;
+			    }
+    		}
+    		gsl_vector_free(row);
+        break;
     }
 }
 
