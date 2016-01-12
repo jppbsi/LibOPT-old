@@ -1091,7 +1091,7 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
                 gTrain = va_arg(arg, Subgraph *);
                 gTest = va_arg(arg, Subgraph *);
             
-                f = Evaluate(gTrain, gTest, 1, x, optTransfer);
+                f = Evaluate(gTrain, gTest, 1, h, optTransfer);
                 
                 if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
