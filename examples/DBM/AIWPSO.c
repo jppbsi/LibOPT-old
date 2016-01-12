@@ -42,16 +42,16 @@ int main(int argc, char **argv){
     n_hidden_units = gsl_vector_alloc(n_layers);
     j = 0;
     for(i = 0; i < n_layers; i++){
-        gsl_vector_set(n_hidden_units, i, gsl_matrix_get(S->x, S->best_fitness, j));
+        gsl_vector_set(n_hidden_units, i, gsl_vector_get(S->g, j));
         j+=4;
     }
 
     d = CreateDBM(Train->nfeats, n_hidden_units, Train->nlabels);
     InitializeDBM(d); j = 1; z = 1;
     for(i = 0; i < d->n_layers; i++){
-        d->m[i]->eta = gsl_matrix_get(S->x, S->best_fitness, j); j++;
-        d->m[i]->lambda = gsl_matrix_get(S->x, S->best_fitness, j); j++;
-        d->m[i]->alpha = gsl_matrix_get(S->x, S->best_fitness, j); j+=2;
+        d->m[i]->eta = gsl_vector_get(S->g, j); j++;
+        d->m[i]->lambda = gsl_vector_get(S->g, j); j++;
+        d->m[i]->alpha = gsl_vector_get(S->g, j); j+=2;
         d->m[i]->eta_min = gsl_vector_get(S->LB, z);
         d->m[i]->eta_max = gsl_vector_get(S->UB, z);
         z+=4;
@@ -75,7 +75,7 @@ int main(int argc, char **argv){
     fpParameters = fopen(argv[6], "a");
     fprintf(fpParameters,"%d ", S->n);
     for(i = 0; i < S->n; i++)
-        fprintf(fpParameters, "%lf ", gsl_matrix_get(S->x, S->best_fitness, i));
+        fprintf(fpParameters, "%lf ", gsl_vector_get(S->g, j));
     fclose(fpParameters);
     
     DestroySwarm(&S);
