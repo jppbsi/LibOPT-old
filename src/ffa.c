@@ -366,6 +366,7 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
                 f = Evaluate(gTrain, gTest, 1, row, optTransfer);
             
                 gsl_vector_set(F->fitness, i, f);
+                gsl_matrix_set_row(F->x, i, row);
     		}
     		F->best = gsl_vector_min_index(F->fitness);
 		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
@@ -459,7 +460,7 @@ void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
             UpdateBestFireflyPosition(F, F->best);
             
             EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
-                        
+            
             fprintf(stderr, "OK (minimum fitness value %lf)", F->best_fitness);
             fprintf(stderr,"%d %lf\n", t, F->best_fitness);
         }

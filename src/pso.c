@@ -477,6 +477,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     			    gsl_matrix_set_row(S->y, i, row);
     		
     		    gsl_vector_set(S->fitness, i, f);
+    		    gsl_matrix_set_row(S->x, i, row);
     		
     		    /* it updates the global optimum */
     		    if(f < S->best_fitness){
@@ -592,10 +593,10 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
                 UpdateParticleVelocity(S, i);
                 UpdateParticlePosition(S, i);
             }
-	    CheckSwarmLimits(S);
-	         
-            EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
-	    fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
+	        
+	        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
+	        
+	        fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
         }
         gsl_rng_free(r);
         

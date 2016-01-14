@@ -312,6 +312,7 @@ void EvaluateRainDropPopulation(RainDropPopulation *P, prtFun Evaluate, int FUNC
 		f = EvaluateRainDrop(P, &row.vector, Evaluate, FUNCTION_ID, arg);
 		
 		gsl_vector_set(P->fitness, i, f);
+		gsl_matrix_set_row(P->x, i, &row.vector);
 	}
 	
 	P->best = gsl_vector_min_index(P->fitness);
