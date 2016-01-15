@@ -26,6 +26,9 @@ extern "C" {
 /* Optimum-Path Forest */
 #define OPFKNN 12 /* OPF with knn adjacency relation */
 
+/* Enhanced Probabilistic Neural Network classifier */
+#define EPNN_OPF 16 /* EPNN with learning from the gaussians */
+	
 /* Regression */
 #define LINEAR_REGRESSION 7 /* Linear Regression */
 

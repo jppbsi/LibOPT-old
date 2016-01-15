@@ -1,0 +1,7 @@
+10 2 30 #<n_harmonies> <dimension> <max_iterations>
+0.7 0.0 #<HMCR> <HMCRm>
+0.7 0.0 0.0 0.0 #<PAR> <PAR_min> <PAR_max> <PARm>
+10 0 0 #<bw> <bw_MIN> <bw_max>
+0.0 0.0 #<LP> <pm>
+0.0 1.0 #<LB> <UB> PNN sigma
+0.0 500 #<LB> <UB> EPNN radius

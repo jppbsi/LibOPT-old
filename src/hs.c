@@ -516,6 +516,27 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 					}					
 				}
 			break;
+			case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
+				g = va_arg(arg, Subgraph *);
+				Val = va_arg(arg, Subgraph *);
+				gsl_vector *lNode = va_arg(arg, gsl_vector *);
+				gsl_vector *nsample4class = va_arg(arg, gsl_vector *);
+				gsl_vector *nGaussians = va_arg(arg, gsl_vector *);
+
+				for(i = 0; i < H->m; i++){
+					f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1));
+					
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}					
+				}
+			break;
+			
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateHarmonies.\n");	
 }
@@ -1109,6 +1130,32 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					}
 				}
             break;
+			case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
+				g = va_arg(arg, Subgraph *);
+				Val = va_arg(arg, Subgraph *);
+				gsl_vector *lNode = va_arg(arg, gsl_vector *);
+				gsl_vector *nsample4class = va_arg(arg, gsl_vector *);
+				gsl_vector *nGaussians = va_arg(arg, gsl_vector *);
+
+
+				f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(h, 0), gsl_vector_get(h, 1));
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					
+					/* it copies the new harmony to the harmony memory */
+					for(i = 0; i < H->n; i++) gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); 
+					
+					gsl_vector_set(H->fitness, H->worst, f);
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+			break;
 		}
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");
 }

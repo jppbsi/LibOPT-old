@@ -54,6 +54,12 @@ double LogisticRegression_Fitting(Subgraph *g, ...); /* It executes the Logistic
 /* OPF knn */
 double OPFknn4Optimization(Subgraph *g, ...); /* It optimizes the k learning step for OPFknn */
 
+/* OPF CLUSTER */
+double OPFclusterOptimization(Subgraph *g, ...); /* It optimizes the k maximum degree for the knn graph*/
+
+/* Enhanced Probabilistic Neural Network */
+double EPNNoptimization(Subgraph *Train, ...); /* It optimizes the sigma and radius for EPNN*/
+
 /* Feature Selection */
 
 Subgraph *CreateSubgraphFromSelectedFeatures(Subgraph *sg, gsl_vector *feat);

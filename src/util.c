@@ -846,6 +846,100 @@ double OPFknn4Optimization(Subgraph *Train, ...){
     return 1/error;
 }
 
+
+
+/* It optimizes the kmax for OPF-CLUSTER
+Parameters: [g, eval, Optimization_Func, ...]
+g: training graph
+Val: validating graph
+kmax: maximum degree for the knn graph
+---
+Output: learned set of parameters kmax */
+double OPFclusterOptimization(Subgraph *Train, ...){
+    va_list arg;
+    double error;
+    Subgraph *Eval = NULL;
+    int kmax, i;
+    
+    va_start(arg, Train);
+    Eval = va_arg(arg, Subgraph *);
+    kmax = va_arg(arg, int);
+	
+    opf_BestkMinCut(Train,1,kmax); //default kmin = 1
+	
+	opf_OPFClustering(Train);
+	
+	if (Train->node[0].truelabel!=0){ // labeled training set
+		Train->nlabels = 0;
+		for (i = 0; i < Train->nnodes; i++){//propagating root labels
+			if (Train->node[i].root==i){
+				Train->node[i].label = Train->node[i].truelabel;
+			}
+		else
+			Train->node[i].label = Train->node[Train->node[i].root].truelabel;
+		}
+		for (i = 0; i < Train->nnodes; i++){ // retrieve the original number of true labels
+			if (Train->node[i].label > Train->nlabels) Train->nlabels = Train->node[i].label;
+		}
+	}
+	else{ // unlabeled training set
+		for (i = 0; i < Train->nnodes; i++) Train->node[i].truelabel = Train->node[i].label+1;
+	}
+  
+    opf_OPFClassifying(Train, Eval);
+    error = (double)opf_Accuracy(Eval);
+
+    va_end(arg);
+    
+    return 1/error;
+}
+
+
+/* It optimizes the sigma and radius for EPNN-OPF
+Parameters: [g, eval, Optimization_Func, ...]
+Train: training graph
+Eval: evaluating graph
+lNode: Ordered list labels based in the OPF-CLUSTER or by number of classes in training set
+nsample4class: Count sample for classes
+nGaussians: number of gaussians (number of labels obtained in OPF-CLUSTER)
+sigma: sigma is the spread of the Gaussian function
+radius: for Hyper-Sphere in Enhanced Probabilistic Neural Network
+root: address of the roots
+---
+Output: learned set of parameters sigma and radius */
+double EPNNoptimization(Subgraph *Train, ...){
+    va_list arg;
+    double error;
+    Subgraph *Eval = NULL;
+    float sigma, radius;
+	gsl_vector *alpha = NULL;
+	gsl_vector *lNode = NULL;
+	gsl_vector *nsample4class = NULL;
+	gsl_vector *nGaussians = NULL;
+    
+	/* reading input parameters */
+    va_start(arg, Train);
+    Eval = va_arg(arg, Subgraph *);
+    lNode = va_arg(arg, gsl_vector *);
+	nsample4class =	va_arg(arg, gsl_vector *);
+	nGaussians = va_arg(arg, gsl_vector *);
+	sigma = va_arg(arg, double);
+	radius = va_arg(arg, double);
+
+	alpha = HyperSphere(Train, radius); //It calculates the hyper-sphere with radius r for each training node
+	
+	// Enhanced probabilistic neural network with local decision circles based on the Parzen-window estimation
+	EPNN(Train, Eval, sigma, lNode, nsample4class, alpha, nGaussians); 
+
+    error = (double)opf_Accuracy(Eval);
+
+    va_end(arg);
+	gsl_vector_free(alpha);
+		
+    return 1/error;
+}
+
+
 /*********************************/
 
 /* Feature Selection */
