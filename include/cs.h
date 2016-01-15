@@ -7,6 +7,7 @@
 #define MEAN 0
 #define VARIANCE 1
 
+/* Cuckoo Search data structure */
 typedef struct _NestPopulation{
     int m; /* number of nests */
     int n; /* number decision variables */
@@ -25,6 +26,26 @@ typedef struct _NestPopulation{
     gsl_vector *UB; /* upper bound for each decision variable */
 }NestPopulation;
 
+/* Quaternion-based Cuckoo Search data structure */
+typedef struct _QNestPopulation{
+    int m; /* number of nests */
+    int n; /* number decision variables */
+    int max_iterations; /* maximum number of iterations */
+    int best; /* index of the best nest */
+    double best_fitness; /* value of best fitness */
+    double alpha; /* step size */
+    double alpha_min; /* lower bound for alpha */
+    double alpha_max; /* upper bound for alpha */
+    double p; /* probability */
+    double p_min; /* lower bound for probability */
+    double p_max; /* upper bound for probability */
+    gsl_matrix **x; /* position */
+    gsl_vector *fitness; /* fitness values */
+    gsl_vector *LB; /* lower bound for each decision variable */
+    gsl_vector *UB; /* upper bound for each decision variable */
+}QNestPopulation;
+
+/* Standard Cuckoo Search ******************************/
 /* Allocation and deallocation */
 NestPopulation *CreateNestPopulation(int m, int n); /*It allocates the search space */
 void DestroyNestPopulation(NestPopulation **P); /* It deallocates the search space */
@@ -46,5 +67,10 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 void EvaluateNestPopulation(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all nests */
 void runCS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Cuckoo Search for function minimization */
 void runACS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Adaptative Cuckoo Search for function minimization */
+/*********************************************************/
+
+/* Quaternion Cuckoo Search ******************************/
+QNestPopulation *CreateQNestPopulation(int m, int n); /*It allocates the search space */
+/*********************************************************/
 
 #endif

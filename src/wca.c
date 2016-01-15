@@ -102,7 +102,10 @@ RainDropPopulation *CopyRainDropPopulation(RainDropPopulation *P){
         gsl_vector_memcpy(cpy->UB, P->UB);
         
         return cpy;
-    }else fprintf(stderr,"\nThere is no search space allocated @CopyRainDropPopulation.\n");		
+    }else{
+	fprintf(stderr,"\nThere is no search space allocated @CopyRainDropPopulation.\n");
+	return NULL;
+    }
 }
 
 /* It checks the limits of each decision variable ---

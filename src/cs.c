@@ -499,3 +499,42 @@ void runCS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
     }else fprintf(stderr,"\nThere is no search space allocated @runCS.\n");
     va_end(arg);
 }
+
+/* It allocates the nest population for Quaternion Cuckoo Search --
+Parameters: [m,n]
+m: number of nests (Population Size)
+n: number of decision variables to be optimized (dimension of the search space) */
+QNestPopulation *CreateQNestPopulation(int m, int n){
+	
+	if((m < 1) || (n < 1)){
+		fprintf(stderr,"\nInvalid parameters @CreateQNestPopulation.\n");
+		return NULL;
+	}
+	
+	QNestPopulation *P = NULL;
+	int i;
+	
+	P = (QNestPopulation *)malloc(sizeof(QNestPopulation));
+	P->m = m;
+	P->n = n;
+	
+	P->x = (gsl_matrix **)malloc(P->m*sizeof(gsl_matrix **));
+	for(i = 0; i < P->m; i++)
+		P->x[i] = gsl_matrix_alloc(P->m, P->n);
+	
+	P->fitness = gsl_vector_calloc(P->m);
+	P->LB = gsl_vector_alloc(P->n);
+	P->UB = gsl_vector_alloc(P->n);
+	
+	P->alpha = 0;
+	P->alpha_min = 0;
+	P->alpha_max = 0;
+	P->p = 0;
+	P->p_min = 0;
+	P->p_max = 0;
+	P->max_iterations = 0;
+	P->best = 0;
+	P->best_fitness = DBL_MAX;
+	
+	return P;
+}
