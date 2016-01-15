@@ -70,9 +70,13 @@ void runACS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...); /* It exe
 /*********************************************************/
 
 /* Quaternion Cuckoo Search ******************************/
+/* Allocation and deallocation */
 QNestPopulation *CreateQNestPopulation(int m, int n); /*It allocates the search space */
 void DestroyQNestPopulation(QNestPopulation **P); /* It deallocates the search space */
 QNestPopulation *ReadQNestPopulationFromFile(char *fileName); /* It creates a search space specified in a file */
+QNestPopulation *CopyQNestPopulation(QNestPopulation *P); /* It copies an entire search space */
+
+/* Auxiliary functions */
 /*********************************************************/
 
 #endif

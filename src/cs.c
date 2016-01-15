@@ -595,3 +595,36 @@ QNestPopulation *ReadNestQPopulationFromFile(char *fileName){
         
     return P;
 }
+
+/* It copies an entire search space for Quaternion Cuckoo Search
+Parameters: [P]
+P: search space to be copied */
+QNestPopulation *CopyQNestPopulation(QNestPopulation *P){
+    QNestPopulation *cpy = NULL;
+    int i;
+    
+    if(P){
+        cpy = CreateQNestPopulation(P->m, P->n);
+    
+        cpy->best = P->best;
+        cpy->max_iterations = P->max_iterations;
+        cpy->best_fitness = P->best_fitness;
+        cpy->alpha = P->alpha;
+        cpy->alpha_min = P->alpha_min;
+        cpy->alpha_max = P->alpha_max;
+        cpy->p = P->p;
+        cpy->p_min = P->p_min;
+        cpy->p_max = P->p_max;
+        for(i = 0; i < P->m; i++)
+		gsl_matrix_memcpy(cpy->x[i], P->x[i]);
+	cpy->x = P->x;
+        gsl_vector_memcpy(cpy->fitness, P->fitness);
+        gsl_vector_memcpy(cpy->LB, P->LB);
+        gsl_vector_memcpy(cpy->UB, P->UB);
+        
+        return cpy;
+    }else{
+	fprintf(stderr,"\nThere is no search space allocated @CopyNestPopulation.\n");
+	return NULL;
+    }
+}
