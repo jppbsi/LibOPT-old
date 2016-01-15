@@ -538,3 +538,60 @@ QNestPopulation *CreateQNestPopulation(int m, int n){
 	
 	return P;
 }
+
+/* It deallocates the nest population for Quaternion Cuckoo Search ---
+Parameters: [P]
+P: QNestPopulation */
+void DestroyQNestPopulation(QNestPopulation **P){
+	QNestPopulation *aux = *P;
+	int i;
+	
+	if(aux){
+		for(i = 0; i < aux->m; i++)
+			gsl_matrix_free(aux->x[i]);
+		free(aux->x);
+		gsl_vector_free(aux->fitness);
+		gsl_vector_free(aux->LB);
+		gsl_vector_free(aux->UB);
+		free(aux);
+		aux = NULL;
+	}
+}
+
+/* It creates a swarm specified in a file for Quaternion Cuckoo Search ---
+Parameters: [fileName]
+fileName: name of the file that stores the swarm's configuration */
+QNestPopulation *ReadNestQPopulationFromFile(char *fileName){
+	FILE *fp = NULL;
+	int m, n;
+	QNestPopulation *P = NULL;
+	double LB, UB;
+	char c;
+        
+	fp = fopen(fileName, "r");
+	if(!fp){
+	    fprintf(stderr,"\nunable to open file %s @ReadNestPopulationFromFile.\n", fileName);
+	    return NULL;
+	}
+        
+	fscanf(fp, "%d %d", &m, &n);
+	P = CreateQNestPopulation(m, n);
+	fscanf(fp, "%d", &(P->max_iterations));
+	WaiveComment(fp);
+	
+	fscanf(fp, "%lf %lf %lf", &(P->alpha), &(P->alpha_min), &(P->alpha_max));
+	WaiveComment(fp);
+	
+	fscanf(fp, "%lf %lf %lf", &(P->p), &(P->p_min), &(P->p_max));
+	WaiveComment(fp);
+		
+	for(n = 0; n < P->n; n++){
+	    fscanf(fp, "%lf %lf", &LB, &UB);
+	    gsl_vector_set(P->LB, n, LB);
+	    gsl_vector_set(P->UB, n, UB);
+	    WaiveComment(fp);
+	}
+	fclose(fp);
+        
+    return P;
+}

@@ -338,7 +338,7 @@ gsl_vector *FlowIntensity(RainDropPopulation *P){
     }
     
     for(i = 0; i < P->nsr+1; i++){
-        tmp = round(abs(gsl_vector_get(P->fitness, i)/sum_fitness) * (P->m - (P->nsr+1)));
+        tmp = round(fabs(gsl_vector_get(P->fitness, i)/sum_fitness) * (P->m - (P->nsr+1)));
         gsl_vector_set(flow, i, tmp);
     }
     
