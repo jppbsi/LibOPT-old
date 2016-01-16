@@ -373,6 +373,21 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
 
     		gsl_vector_free(row);
         break;
+        case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
+			g = va_arg(arg, Subgraph *);
+			Val = va_arg(arg, Subgraph *);
+			gsl_vector *lNode = va_arg(arg, gsl_vector *);
+			gsl_vector *nsample4class = va_arg(arg, gsl_vector *);
+			gsl_vector *nGaussians = va_arg(arg, gsl_vector *);
+            
+            for(i = 0; i < F->m; i++){
+			    f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1));
+			    
+			    gsl_vector_set(F->fitness, i, f);
+			}
+			F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+		break;
     }
 }
 
