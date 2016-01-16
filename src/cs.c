@@ -302,6 +302,15 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
             f = Evaluate(gTrain, gTest, 1, x, optTransfer);
             
         break;
+        case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
+			g = va_arg(arg, Subgraph *);
+			Val = va_arg(arg, Subgraph *);
+			gsl_vector *lNode = va_arg(arg, gsl_vector *);
+			gsl_vector *nsample4class = va_arg(arg, gsl_vector *);
+			gsl_vector *nGaussians = va_arg(arg, gsl_vector *);
+
+			f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
+		break;
     }
     
     return f;

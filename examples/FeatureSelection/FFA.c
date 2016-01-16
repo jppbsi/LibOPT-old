@@ -22,7 +22,7 @@ int main(int argc, char **argv){
     Eval = ReadSubgraph(argv[2]);
     Test = ReadSubgraph(argv[3]);
     
-    optTransfer = V1TransferFunction;
+    optTransfer = S2TransferFunction;
     
     fprintf(stderr,"\nInitializing firefly swarm ... ");
     InitializeFireflySwarm(F);

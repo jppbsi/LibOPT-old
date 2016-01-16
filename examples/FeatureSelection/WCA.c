@@ -22,7 +22,7 @@ int main(int argc, char **argv){
     Eval = ReadSubgraph(argv[2]);
     Test = ReadSubgraph(argv[3]);
     
-    optTransfer = V1TransferFunction;
+    optTransfer = S2TransferFunction;
     
     fprintf(stderr,"\nInitializing raindrop population ... ");
     InitializeRainDropPopulation(P);
@@ -35,7 +35,7 @@ int main(int argc, char **argv){
     fflush(stderr); fprintf(stderr," OK");
     
     best_row = gsl_vector_calloc(P->n);
-    gsl_matrix_get_row(best_row, P->x, 0);
+    gsl_matrix_get_row(best_row, P->x, P->best);
     
     fflush(stderr); fprintf(stderr,"\nWriting new training and testing sets ...");
     newTrain = CreateSubgraphFromSelectedFeatures(Train, best_row);
