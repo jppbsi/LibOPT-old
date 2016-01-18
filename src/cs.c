@@ -302,11 +302,6 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
             f = Evaluate(gTrain, gTest, 1, x, optTransfer);
             
         break;
-		case OPFKNN: /* OPF with knn adjacency relation */
-			g = va_arg(arg, Subgraph *);
-			Val = va_arg(arg, Subgraph *);
-			f = Evaluate(g, Val, (int)gsl_vector_get(x, 0));
-		break;
         case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
 			g = va_arg(arg, Subgraph *);
 			Val = va_arg(arg, Subgraph *);
@@ -316,6 +311,12 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 
 			f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
 		break;
+		case OPFKNN: /* OPF with knn adjacency relation */
+			g = va_arg(arg, Subgraph *);
+			Val = va_arg(arg, Subgraph *);
+			f = Evaluate(g, Val, (int)gsl_vector_get(x, 0));
+		break;
+		
     }
     
     return f;

@@ -373,17 +373,6 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
 
     		gsl_vector_free(row);
         break;
-		case OPFKNN: /* OPF with knn adjacency relation */
-			g = va_arg(arg, Subgraph *);
-			Val = va_arg(arg, Subgraph *);
-		
-			for(i = 0; i < F->m; i++){
-				f = Evaluate(g, Val, (int)gsl_matrix_get(F->x, i, 0));
-				gsl_vector_set(F->fitness, i, f);
-			}
-			F->best = gsl_vector_min_index(F->fitness);
-		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
-		break;
         case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
 			g = va_arg(arg, Subgraph *);
 			Val = va_arg(arg, Subgraph *);
@@ -399,6 +388,18 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
 			F->best = gsl_vector_min_index(F->fitness);
 		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
 		break;
+		case OPFKNN: /* OPF with knn adjacency relation */
+			g = va_arg(arg, Subgraph *);
+			Val = va_arg(arg, Subgraph *);
+		
+			for(i = 0; i < F->m; i++){
+				f = Evaluate(g, Val, (int)gsl_matrix_get(F->x, i, 0));
+				gsl_vector_set(F->fitness, i, f);
+			}
+			F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+		break;
+		
     }
 }
 
