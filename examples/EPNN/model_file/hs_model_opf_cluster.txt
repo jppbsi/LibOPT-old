@@ -3,4 +3,4 @@
 0.7 0.0 0.0 0.0 #<PAR> <PAR_min> <PAR_max> <PARm>
 10 0 0 #<bw> <bw_MIN> <bw_max>
 0.0 0.0 #<LP> <pm>
-1 30 #<LB> <UB> Kmax maximum degree
+1 30 #<LB> <UB> K maximum degree

@@ -488,6 +488,34 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     		}
     		gsl_vector_free(row);
         break;
+		case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
+			g = va_arg(arg, Subgraph *);
+			Val = va_arg(arg, Subgraph *);
+			gsl_vector *lNode = va_arg(arg, gsl_vector *);
+			gsl_vector *nsample4class = va_arg(arg, gsl_vector *);
+			gsl_vector *nGaussians = va_arg(arg, gsl_vector *);
+			row = gsl_vector_alloc(S->n);
+		
+			for(i = 0; i < S->m; i++){
+				f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1));
+								
+				/* it updates the best position of the agent */
+				if(f < gsl_vector_get(S->fitness, i)){
+					gsl_matrix_get_row(row, S->x, i);
+					gsl_matrix_set_row(S->y, i, row);
+				}
+							
+				gsl_vector_set(S->fitness, i, f);
+				
+				/* it updates the global optimum */
+				if(f < S->best_fitness){
+					tmp = gsl_matrix_row(S->x, i);
+					gsl_vector_memcpy(S->g, &tmp.vector);
+					S->best_fitness = f;
+				}
+			}
+			gsl_vector_free(row);
+		break;
     }
 }
 
@@ -594,6 +622,8 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
                 UpdateParticlePosition(S, i);
             }
 	        
+			CheckSwarmLimits(S);
+			
 	        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
 	        
 	        fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);

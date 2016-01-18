@@ -1,0 +1,5 @@
+10 2 30 #<n_particles> <dimension> <max_iterations>
+1.4 0.6 # <c1> <c2> 
+0.7 0.5 1.5 #<w> <w_min> <w_max>
+0.0 1.0 #<LB> <UB> PNN sigma
+0.0 500 #<LB> <UB> EPNN radius
