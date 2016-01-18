@@ -1,0 +1,4 @@
+5 1 30 #<n_particles> <dimension> <max_iterations>
+0.1 0.5 1 #<alpha> <alpha_min> <alpha_max>
+0.25 0.05 0.5 #<p> <p_min> <p_max>
+1 30 #<LB> <UB> K maximum degree

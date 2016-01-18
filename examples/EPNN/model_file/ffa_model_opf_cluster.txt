@@ -1,0 +1,3 @@
+5 1 30 #<n_particles> <dimension> <max_iterations>
+0.1 1 0.8 #<gamma> <beta_0> <alpha>
+1 30 #<LB> <UB> K maximum degree
