@@ -308,11 +308,13 @@ void EvaluateRainDropPopulation(RainDropPopulation *P, prtFun Evaluate, int FUNC
 	int i;
 	double f;
 	gsl_vector_view row;
+	va_list arg_tmp;
 	
 	for (i = 0; i < P->m; i++){
+	    va_copy(arg_tmp, arg);
 		row = gsl_matrix_row(P->x, i);
 		
-		f = EvaluateRainDrop(P, &row.vector, Evaluate, FUNCTION_ID, arg);
+		f = EvaluateRainDrop(P, &row.vector, Evaluate, FUNCTION_ID, arg_tmp);
 		
 		gsl_vector_set(P->fitness, i, f);
 		gsl_matrix_set_row(P->x, i, &row.vector);
@@ -356,16 +358,16 @@ void UpdateStreamPosition(RainDropPopulation *P, gsl_vector *flow, double c){
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    /* Streams flows to the sea */
+    /* Streams flow to the sea */
     flow_count = gsl_vector_get(flow, 0);
-    for(i = 0; i <= flow_count; i++){
+    for(i = P->nsr+1; i <= flow_count; i++){
         for(j = 0; j < P->n; j++){
             tmp = gsl_matrix_get(P->x, i, j) + gsl_rng_uniform(r) * c * (gsl_matrix_get(P->x, P->best, j) - gsl_matrix_get(P->x, i, j));
             gsl_matrix_set(P->x, i, j, tmp);
         }
     }
     
-    /* Streams flows to rivers */
+    /* Streams flow to rivers */
     for(k = 1; k < P->nsr+1; k++){
         flow_count = flow_count + gsl_vector_get(flow, k);
         for(i = (flow_count - gsl_vector_get(flow, k)); i <= flow_count; i++){
@@ -378,8 +380,8 @@ void UpdateStreamPosition(RainDropPopulation *P, gsl_vector *flow, double c){
     gsl_rng_free(r);
 }
 
-void UpdateRiverPosition(RainDropPopulation *P, gsl_vector *flow, double c){
-    int k, i, j, flow_count;
+void UpdateRiverPosition(RainDropPopulation *P, double c){
+    int k, i, j;
     double tmp;
     const gsl_rng_type *T = NULL;
     gsl_rng *r = NULL;
@@ -389,7 +391,7 @@ void UpdateRiverPosition(RainDropPopulation *P, gsl_vector *flow, double c){
     r = gsl_rng_alloc(T);
     gsl_rng_set(r, rand());
     
-    /* Rivers flows to the sea */
+    /* Rivers flow to the sea */
     for(i = 1; i < P->nsr+1; i++){
         for(j = 0; j < P->n; j++){
             tmp = gsl_matrix_get(P->x, i, j) + gsl_rng_uniform(r) * c * (gsl_matrix_get(P->x, P->best, j) - gsl_matrix_get(P->x, i, j));
@@ -482,10 +484,7 @@ void runWCA(RainDropPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
             va_copy(arg, argtmp);
             
             UpdateStreamPosition(P, flow, c);
-            EvaluateRainDropPopulation(P, Evaluate, FUNCTION_ID, arg);
-            SortingRainDropPopulation(P);
-            
-            UpdateRiverPosition(P, flow, c);
+            UpdateRiverPosition(P, c);
             EvaluateRainDropPopulation(P, Evaluate, FUNCTION_ID, arg);
             SortingRainDropPopulation(P);
             
@@ -499,5 +498,107 @@ void runWCA(RainDropPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
         }
         gsl_vector_free(flow);
     }else fprintf(stderr,"\nThere is no search space allocated @runWCA.\n");
+    va_end(arg);
+}
+
+void EvaporationRateRainingProcess(RainDropPopulation *P, gsl_vector *flow, int t){
+    int i, j, flow_count;
+	const gsl_rng_type *T = NULL;
+	gsl_rng *r = NULL;
+	double p, dist, sum, er;
+	gsl_vector_view row1, row2;
+		
+	srand(time(NULL));
+	gsl_rng_env_setup();
+	T = gsl_rng_default;
+	r = gsl_rng_alloc(T);
+	gsl_rng_set(r, rand());
+    
+    for(i = 2; i < P->nsr+1; i++)
+        sum = sum + gsl_vector_get(flow, i);
+    
+    er = (sum/P->nsr)*gsl_rng_uniform(r);
+    
+    for(i = 2; i < P->nsr+1; i++){
+        if((exp(-t/P->max_iterations) < gsl_rng_uniform(r)) && gsl_vector_get(flow, i) < er){
+            for(j = 0; j < P->n; j++){
+                p = (gsl_vector_get(P->UB, j)-gsl_vector_get(P->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(P->LB, j);
+				gsl_matrix_set(P->x, i, j, p);
+			}
+			gsl_vector_set(P->fitness, i, DBL_MAX);
+        }
+    }
+    
+    row1 = gsl_matrix_row(P->x, 0);
+	for(i = 1; i < P->nsr+1; i++){
+	    row2 = gsl_matrix_row(P->x, i);
+	    dist = opt_EuclideanDistance(&row1.vector, &row2.vector);
+	    if((dist < P->dmax) || (gsl_rng_uniform(r) < 0.1)){
+		    for(j = 0; j < P->n; j++){
+                p = (gsl_vector_get(P->UB, j)-gsl_vector_get(P->LB, j))*gsl_rng_uniform(r)+gsl_vector_get(P->LB, j);
+				gsl_matrix_set(P->x, i, j, p);
+			}
+			gsl_vector_set(P->fitness, i, DBL_MAX);
+	    }
+	}
+    
+    flow_count = gsl_vector_get(flow, 0); // Streams that directly flow to the sea
+    row1 = gsl_matrix_row(P->x, 0); // Sea
+    for(i = P->nsr+1; i <= flow_count; i++){
+        row2 = gsl_matrix_row(P->x, i);
+	    dist = opt_EuclideanDistance(&row1.vector, &row2.vector);
+	    if(dist < P->dmax){
+		    for(j = 0; j < P->n; j++){
+                p = (gsl_matrix_get(P->x, P->best, j) + sqrt(MU) * gsl_rng_uniform_int(r, P->n));
+				gsl_matrix_set(P->x, i, j, p);
+			}
+			gsl_vector_set(P->fitness, i, DBL_MAX);
+	    }
+    }
+	gsl_rng_free(r);
+}
+
+/* It executes the Evaporation Rate Water Cycle Algorithm for function minimization ---
+Paper: "Water Cycle Algoritm with Evaporation Rate for Solving Constrained and Unconstrained Optimization Problems" ---
+Parameters: [P, EvaluateFun, FUNCTION_ID, ... ]
+P: search space
+Evaluate: pointer to the function used to evaluate population
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+void runERWCA(RainDropPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
+    va_list arg, argtmp;
+		
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+    if(P){
+        int t, i;
+        double c = 2; /* c = [1,2]. The author recommends 2 as the best value */
+        gsl_vector *flow = NULL;
+        
+        EvaluateRainDropPopulation(P, Evaluate, FUNCTION_ID, arg);
+        
+        SortingRainDropPopulation(P);
+        
+        flow = FlowIntensity(P);
+        
+        for(t = 1; t <= P->max_iterations; t++){
+            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, P->max_iterations);
+            va_copy(arg, argtmp);
+            
+            UpdateStreamPosition(P, flow, c);
+            UpdateRiverPosition(P, c);
+            EvaluateRainDropPopulation(P, Evaluate, FUNCTION_ID, arg);
+            SortingRainDropPopulation(P);
+            
+            EvaporationRateRainingProcess(P, flow, t);
+            
+            P->dmax = P->dmax - (P->dmax/P->max_iterations);
+            
+            va_copy(arg, argtmp);
+                        
+            fprintf(stderr, "OK (minimum fitness value %lf)", P->best_fitness);
+        }
+        gsl_vector_free(flow);
+    }else fprintf(stderr,"\nThere is no search space allocated @runERWCA.\n");
     va_end(arg);
 }

@@ -3,6 +3,8 @@
 
 #include "opt.h"
 
+#define MU 0.1
+
 typedef struct _RainDropPopulation{
     int m; /* size of population */
     int n; /* number decision variables */
@@ -33,5 +35,6 @@ void ShowRainDropPopulationInformation(RainDropPopulation *P); /* It displays th
 double EvaluateRainDrop(RainDropPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates a raindrop */
 void EvaluateRainDropPopulation(RainDropPopulation *P, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates the entire population */
 void runWCA(RainDropPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Water Cycle Algorithm for function minimization */
+void runERWCA(RainDropPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the ER-WCA for function minimization */
 
 #endif
