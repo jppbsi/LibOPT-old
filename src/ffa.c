@@ -490,6 +490,9 @@ void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
             
             fprintf(stderr, "OK (minimum fitness value %lf)", F->best_fitness);
             fprintf(stderr,"%d %lf\n", t, F->best_fitness);
+			
+			CheckFireflySwarmLimits(F);
+			
         }
         
     }else fprintf(stderr,"\nThere is no search space allocated @runGA.\n");

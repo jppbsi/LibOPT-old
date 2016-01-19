@@ -509,6 +509,8 @@ void runCS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
             gsl_vector_free(newNest);
             
             SortingNestPopulation(P);
+			
+			CheckNestPopulationLimits(P);
             
             fprintf(stderr, "OK (minimum fitness value %lf)", P->best_fitness);
         }
