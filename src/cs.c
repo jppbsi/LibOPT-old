@@ -305,6 +305,7 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 		case OPFKNN: /* OPF with knn adjacency relation */
 			g = va_arg(arg, Subgraph *);
 			Val = va_arg(arg, Subgraph *);
+			
 			f = Evaluate(g, Val, (int)gsl_vector_get(x, 0));
 		break;
         case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
@@ -317,7 +318,6 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
 		break;
     }
-    
     return f;
 }
 
@@ -342,8 +342,7 @@ void EvaluateNestPopulation(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID,
 
 	P->best = gsl_vector_min_index(P->fitness);
 	P->best_fitness = gsl_vector_get(P->fitness, P->best);
-
-	va_end(arg);
+	fprintf(stderr,"Teste3\n");
 }
 
 /*It computes the Box-Muller Transform generating a vector whose elements are positives and belong to a normal distribution*/
@@ -366,9 +365,10 @@ gsl_vector *AllocGaussianVector(int n){
         temp = x*sqrt(-2*log(r)/r)*VARIANCE + MEAN;
         gsl_vector_set(v, i, temp);
         
-        if(i+1 < n)
+        if(i+1 < n){
             temp = y*sqrt(-2*log(r)/r)*VARIANCE + MEAN;
             gsl_vector_set(v, i+1, temp);
+        }
     }
     return v;
 }
@@ -392,6 +392,7 @@ void LevyFlightNest(NestPopulation *P, double alpha, double sigma){
     for(i = 0; i < P->m; i++){
         u = AllocGaussianVector(P->n);
         v = AllocGaussianVector(P->n);
+        
         for(j = 0; j < P->n; j++){
             step = gsl_vector_get(u, j)*sigma/pow(gsl_vector_get(v, j),1/BETA);
             stepsize = alpha * step * (gsl_matrix_get(P->x, P->best, j) - gsl_matrix_get(P->x, i, j)); //using alpha as 1.0, Levy Flights becomes more agressive.
@@ -482,7 +483,7 @@ void runCS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
             
             LevyFlightNest(P,P->alpha,sigma); //it generates new solutions via Levy Flights
             
-            EvaluateNestPopulation(P, Evaluate, FUNCTION_ID, arg);
+            EvaluateNestPopulation(P, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
             
             SortingNestPopulation(P);
             
@@ -497,7 +498,7 @@ void runCS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
                     gsl_vector_set(newNest, j, gsl_matrix_get(P->x, index, j));
                 }
                 
-                f = EvaluateNest(P, newNest, Evaluate, FUNCTION_ID, arg);
+                f = EvaluateNest(P, newNest, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
                 
                 if(f > gsl_vector_get(P->fitness, P->m-1 - k)){
                     gsl_vector_set(P->fitness, P->m-1 - k, f);
