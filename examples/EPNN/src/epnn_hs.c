@@ -164,7 +164,7 @@ int main(int argc, char **argv){
 		time2 += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
 		
 		//SET N-CLUSTER IN N-GAUSSIANS
-		nGaussians = LoadLabels(gTrain);
+		nGaussians = loadLabels(gTrain);
 		root = gsl_vector_calloc(gTrain->nlabels); //Allocate space root
 		
 		if (gTrain->node[0].truelabel!=0){ // labeled training set
@@ -208,12 +208,12 @@ int main(int argc, char **argv){
  	if(H2){	
 	
 		//SET N-LABELS IN N-GAUSSIANS
-		if(!nGaussians) nGaussians = LoadLabels(gTrain);
+		if(!nGaussians) nGaussians = loadLabels(gTrain);
  
 		// Ordered list labels based in the OPF-CLUSTER or by number of classes in training set
-		lNode = OrderedListLabel(gTrain, nGaussians, root);
+		lNode = orderedListLabel(gTrain, nGaussians, root);
 		// Count sample for classes
-		nsample4class = CountClasses(gTrain, nGaussians, root); 
+		nsample4class = countClasses(gTrain, nGaussians, root); 
 				
 	    fprintf(stdout, "\nOptimizing EPNN-OPF approach ..."); fflush(stdout);
 	    gettimeofday(&tic,NULL);
@@ -239,7 +239,7 @@ int main(int argc, char **argv){
  
 	//TRAINING PHASE
 	fprintf(stdout, "\nComputing Hyper-Sphere with radius: %lf ...", radius); fflush(stdout);
-	gettimeofday(&tic,NULL); alpha = HyperSphere(gTrain, radius); gettimeofday(&toc,NULL);
+	gettimeofday(&tic,NULL); alpha = hyperSphere(gTrain, radius); gettimeofday(&toc,NULL);
 	fprintf(stdout, " OK\n"); fflush(stdout);
 	
 	time2 += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
@@ -268,7 +268,7 @@ int main(int argc, char **argv){
 	fprintf(stdout, " OK\n"); fflush(stdout);
 	
     fprintf(stdout, "\nInitializing EPNN ... ");
-  	gettimeofday(&tic,NULL); EPNN(gTrain, gTest, sigma, lNode, nsample4class, alpha, nGaussians); gettimeofday(&toc,NULL);
+  	gettimeofday(&tic,NULL); epnn(gTrain, gTest, sigma, lNode, nsample4class, alpha, nGaussians); gettimeofday(&toc,NULL);
 	fprintf(stdout,"OK\n");
 
 	time2 = (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);

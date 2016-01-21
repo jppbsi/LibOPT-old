@@ -926,10 +926,10 @@ double EPNNoptimization(Subgraph *Train, ...){
 	sigma = va_arg(arg, double);
 	radius = va_arg(arg, double);
 
-	alpha = HyperSphere(Train, radius); //It calculates the hyper-sphere with radius r for each training node
+	alpha = hyperSphere(Train, radius); //It calculates the hyper-sphere with radius r for each training node
 	
 	// Enhanced probabilistic neural network with local decision circles based on the Parzen-window estimation
-	EPNN(Train, Eval, sigma, lNode, nsample4class, alpha, nGaussians); 
+	epnn(Train, Eval, sigma, lNode, nsample4class, alpha, nGaussians); 
 
     error = (double)opf_Accuracy(Eval);
 

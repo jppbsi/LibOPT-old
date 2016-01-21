@@ -1,6 +1,6 @@
 10 1 30 #<n_harmonies> <dimension> <max_iterations>
-0.7 0.0 #<HMCR> <HMCRm>
-0.7 0.0 0.0 0.0 #<PAR> <PAR_min> <PAR_max> <PARm>
+0.5 0.0 #<HMCR> <HMCRm>
+0.5 0.0 0.0 0.0 #<PAR> <PAR_min> <PAR_max> <PARm>
 10 0 0 #<bw> <bw_MIN> <bw_max>
 0.0 0.0 #<LP> <pm>
 1 30 #<LB> <UB> K maximum degree
