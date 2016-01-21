@@ -164,7 +164,7 @@ int main(int argc, char **argv){
 		time2 += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
 		
 		//SET N-CLUSTER IN N-GAUSSIANS
-		nGaussians = LoadLabels(gTrain);
+		nGaussians = loadLabels(gTrain);
 		root = gsl_vector_calloc(gTrain->nlabels); //Allocate space root
 		
 		if (gTrain->node[0].truelabel!=0){ // labeled training set
