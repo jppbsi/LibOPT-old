@@ -1877,7 +1877,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
 		Subgraph *g = NULL, *Val = NULL;
 		double f, x, y;
-		double decision_variable1, decision_variable2, decision_variable3, decision_variable4; 
+		double decision_variable, decision_variable1, decision_variable2, decision_variable3, decision_variable4; 
 		gsl_vector *sigma = NULL, *w = NULL;
 		gsl_matrix *Param = NULL;
 		gsl_vector_view *column = NULL;
@@ -1917,6 +1917,47 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 							H->Rehearsal[H->worst][i] = H->op_type[i];
 					}
 				}
+			break;
+			case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+				
+				/* setting Param matrix */
+				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
+				for(l = 0; l < L; l++){
+					for(j = 0; j < 4; j++){
+						column[j] = gsl_matrix_column(h, j+z);
+						decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+						gsl_matrix_set(Param, l, j, decision_variable);
+					}
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
+				}
+				
+				f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+
+				gsl_matrix_free(Param);
 			break;
 			case SPHERE:
 				for(i = 0; i < H->m; i++){
