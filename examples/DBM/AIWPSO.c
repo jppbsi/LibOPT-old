@@ -75,7 +75,7 @@ int main(int argc, char **argv){
     fpParameters = fopen(argv[6], "a");
     fprintf(fpParameters,"%d ", S->n);
     for(i = 0; i < S->n; i++)
-        fprintf(fpParameters, "%lf ", gsl_vector_get(S->g, j));
+        fprintf(fpParameters, "%lf ", gsl_vector_get(S->g, i));
     fclose(fpParameters);
     
     DestroySwarm(&S);
