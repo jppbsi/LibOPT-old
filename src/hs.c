@@ -1963,7 +1963,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 	if(H){
 		int i, j, l, z, n_epochs, batch_size, n_gibbs_sampling, L, FUNCTION_ID2;
 		double f, x, y;
-		double decision_variable1, decision_variable2, decision_variable3, decision_variable4;
+		double decision_variable, decision_variable1, decision_variable2, decision_variable3, decision_variable4;
 		gsl_vector_view row;
 		gsl_vector *sigma = NULL, *w = NULL;
 		gsl_matrix *Param = NULL;	
@@ -1997,6 +1997,43 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						H->worst_fitness = f;
 					}
 				}
+			break;
+			case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+								
+				Param = gsl_matrix_alloc(L, 6);
+				for(i = 0; i < H->m; i++){
+										
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++){
+							column[j] = gsl_matrix_column(H->HM[i], j+z);
+							decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+							gsl_matrix_set(Param, l, j, decision_variable);
+							
+						}
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+							
+					f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+
+				gsl_matrix_free(Param);
 			break;
 			case SPHERE:
 				for(i = 0; i < H->m; i++){
