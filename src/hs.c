@@ -1894,6 +1894,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 					column[j] = gsl_matrix_column(h, j);
 				
 				decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
+				if(decision_variable1 < gsl_vector_get(H->LB, 0)) decision_variable1 = gsl_vector_get(H->LB, 0);
 				decision_variable2 = Span(gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1), &column[1].vector);
 				decision_variable3 = Span(gsl_vector_get(H->LB, 2), gsl_vector_get(H->UB, 2), &column[2].vector);
 				decision_variable4 = Span(gsl_vector_get(H->LB, 3), gsl_vector_get(H->UB, 3), &column[3].vector);
@@ -1932,6 +1933,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 					for(j = 0; j < 4; j++){
 						column[j] = gsl_matrix_column(h, j+z);
 						decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+						if(decision_variable < gsl_vector_get(H->LB, j)) decision_variable = gsl_vector_get(H->LB, j); // avoiding null quaternions
 						gsl_matrix_set(Param, l, j, decision_variable);
 					}
 					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
@@ -1976,6 +1978,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 					for(j = 0; j < 4; j++){
 						column[j] = gsl_matrix_column(h, j+z);
 						decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+						if(decision_variable < gsl_vector_get(H->LB, j)) decision_variable = gsl_vector_get(H->LB, j); // avoiding null quaternions
 						gsl_matrix_set(Param, l, j, decision_variable);
 					}
 					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
@@ -2019,6 +2022,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 					for(j = 0; j < 4; j++){
 						column[j] = gsl_matrix_column(h, j+z);
 						decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+						if(decision_variable < gsl_vector_get(H->LB, j)) decision_variable = gsl_vector_get(H->LB, j); // avoiding null quaternions
 						gsl_matrix_set(Param, l, j, decision_variable);
 					}
 					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
@@ -2111,6 +2115,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						column[j] = gsl_matrix_column(H->HM[i], j);
 
 					decision_variable1 = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column[0].vector);
+					if(decision_variable1 < gsl_vector_get(H->LB, 0)) decision_variable1 = gsl_vector_get(H->LB, 0); // avoiding null quaternions
 					decision_variable2 = Span(gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1), &column[1].vector);
 					decision_variable3 = Span(gsl_vector_get(H->LB, 2), gsl_vector_get(H->UB, 2), &column[2].vector);
 					decision_variable4 = Span(gsl_vector_get(H->LB, 3), gsl_vector_get(H->UB, 3), &column[3].vector);
@@ -2143,6 +2148,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						for(j = 0; j < 4; j++){
 							column[j] = gsl_matrix_column(H->HM[i], j+z);
 							decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+							if(decision_variable < gsl_vector_get(H->LB, j)) decision_variable = gsl_vector_get(H->LB, j); // avoiding null quaternions
 							gsl_matrix_set(Param, l, j, decision_variable);
 							
 						}
@@ -2180,6 +2186,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						for(j = 0; j < 4; j++){
 							column[j] = gsl_matrix_column(H->HM[i], j+z);
 							decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+							if(decision_variable < gsl_vector_get(H->LB, j)) decision_variable = gsl_vector_get(H->LB, j); // avoiding null quaternions
 							gsl_matrix_set(Param, l, j, decision_variable);
 							
 						}
@@ -2217,6 +2224,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						for(j = 0; j < 4; j++){
 							column[j] = gsl_matrix_column(H->HM[i], j+z);
 							decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+							if(decision_variable < gsl_vector_get(H->LB, j)) decision_variable = gsl_vector_get(H->LB, j); // avoiding null quaternions
 							gsl_matrix_set(Param, l, j, decision_variable);
 							
 						}
