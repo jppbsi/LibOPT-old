@@ -1325,7 +1325,6 @@ double QNorm(gsl_vector *q){
 	fprintf(stderr,"\nA quaternion needs four coefficients @QNorm");
 	return -1;
     }
-    fprintf(stderr, "%lf %lf %lf %lf\n\n", gsl_vector_get(q,0), gsl_vector_get(q,1), gsl_vector_get(q,2), gsl_vector_get(q,3));
     norm = sqrt(pow(gsl_vector_get(q,0),2)+pow(gsl_vector_get(q,1),2)+pow(gsl_vector_get(q,2),2)+pow(gsl_vector_get(q,3),2));
     
     return norm;
@@ -1345,11 +1344,9 @@ double Span(double L, double U, gsl_vector *q){
 	return -1;
     }
 
-    fprintf(stderr, "QNorm: %lf\n", QNorm(q));
-    fprintf(stderr, "U: %lf\n", U);
-    fprintf(stderr, "L: %lf\n", L);
-    
-    out = (U-L)/2*sin(QNorm(q));
+    out = (U-L)/(2*(sin(QNorm(q))+0.00001));
+    if(out < L) out = L;
+    else if(out > U) out = U;
     
     return out;
 }

@@ -52,7 +52,6 @@ int main(int argc, char **argv){
     for(i = 0; i < n_layers; i++){
         column = gsl_matrix_column(H->HM[H->best], j);
         decision_variable = Span(gsl_vector_get(H->LB, 0), gsl_vector_get(H->UB, 0), &column.vector);        
-        if(decision_variable < gsl_vector_get(H->LB, 0)) decision_variable = gsl_vector_get(H->LB, 0);
         gsl_vector_set(n_hidden_units, i, decision_variable);
         j+=4;
     }
