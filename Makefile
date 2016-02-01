@@ -27,6 +27,7 @@ $(OBJ)/ffa.o \
 $(OBJ)/ga.o \
 $(OBJ)/cs.o \
 $(OBJ)/wca.o \
+$(OBJ)/mba.o \
 
 	ar csr $(LIB)/libopt.a \
 $(OBJ)/opt.o \
@@ -41,6 +42,7 @@ $(OBJ)/ffa.o \
 $(OBJ)/ga.o \
 $(OBJ)/cs.o \
 $(OBJ)/wca.o \
+$(OBJ)/mba.o \
 
 $(OBJ)/opt.o: $(SRC)/opt.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
@@ -89,6 +91,10 @@ $(OBJ)/cs.o: $(SRC)/cs.c
 $(OBJ)/wca.o: $(SRC)/wca.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
     -c $(SRC)/wca.c -o $(OBJ)/wca.o
+    
+$(OBJ)/mba.o: $(SRC)/mba.c
+	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
+    -c $(SRC)/mba.c -o $(OBJ)/mba.o
 
 clean:
 	rm -f $(LIB)/lib*.a; rm -f $(OBJ)/*.o

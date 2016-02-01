@@ -17,7 +17,6 @@ extern "C" {
 #define BBDBN_CD 6 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Contrastive Divergence */
 #define BBDBN_PCD 9 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Persistent Contrastive Divergence */
 #define BBDBN_FPCD 10 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Fast Persistent Contrastive Divergence */
-#define FEATURESELECTION 13 /* Single-objective feature selection */
 #define BBDBM_CD 14 /* Bernoulli_Bernoulli DBM for data reconstruction trained by Contrastive Divergence */
 
 /* k-means */
@@ -25,6 +24,9 @@ extern "C" {
 
 /* Optimum-Path Forest */
 #define OPFKNN 12 /* OPF with knn adjacency relation */
+
+/* Feature Selection */
+#define FEATURESELECTION 13 /* Single-objective feature selection */
 
 /* Enhanced Probabilistic Neural Network classifier */
 #define EPNN_OPF 16 /* EPNN with learning from the gaussians */
@@ -53,6 +55,7 @@ extern "C" {
 #define QHS 9 /* Quaternion-based Harmony Search */
 #define CS 10 /* Cuckoo Search */
 #define WCA 11 /* Water Cycle Algorithm */
+#define MBA 12 /* Mine Blast Algorithm */
 /*****************************************************************/
     
 #include <stdio.h>
@@ -90,6 +93,7 @@ typedef gsl_vector *(*prtFun2)(Subgraph *, ...);
 #include "ga.h"
 #include "cs.h"
 #include "wca.h"
+#include "mba.h"
 #include "util.h"
 
 #ifdef __cplusplus
