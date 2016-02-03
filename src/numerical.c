@@ -44,7 +44,7 @@ double GradientDescent(Subgraph *g, double alpha, int FUNCTION_ID, ...){
 				w_tmp = gsl_vector_calloc(w->size);
 				gsl_vector_memcpy(w_tmp, w);
 				i = 1; 
-				while((fabs(error-old_error) > 0.000001) && (i <= max_iteration)){
+				while((fabs(error-old_error) > 0.0000000001) && (i <= max_iteration)){
 					old_error = error;
 				
 					for(j = 0; j < g->nfeats; j++){

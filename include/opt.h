@@ -18,6 +18,8 @@ extern "C" {
 #define BBDBN_PCD 9 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Persistent Contrastive Divergence */
 #define BBDBN_FPCD 10 /* Bernoulli_Bernoulli DBN for data reconstruction trained by Fast Persistent Contrastive Divergence */
 #define BBDBM_CD 14 /* Bernoulli_Bernoulli DBM for data reconstruction trained by Contrastive Divergence */
+#define BBDBM_PCD 15 /* Bernoulli_Bernoulli DBM for data reconstruction trained by Persistent Contrastive Divergence */
+#define BBDBM_FPCD 16 /* Bernoulli_Bernoulli DBM for data reconstruction trained by Fast Persistent Contrastive Divergence */
 
 /* k-means */
 #define KMEANS 2 /* K-Means for data clustering */
