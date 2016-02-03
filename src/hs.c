@@ -243,6 +243,8 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 		Subgraph *g = NULL, *Val = NULL, *gTrain = NULL, *gTest = NULL;
         TransferFunc optTransfer = NULL;
 		
+
+		fprintf(stderr,"\nFunction ID = %i.\n",FUNCTION_ID);
 		switch(FUNCTION_ID){
 			case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
 				g = va_arg(arg, Subgraph *);
@@ -478,6 +480,38 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 					}					
 				}
 				
+			break;
+			case 14: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+
+				Param = gsl_matrix_alloc(L, 6);
+				for(i = 0; i < H->m; i++){
+
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+
+					f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+				gsl_matrix_free(Param);
 			break;
 			case FEATURESELECTION: /* Feature_Selection */
 	            optTransfer = va_arg(arg, TransferFunc);
