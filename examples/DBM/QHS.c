@@ -7,7 +7,7 @@ int main(int argc, char **argv){
     if(argc != 12){
         fprintf(stderr,"\nusage QHS <training set> <test set> <output results file name> <cross-validation iteration number> \
                 <harmony memory configuration file> <output best parameters file name> <n_epochs> <batch_size> \
-                <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD> <number of DBN layers>\n");
+                <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD> <number of DBM layers>\n");
         exit(-1);
     }
     QHarmonyMemory *H = NULL;
@@ -19,7 +19,7 @@ int main(int argc, char **argv){
     gsl_vector *n_hidden_units = NULL;
     FILE *fp = NULL, *fpParameters = NULL;
     Dataset *DatasetTrain = NULL, *DatasetTest = NULL;
-    DBN *d = NULL;
+    DBM *d = NULL;
     gsl_vector_view column;
     
     H = ReadQHarmoniesFromFile(argv[5]);
@@ -46,7 +46,7 @@ int main(int argc, char **argv){
         break;
     }   
     
-    fprintf(stderr,"\nRunning DBN once more over the training set ... ");
+    fprintf(stderr,"\nRunning DBM once more over the training set ... ");
     n_hidden_units = gsl_vector_alloc(n_layers);
     j = 0;
     for(i = 0; i < n_layers; i++){
