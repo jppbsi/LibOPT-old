@@ -78,7 +78,7 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
+            errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, 1);
         break;
     }
     fprintf(stderr,"\nOK\n");
