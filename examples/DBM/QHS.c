@@ -78,13 +78,7 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            errorTRAIN = BernoulliDBMTrainingbyContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-        case 2:
-            errorTRAIN = BernoulliDBMTrainingbyPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
-        break;
-        case 3:
-            errorTRAIN = BernoulliDBMTrainingbyFastPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
+            errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
         break;
     }
     fprintf(stderr,"\nOK\n");
