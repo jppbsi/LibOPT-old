@@ -14,7 +14,6 @@ void info(){
 
 void help_usage()
 {
-
 fprintf(stderr, 
 "\nusage epnn_hs [options] training_file evaluation_file test_file\n\
 Options:\n\
@@ -28,8 +27,8 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int n,i,j, kmax = -1;
-	float time1 = 0.0, time2 = 0.0;
+	int n,i,j, kmax = 0;
+	float time = 0.0;
 	float Acc, sigma = 0.3, radius = 0.0;
 	char fileName[256]; 
 	FILE *f = NULL, *fParameters = NULL;
@@ -41,6 +40,9 @@ int main(int argc, char **argv){
 	gsl_vector *nGaussians = NULL;
     gsl_vector *nsample4class = NULL;
 	gsl_vector *root = NULL;
+	gsl_vector **gaussians = (gsl_vector **)malloc(2 * sizeof(gsl_vector *));
+	gaussians[0] = NULL;//nGaussians
+	gaussians[1] = NULL;//root
 
     // parse options
 	for(i=1;i<argc;i++)
@@ -114,16 +116,6 @@ int main(int argc, char **argv){
 		train_set = j, eval_set = j+1, test_set = j+2;
     
 	
-	// LOADING FIREFLY SWARM
-	if(P1){
-		ShowFireflySwarmInformation(P1);
-	
-		fprintf(stdout,"\nInitializing firefly swarm for OPF-CLUSTER... ");
-		InitializeFireflySwarm(P1);
-		fprintf(stdout,"\nOK\n");
-	}
-	
-	
 	// LOADING DATASETS
     fprintf(stdout, "\nReading training set [%s] ...", argv[train_set]); fflush(stdout);	
     Subgraph *gTrain = ReadSubgraph(argv[train_set]);
@@ -133,83 +125,53 @@ int main(int argc, char **argv){
 	Subgraph *gEval = ReadSubgraph(argv[eval_set]);
 	fprintf(stdout, " OK"); fflush(stdout);
 	
+	Subgraph *gMerge = opf_MergeSubgraph(gTrain, gEval);
 	
 	// FOR OPF-CLUSTER OPTIMIZATION 
 	if(P1){
+		ShowFireflySwarmInformation(P1);
+		fprintf(stdout,"\nInitializing firefly swarm for OPF-CLUSTER... ");
+		InitializeFireflySwarm(P1);
+		fprintf(stdout,"\nOK\n");
+		
+		
 	    fprintf(stdout, "\nOptimizing OPF-cluster to extract g Gaussians for EPNN approach ... \n\n"); fflush(stdout);
 	    gettimeofday(&tic,NULL);
 		runFFA(P1, OPFclusterOptimization, OPFKNN, gTrain, gEval); gettimeofday(&toc,NULL);
 		fprintf(stdout, " OK"); fflush(stdout);
-
-		time1 = ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0;
-			
-		fprintf(stdout, "\nOPF-CLUSTER optimizing time : %f seconds\n", time1); fflush(stdout);	
+		time = ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0;
 		
-		fprintf(stdout, "\n\nBest k maximum degree: %i\n", (int)gsl_matrix_get(P1->x, P1->best, 0)); fflush(stdout);
- 
-	 	kmax = (int)gsl_matrix_get(P1->x, P1->best, 0);
-			
-		fprintf(stdout, "\nLearning gaussians from [%s] with kmax: %i ... ",argv[train_set], kmax); fflush(stdout);
+		kmax = (int)gsl_matrix_get(P1->x, P1->best, 0);
 		
-		gettimeofday(&tic,NULL);
-		opf_BestkMinCut(gTrain,1,kmax); //default kmin = 1
-		gettimeofday(&toc,NULL);
+		opf_ResetSubgraph(gTrain);
 		
-		time2 = (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
-		
-		fprintf(stdout, "\n\nClustering by OPF ... ");
-		gettimeofday(&tic,NULL); opf_OPFClustering(gTrain); gettimeofday(&toc,NULL);
-		printf("num of clusters: %d\n",gTrain->nlabels);
-		
-		time2 += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
-		
-		//SET N-CLUSTER IN N-GAUSSIANS
-		nGaussians = loadLabels(gTrain);
-		root = gsl_vector_calloc(gTrain->nlabels); //Allocate space root
-		
-		if (gTrain->node[0].truelabel!=0){ // labeled training set
-			gTrain->nlabels = 0;
-			j = 1;
-			for (i = 0; i < gTrain->nnodes; i++){//propagating root labels
-				if (gTrain->node[i].root==i){
-					gTrain->node[i].label = gTrain->node[i].truelabel;
-					gsl_vector_set(root,j-1,i);// Assign corresponding root ID
-					gsl_vector_set(nGaussians,j,gTrain->node[i].label);// Assign corresponding label for each Gaussian
-					j++;
-				}
-			else
-				gTrain->node[i].label = gTrain->node[gTrain->node[i].root].truelabel;
-			}
-			for (i = 0; i < gTrain->nnodes; i++){
-				// retrieve the original number of true labels
-				if (gTrain->node[i].label > gTrain->nlabels) gTrain->nlabels = gTrain->node[i].label;
-			}
-		}
-		else{ // unlabeled training set
-			for (i = 0; i < gTrain->nnodes; i++) gTrain->node[i].truelabel = gTrain->node[i].label+1;
-		}
-		
-		fprintf(stdout, "\nLearning gaussians time : %f seconds\n", time2); fflush(stdout);	
-		
+		fprintf(stdout, "\nOPF-CLUSTER optimizing time : %f seconds\n", time); fflush(stdout);	
+		fprintf(stdout, "\n\nBest k maximum degree: %i\n", kmax); fflush(stdout);
 	}
- 
  	
- 
-	// LOADING HARMONY MEMORY
-	if(P2){
+	 // FOR EPNN OPTIMIZATION
+ 	if(P2){
 		ShowFireflySwarmInformation(P2);
-
 		fprintf(stdout,"\nInitializing firefly swarm for EPNN... ");
 		InitializeFireflySwarm(P2);
 		fprintf(stdout,"\nOK\n");
-	}
- 
-	 // FOR EPNN OPTIMIZATION
- 	if(P2){	
 	
-		//SET N-LABELS IN N-GAUSSIANS
-		if(!nGaussians) nGaussians = loadLabels(gTrain);
- 
+		if(kmax){
+			fprintf(stdout, "\n\nClustering [%s] with kmax: %i... ",argv[train_set], kmax); fflush(stdout);
+				
+			gettimeofday(&tic,NULL);
+			gaussians = opfcluster4epnn(gTrain, gaussians, kmax);
+			nGaussians = gaussians[0]; root = gaussians[1];
+			gettimeofday(&toc,NULL);
+		
+			time += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
+			fprintf(stdout, "\nClustering time: %f seconds\n", (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0)); fflush(stdout);	
+		}
+		else{
+			//set gaussians = nlabels if not clustering
+			nGaussians = loadLabels(gTrain);
+		}
+						
 		// Ordered list labels based in the OPF-CLUSTER or by number of classes in training set
 		lNode = orderedListLabel(gTrain, nGaussians, root);
 		// Count sample for classes
@@ -219,43 +181,63 @@ int main(int argc, char **argv){
 	    gettimeofday(&tic,NULL);
 		runFFA(P2, EPNNoptimization, EPNN_OPF, gTrain, gEval, lNode, nsample4class, nGaussians); gettimeofday(&toc,NULL);
 		fprintf(stdout, " OK"); fflush(stdout);
-			
+		
 		sigma = gsl_matrix_get(P2->x, P2->best, 0);
 		radius = gsl_matrix_get(P2->x, P2->best, 1);
 		
-		time1 += ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0;
+		time += ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0;
 			
 		fprintf(stdout, "\n\nBest sigma: %lf\nBest radius: %lf\n", sigma, radius); fflush(stdout);	
 		fprintf(stdout, "\nEPNN-OPF optimizing time : %f seconds\n", ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0 ); fflush(stdout);	
  	}
  
- 
 	// WRITING OPTIMIZATION TIME
 	sprintf(fileName,"%s.time",argv[eval_set]);
 	f = fopen(fileName,"a");
-	fprintf(f,"%f\n",time1);
+	fprintf(f,"%f\n",time);
 	fclose(f);
  
- 
 	//TRAINING PHASE
+	time = 0.0;
+	gsl_vector_free(nGaussians);
+	gsl_vector_free(root);
+	gsl_vector_free(lNode);
+	gsl_vector_free(nsample4class);
+	if(kmax){
+		fprintf(stdout, "\n\nClustering [%s] with kmax: %i... ",argv[train_set], kmax); fflush(stdout);
+			
+		gettimeofday(&tic,NULL);
+		gaussians = opfcluster4epnn(gMerge, gaussians, kmax);
+		nGaussians = gaussians[0]; root = gaussians[1];
+		gettimeofday(&toc,NULL);
+	
+		time = (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
+		fprintf(stdout, "\nClustering time: %f seconds\n", time); fflush(stdout);	
+	}
+	else{
+		//set gaussians = nlabels if not clustering
+		nGaussians = loadLabels(gMerge);
+	}
 	fprintf(stdout, "\nComputing Hyper-Sphere with radius: %lf ...", radius); fflush(stdout);
-	gettimeofday(&tic,NULL); alpha = hyperSphere(gTrain, radius); gettimeofday(&toc,NULL);
+	gettimeofday(&tic,NULL);
+	lNode = orderedListLabel(gMerge, nGaussians, root);
+	nsample4class = countClasses(gMerge, nGaussians, root);
+	alpha = hyperSphere(gMerge, radius);
+	gettimeofday(&toc,NULL);
 	fprintf(stdout, " OK\n"); fflush(stdout);
 	
-	time2 += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
-
+	time += (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
 
 	// WRITING TRAINING TIME (OPF-CLUSTER + EPNN)
 	sprintf(fileName,"%s.time",argv[train_set]);
 	f = fopen(fileName,"a");
-	fprintf(f,"%f\n",time2);
+	fprintf(f,"%f\n",time);
 	fclose(f);
 	
- 
     //WRITING PARAMETERS FILES
     fprintf(stdout, "\nWriting parameters file ... "); fflush(stdout);
 	if(!fParameters) fParameters = fopen("best_parameters.out", "w");
-	if(kmax > -1) fprintf(fParameters, "%i\n", kmax);
+	if(kmax > 0) fprintf(fParameters, "%i\n", kmax);
 	fprintf(fParameters,"%lf\n",sigma);
 	fprintf(fParameters,"%lf\n",radius);
     fclose(fParameters);
@@ -268,16 +250,16 @@ int main(int argc, char **argv){
 	fprintf(stdout, " OK\n"); fflush(stdout);
 	
     fprintf(stdout, "\nInitializing EPNN ... ");
-  	gettimeofday(&tic,NULL); epnn(gTrain, gTest, sigma, lNode, nsample4class, alpha, nGaussians); gettimeofday(&toc,NULL);
+  	gettimeofday(&tic,NULL); epnn(gMerge, gTest, sigma, lNode, nsample4class, alpha, nGaussians); gettimeofday(&toc,NULL);
 	fprintf(stdout,"OK\n");
 
-	time2 = (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
+	time = (((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0);
 
-	fprintf(stdout, "\nTesting time: %f seconds\n", time2); fflush(stdout);
+	fprintf(stdout, "\nTesting time: %f seconds\n", time); fflush(stdout);
 
 	sprintf(fileName,"%s.time",argv[test_set]);
 	f = fopen(fileName,"a");
-	fprintf(f,"%f\n",time2);
+	fprintf(f,"%f\n",time);
 	fclose(f);
 	
 	
@@ -313,12 +295,14 @@ int main(int argc, char **argv){
 	DestroyFireflySwarm(&P2);
 	DestroySubgraph(&gTrain);
 	DestroySubgraph(&gEval);
+	DestroySubgraph(&gMerge);
 	DestroySubgraph(&gTest);
 	gsl_vector_free(alpha);
 	gsl_vector_free(lNode);
 	gsl_vector_free(nsample4class);
 	gsl_vector_free(nGaussians);
 	gsl_vector_free(root);
+	free(gaussians);
 	if(opf_PrecomputedDistance){
 		for (i = 0; i < n; i++)
 			free(opf_DistanceValue[i]);
