@@ -36,6 +36,12 @@ int main(int argc, char **argv){
         case 1:
             runIHS(H, Bernoulli_BernoulliDBM4Reconstruction, BBDBM_CD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
+        case 2:
+            runIHS(H, Bernoulli_BernoulliDBM4Reconstruction, BBDBM_PCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+        break;
+        case 3:
+            runIHS(H, Bernoulli_BernoulliDBM4Reconstruction, BBDBM_FPCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+        break;
     }
     
     fprintf(stderr,"\nRunning DBM once more over the training set ... ");
@@ -56,12 +62,9 @@ int main(int argc, char **argv){
         d->m[i]->eta_max = gsl_vector_get(H->UB, z);
         z+=4;
     }
-    
-    switch (op){
-        case 1:
-            errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, 1);
-        break;
-    }
+
+    errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, op);
+
     fprintf(stderr,"\nOK\n");
     
     fprintf(stderr,"\nRunning DBM for reconstruction ... ");

@@ -76,11 +76,9 @@ int main(int argc, char **argv){
         z+=4;
     }
     
-    switch (op){
-        case 1:
-            errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, 1);
-        break;
-    }
+
+    errorTRAIN = GreedyPreTrainingDBM(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, op);
+
     fprintf(stderr,"\nOK\n");
     
     fprintf(stderr,"\nRunning DBM for reconstruction ... ");

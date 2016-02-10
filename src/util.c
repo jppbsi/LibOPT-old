@@ -419,11 +419,18 @@ double Bernoulli_BernoulliDBM4Reconstruction(Subgraph *g, ...){
     }
     
     D = Subgraph2Dataset(g);
-    switch (op){
+	reconstruction_error = GreedyPreTrainingDBM(D, d, n_epochs, 1, batch_size, op);
+    /*switch (op){
         case 1:
             reconstruction_error = GreedyPreTrainingDBM(D, d, n_epochs, 1, batch_size, 1);
         break;
-    }
+        case 1:
+            reconstruction_error = GreedyPreTrainingDBM(D, d, n_epochs, 1, batch_size, 1);
+        break;
+        case 1:
+            reconstruction_error = GreedyPreTrainingDBM(D, d, n_epochs, 1, batch_size, 1);
+        break;
+    }*/
     DestroyDBM(&d);
     DestroyDataset(&D);
     va_end(arg);
