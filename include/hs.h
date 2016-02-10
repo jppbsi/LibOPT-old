@@ -116,6 +116,8 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all harmonies concerning quaternion-based Harmony Search */
 void runQHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Harmony Memory for function minimization */
 void runQIHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Improved Harmony Memory for function minimization */
+void runQGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Global-best Harmony Memory for function minimization */
+gsl_matrix *CreateNewQHarmony4GHS(QHarmonyMemory *H);  /* It creates a new harmony for QGHS  */
 /********************************************/
 
 #endif
