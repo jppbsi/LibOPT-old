@@ -511,6 +511,72 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				}
 				gsl_matrix_free(Param);
 			break;
+			case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Persistent Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+								
+				Param = gsl_matrix_alloc(L, 6);
+				for(i = 0; i < H->m; i++){
+				
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+							
+					f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
+			case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Fast Persistent Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+								
+				Param = gsl_matrix_alloc(L, 6);
+				for(i = 0; i < H->m; i++){
+				
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(Param, l, j, gsl_matrix_get(H->HM, i, j+z));
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+							
+					f = Evaluate(g, 3, L, Param, n_epochs, batch_size); 
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
 			case FEATURESELECTION: /* Feature_Selection */
 	            optTransfer = va_arg(arg, TransferFunc);
             
@@ -1101,7 +1167,7 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					}
 				}
 			break;
-			case 14: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
+			case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
@@ -1136,6 +1202,82 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 							H->Rehearsal[H->worst][i] = H->op_type[i];
 					}
 				}
+				gsl_matrix_free(Param);
+			break;
+			case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Persistent Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+				
+				/* setting Param matrix */
+				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
+				for(l = 0; l < L; l++){
+					for(j = 0; j < 4; j++)
+						gsl_matrix_set(Param, l, j, gsl_vector_get(h, j+z));
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
+				}
+				
+				f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
+			case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Fast Persistent Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+				
+				/* setting Param matrix */
+				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
+				for(l = 0; l < L; l++){
+					for(j = 0; j < 4; j++)
+						gsl_matrix_set(Param, l, j, gsl_vector_get(h, j+z));
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
+				}
+				
+				f = Evaluate(g, 3, L, Param, n_epochs, batch_size);
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+
 				gsl_matrix_free(Param);
 			break;
 			case FEATURESELECTION: /* Feature_Selection */
@@ -2078,7 +2220,8 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 				}
 
 				gsl_matrix_free(Param);
-			case BBDBM_CD: 
+			break;
+			case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction using Contrastive Divergence*/
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
@@ -2152,7 +2295,91 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 					}					
 				}
 			break;
-			
+			case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction using Persistent Contrastive Divergence*/
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+				
+				/* setting Param matrix */
+				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
+				for(l = 0; l < L; l++){
+					for(j = 0; j < 4; j++){
+						column[j] = gsl_matrix_column(h, j+z);
+						decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+						gsl_matrix_set(Param, l, j, decision_variable);
+					}
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
+				}
+				
+				f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(H->HM[H->worst], j, i, gsl_matrix_get(h, j, i)); /* it copies the new harmony to the harmony memory */
+					}
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateQHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
+			case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction using Fast Persistent Contrastive Divergence*/
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+				
+				/* setting Param matrix */
+				Param = gsl_matrix_alloc(L, 6);
+				z = 0;
+				for(l = 0; l < L; l++){
+					for(j = 0; j < 4; j++){
+						column[j] = gsl_matrix_column(h, j+z);
+						decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+						gsl_matrix_set(Param, l, j, decision_variable);
+					}
+					gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+					gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+					z+=4;
+				}
+				
+				f = Evaluate(g, 3, L, Param, n_epochs, batch_size);
+				
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++){
+						for(j = 0; j < 4; j++)
+							gsl_matrix_set(H->HM[H->worst], j, i, gsl_matrix_get(h, j, i)); /* it copies the new harmony to the harmony memory */
+					}	gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateQHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
 		}
 		free(column);
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateQNewHarmony.\n");
@@ -2332,7 +2559,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 						H->worst_fitness = f;
 					}					
 				}
-			case BBDBM_CD:
+			case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction using Persistent Contrastive Divergence */
 				g = va_arg(arg, Subgraph *);
 				n_epochs = va_arg(arg, int);
 				batch_size = va_arg(arg, int);
@@ -2357,6 +2584,80 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 					}
 							
 					f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
+			case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction using Persistent Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+								
+				Param = gsl_matrix_alloc(L, 6);
+				for(i = 0; i < H->m; i++){
+										
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++){
+							column[j] = gsl_matrix_column(H->HM[i], j+z);
+							decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+							gsl_matrix_set(Param, l, j, decision_variable);
+							
+						}
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+							
+					f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+
+				gsl_matrix_free(Param);
+			break;
+			case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction using Fast Persistent Contrastive Divergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+				L = va_arg(arg, int);
+								
+				Param = gsl_matrix_alloc(L, 6);
+				for(i = 0; i < H->m; i++){
+										
+					/* setting Param matrix */
+					z = 0;
+					for(l = 0; l < L; l++){
+						for(j = 0; j < 4; j++){
+							column[j] = gsl_matrix_column(H->HM[i], j+z);
+							decision_variable = Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector);
+							gsl_matrix_set(Param, l, j, decision_variable);
+							
+						}
+						gsl_matrix_set(Param, l, j++, gsl_vector_get(H->LB, z+1)); // setting up eta_min 
+						gsl_matrix_set(Param, l, j, gsl_vector_get(H->UB, z+1)); // setting up eta_max
+						z+=4;
+					}
+							
+					f = Evaluate(g, 3, L, Param, n_epochs, batch_size); 
 					gsl_vector_set(H->fitness, i, f);
 					if(f < H->best_fitness){
 						H->best = i;
