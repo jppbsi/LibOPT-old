@@ -6,11 +6,11 @@ int main(int argc, char **argv){
 
     if(argc != 12){
         fprintf(stderr,"\nusage MBO <training set> <test set> <output results file name> <cross-validation iteration number> \
-                <harmony memory configuration file> <output best parameters file name> <n_epochs> <batch_size> \
+                <bird flock configuration file> <output best parameters file name> <n_epochs> <batch_size> \
                 <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD> <number of DBN layers>\n");
         exit(-1);
     }
-    HarmonyMemory *H = NULL; //->AQUI!
+    BirdFlock *B = NULL;
     int iteration = atoi(argv[4]), i, j, z, n_epochs = atoi(argv[7]), batch_size = atoi(argv[8]), n_gibbs_sampling = atoi(argv[9]), op = atoi(argv[10]);
     int n_layers = atoi(argv[11]);
     double errorTRAIN, errorTEST;
@@ -20,13 +20,13 @@ int main(int argc, char **argv){
     Dataset *DatasetTrain = NULL, *DatasetTest = NULL;
     DBN *d = NULL;
     
-    H = ReadHarmoniesFromFile(argv[5]); //->AQUI!
+    B = ReadBirdFlockFromFile(argv[5]);
     Subgraph *Train = NULL, *Test = NULL;
     Train = ReadSubgraph(argv[1]);
     Test = ReadSubgraph(argv[2]);
     
-    fprintf(stderr,"\nInitializing harmony memory ... ");
-    InitializeHarmonyMemory(H);//->AQUI!
+    fprintf(stderr,"\nInitializing birdflock ... ");
+    InitializeBirdFlock(B);
     fprintf(stderr,"\nOK\n");
     
     DatasetTrain = Subgraph2Dataset(Train);
@@ -34,32 +34,34 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            runMBO(H, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_CD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runMBO(B, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_CD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
         case 2:
-            runMBO(H, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_PCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runMBO(B, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_PCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
         case 3:
-            runMBO(H, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_FPCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runMBO(B, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_FPCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
     }   
     
     fprintf(stderr,"\nRunning DBN once more over the training set ... ");
     n_hidden_units = gsl_vector_alloc(n_layers);
+    fprintf(stderr,"\n %f Units allocated from bird %d... ", gsl_matrix_get(B->x, 0, 0), B->best);
+    ShowBirdFlock(B);
     j = 0;
     for(i = 0; i < n_layers; i++){
-        gsl_vector_set(n_hidden_units, i, gsl_matrix_get(H->HM, H->best, j));//->AQUI!
+        gsl_vector_set(n_hidden_units, i, gsl_matrix_get(B->x, 0, j));
         j+=4;
     }
 
     d = CreateDBN(Train->nfeats, n_hidden_units, Train->nlabels, n_layers);
     InitializeDBN(d); j = 1; z = 1;
     for(i = 0; i < d->n_layers; i++){
-        d->m[i]->eta = gsl_matrix_get(H->HM, H->best, j); j++;//->AQUI!
-        d->m[i]->lambda = gsl_matrix_get(H->HM, H->best, j); j++;//->AQUI!
-        d->m[i]->alpha = gsl_matrix_get(H->HM, H->best, j); j+=2;//->AQUI!
-        d->m[i]->eta_min = gsl_vector_get(H->LB, z);//->AQUI!
-        d->m[i]->eta_max = gsl_vector_get(H->UB, z);//->AQUI!
+        d->m[i]->eta = gsl_matrix_get(B->x, 0, j); j++;
+        d->m[i]->lambda = gsl_matrix_get(B->x, 0, j); j++;
+        d->m[i]->alpha = gsl_matrix_get(B->x, 0, j); j+=2;
+        d->m[i]->eta_min = gsl_vector_get(B->LB, z);
+        d->m[i]->eta_max = gsl_vector_get(B->UB, z);
         z+=4;
     }
     
@@ -85,12 +87,12 @@ int main(int argc, char **argv){
     fclose(fp);
     
     fpParameters = fopen(argv[6], "a");
-    fprintf(fpParameters,"%d ", H->n);
-    for(i = 0; i < H->n; i++)
-        fprintf(fpParameters, "%lf ", gsl_matrix_get(H->HM, H->best, i));//->AQUI!
+    fprintf(fpParameters,"%d ", B->n);
+    for(i = 0; i < B->n; i++)
+        fprintf(fpParameters, "%lf ", gsl_matrix_get(B->x, B->best, i));
     fclose(fpParameters);
     
-    DestroyHarmonyMemory(&H);//->AQUI!
+    DestroyBirdFlock(&B);
     DestroyDataset(&DatasetTrain);
     DestroyDataset(&DatasetTest);
     DestroySubgraph(&Train);
