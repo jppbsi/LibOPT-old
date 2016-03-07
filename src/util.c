@@ -1384,3 +1384,98 @@ double Sphere(Subgraph *g, ...){
 }
 
 
+/* It executes a OPF Ensemble-pruning and it outputs the best classifiers
+Parameters: [eval, train, psi]
+eval: evaluation set in the OPF format
+train: vector of subgraphs of training set in the OPF format
+psi: vector of possible solutions
+*/
+double ensemble_pruning(Subgraph *eval, ...){
+    
+	double acc = 0.0, lambda=0.0, micro=0.0, SL=0.0;
+	int i, j, n = 0, pass = 0, DL = 0, *psi = NULL, *poll_label = NULL;
+	gsl_vector *Psi = NULL;
+	Subgraph **ensembleTrain = NULL;
+
+	va_list arg;
+	va_start(arg, eval);
+
+	ensembleTrain = va_arg(arg, Subgraph **);
+    Psi = va_arg(arg, gsl_vector *); // Vector of possible solutions
+    n = va_arg(arg, int);
+	int HS_type = va_arg(arg, int);
+	
+	psi = (int *)calloc((n),sizeof(int));  //For ensemble-pruning in LibOPT to LibOPF;
+	
+	for(i = 0; i < n; i++){
+		if(!HS_type){
+			psi[i] = (int)gsl_vector_get(Psi, i); //Set classifiers to evaluation phase
+			if(psi[i] == 1) pass = 1;
+		}else micro+=gsl_vector_get(Psi, i);		
+	}
+	
+	if(HS_type){
+			micro/=n; //mean of the weights of the classifiers
+			for(i = 0; i< n; i++){
+				if(gsl_vector_get(Psi, i) < micro){
+						DL++; //DL is the number of classifiers whose weight is less than micro
+						SL+= pow((gsl_vector_get(Psi, i) - micro),2); // square the difference
+				} 
+			} 
+			SL = sqrt((1/(double)DL)*SL); 
+			lambda = micro - SL; //select the individual classifiers whose weight is greater than a threshold lambda
+			for(i = 0; i< n; i++){
+				if(gsl_vector_get(Psi, i) > lambda){
+					psi[i] = 1;
+					pass = 1;
+				} else psi[i] = 0;
+			}	
+	}
+	
+	if(pass){
+		/* ensemble labels */
+		int **ensemble_label = (int **)malloc(eval->nnodes * sizeof(int *));
+		for(i = 0; i < eval->nnodes; i++) ensemble_label[i] = AllocIntArray(n+1);
+		
+		for(i = 0; i < n; i++ ){
+			if(psi[i]){
+				opf_OPFClassifying(ensembleTrain[i], eval);
+				for(j = 0; j < eval->nnodes; j++ ){
+					ensemble_label[j][i]=eval->node[j].label;
+					eval->node[j].label = 0;
+				}
+			}
+		}
+				
+		/* majority voting */
+		int k, aux, label=0;
+		poll_label = (int *)calloc((eval->nlabels+1),sizeof(int));
+	    for(i = 0; i < eval->nnodes; i++){
+	        aux = 0;
+	        for(j = 0; j < n; j++){
+	          if(psi[j]) poll_label[ensemble_label[i][j]]++;
+	        }
+	        for(k = 0; k <= eval->nlabels; k++){
+	            if(poll_label[k] > aux){
+	                aux = poll_label[k];
+	                label = k;
+	            }
+	            poll_label[k] = 0;
+	        }
+	        eval->node[i].label = label;
+	    }
+	    
+	    for(i = 0; i < eval->nnodes; i++) free(ensemble_label[i]);
+	    free(ensemble_label);
+	    free(poll_label);
+		
+		acc = opf_Accuracy(eval);
+	}
+	else{
+		printf("\nThere is no classification requirement in this harmony!\n");
+		acc = 0.000001;
+	}
+	free(psi);
+
+    return (1/acc);
+}

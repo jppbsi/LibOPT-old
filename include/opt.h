@@ -26,7 +26,8 @@ extern "C" {
 
 /* Optimum-Path Forest */
 #define OPFKNN 12 /* OPF with knn adjacency relation */
-
+#define OPF_ENSEMBLE 19 /* OPF ensemble  with knn adjacency relation */
+	
 /* Feature Selection */
 #define FEATURESELECTION 13 /* Single-objective feature selection */
 

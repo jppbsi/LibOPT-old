@@ -169,6 +169,33 @@ void InitializeHarmonyMemory(HarmonyMemory *H){
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeHarmonyMemory.\n");		
 }
 
+/* It initializes the harmony memory ---
+Parameters: [H]
+H: harmony memory */
+void InitializeHarmonyMemory_Binary(HarmonyMemory *H){
+	if(H){
+		int i, j;
+		const gsl_rng_type *T;
+		gsl_rng *r;
+		double p;
+
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+	
+		for(i = 0; i < H->m; i++){
+			for(j = 0; j < H->n; j++){
+				p = gsl_rng_uniform_int(r, (int)gsl_vector_get(H->UB, j)+1);
+				gsl_matrix_set(H->HM, i, j, p);
+			}
+			
+		}
+		gsl_rng_free(r);		
+	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeHarmonyMemory.\n");		
+}
+
+
 /* It initializes the harmony memory with random dataset samples for k-Means algorithm,
  * as well as it sets the lower and upper boundaries according to the dataset samples.
 Parameters: [H]
@@ -635,6 +662,24 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				}
 			break;
 			
+			case OPF_ENSEMBLE: /* OPFensemble pruning */
+				g = va_arg(arg, Subgraph *);
+				Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+				int HS_type = va_arg(arg, int);
+				for(i = 0; i < H->m; i++){
+					row = gsl_matrix_row(H->HM, i);
+					f = Evaluate(g, ensembleTrain, &row.vector, H->n, HS_type);
+					gsl_vector_set(H->fitness, i, f);
+					if(f < H->best_fitness){
+						H->best = i;
+						H->best_fitness = f;
+					}else if(f > H->worst_fitness){
+						H->worst = i;
+						H->worst_fitness = f;
+					}
+				}
+			break;
+			
 		}
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateHarmonies.\n");	
 }
@@ -687,6 +732,50 @@ fprintf(stderr,"h[%d]: %lf	", i, gsl_vector_get(h, i));
 		return NULL;
 	}
 }
+
+
+/* It creates a new binary harmony
+Parameters: [H]
+H: harmony memory */
+gsl_vector *CreateNewHarmony_Binary(HarmonyMemory *H){
+	if(H){
+		int i, index;
+		gsl_vector *h = NULL;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p;
+			    
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+		
+		h = gsl_vector_alloc(H->n);
+		for(i = 0; i < H->n; i++){
+			p = gsl_rng_uniform(r);
+			if(H->HMCR >= p){
+				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
+				gsl_vector_set(h, i, gsl_matrix_get(H->HM, index, i));
+				p = gsl_rng_uniform(r);
+				if(H->PAR >= p) gsl_vector_set(h, i, (int)gsl_vector_get(h, i)^1); //XOR
+			}else{				
+				p = gsl_rng_uniform_int(r, (int)gsl_vector_get(H->UB, i)+1);
+				gsl_vector_set(h, i, p);
+			}
+		}
+		gsl_rng_free(r);
+		fprintf(stderr,"\n");
+		for(i = 0; i < h->size; i++)
+			fprintf(stderr,"h[%d]: %lf	", i, gsl_vector_get(h, i));
+		
+		return h;
+	}else{
+		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewHarmony.\n");
+		return NULL;
+	}
+}
+
+
 
 /* It creates a new harmony for GHS
 Parameters: [H]
@@ -1330,6 +1419,28 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 					}
 				}
 			break;
+			
+			case OPF_ENSEMBLE: /* OPFensemble pruning */
+				g = va_arg(arg, Subgraph *);
+				Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+				int HS_type = va_arg(arg, int);
+				f = Evaluate(g, ensembleTrain, h, H->n, HS_type);
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+
+					gsl_vector_set(H->fitness, H->worst, f);
+					UpdateHarmonyMemoryIndices(H);
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+			break;
 		}
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateNewHarmony.\n");
 }
@@ -1386,6 +1497,48 @@ void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
     va_end(arg);
 }
+
+
+/* It executes the binary Harmony Search for function minimization ---
+Parameters: [H, EvaluateFun, FUNCTION_ID, ... ]
+H: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+void runHS_binary(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
+	va_list arg, argtmp;
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+
+    if(H){
+        int t, i;
+        double p;
+		gsl_vector *h = NULL;
+                        
+		fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+		EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
+		fprintf(stderr," OK.");
+	
+		ShowHarmonyMemory(H);
+	
+		for(t = 1; t <= H->max_iterations; t++){
+			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
+			va_copy(arg, argtmp);
+			
+			h = CreateNewHarmony_Binary(H);
+			EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
+			gsl_vector_free(h);
+						
+			fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
+			fprintf(stdout,"%d %lf\n", t, H->best_fitness);
+		
+			ShowHarmonyMemory(H);
+		}
+    
+    }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
+    va_end(arg);
+}
+
 
 /* It executes the Improved Harmony Search for function minimization ---
 Parameters: [H, EvaluateFun, FUNCTION_ID, ... ]

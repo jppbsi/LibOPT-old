@@ -60,6 +60,9 @@ double OPFclusterOptimization(Subgraph *g, ...); /* It optimizes the k maximum d
 /* Enhanced Probabilistic Neural Network */
 double EPNNoptimization(Subgraph *Train, ...); /* It optimizes the sigma and radius for EPNN*/
 
+/* OPFpruning */
+double ensemble_pruning(Subgraph *g, ...); /*It executes a Ensemble-pruning OPF classifier optimized by FUNCTION_ID*/
+
 /* Feature Selection */
 
 Subgraph *CreateSubgraphFromSelectedFeatures(Subgraph *sg, gsl_vector *feat);
@@ -88,4 +91,6 @@ double Span(double L, double U, gsl_vector *q); /* It maps the quaternion value 
 double f1(Subgraph *g, ...);
 double Sphere(Subgraph *g, ...);
 /*****************************************************************/
+
+
 #endif
