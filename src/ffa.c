@@ -399,6 +399,22 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
 			F->best = gsl_vector_min_index(F->fitness);
 		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
 		break;
+		case OPF_ENSEMBLE: /* OPFensemble pruning */
+			g = va_arg(arg, Subgraph *);
+			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+			int binary_optimization = va_arg(arg, int);
+			row = gsl_vector_alloc(F->n);
+		
+			for(i = 0; i < F->m; i++){
+				gsl_matrix_get_row(row, F->x, i);
+				f = Evaluate(g, ensembleTrain, row, F->n, binary_optimization);
+
+                gsl_vector_set(F->fitness, i, f);
+                gsl_matrix_set_row(F->x, i, row);
+			}
+			F->best = gsl_vector_min_index(F->fitness);
+		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+		break;
 		
     }
 }

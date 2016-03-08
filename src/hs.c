@@ -665,10 +665,10 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 			case OPF_ENSEMBLE: /* OPFensemble pruning */
 				g = va_arg(arg, Subgraph *);
 				Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
-				int HS_type = va_arg(arg, int);
+				int binary_optimization = va_arg(arg, int);
 				for(i = 0; i < H->m; i++){
 					row = gsl_matrix_row(H->HM, i);
-					f = Evaluate(g, ensembleTrain, &row.vector, H->n, HS_type);
+					f = Evaluate(g, ensembleTrain, &row.vector, H->n, binary_optimization);
 					gsl_vector_set(H->fitness, i, f);
 					if(f < H->best_fitness){
 						H->best = i;
@@ -1423,8 +1423,8 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 			case OPF_ENSEMBLE: /* OPFensemble pruning */
 				g = va_arg(arg, Subgraph *);
 				Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
-				int HS_type = va_arg(arg, int);
-				f = Evaluate(g, ensembleTrain, h, H->n, HS_type);
+				int binary_optimization = va_arg(arg, int);
+				f = Evaluate(g, ensembleTrain, h, H->n, binary_optimization);
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 
 					H->HMCRm+=H->HMCR; /* used for SGHS */

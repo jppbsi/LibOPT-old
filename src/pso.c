@@ -599,6 +599,36 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			}
 			gsl_vector_free(row);
 		break;
+		
+		case OPF_ENSEMBLE: /* OPFensemble pruning */
+			g = va_arg(arg, Subgraph *);
+			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+			int binary_optimization = va_arg(arg, int);
+			row = gsl_vector_alloc(S->n);
+		
+			for(i = 0; i < S->m; i++){
+				gsl_matrix_get_row(row, S->x, i);
+				f = Evaluate(g, ensembleTrain, row, S->n, binary_optimization);
+								
+				/* it updates the best position of the agent */
+				if(f < gsl_vector_get(S->fitness, i)){
+					gsl_matrix_get_row(row, S->x, i);
+					gsl_matrix_set_row(S->y, i, row);
+				}
+							
+				gsl_vector_set(S->fitness, i, f);
+				
+				/* it updates the global optimum */
+				if(f < S->best_fitness){
+					tmp = gsl_matrix_row(S->x, i);
+					gsl_vector_memcpy(S->g, &tmp.vector);
+					S->best_fitness = f;
+				}
+			}
+			gsl_vector_free(row);
+		break;
+		
+		
     }
 }
 

@@ -18,10 +18,7 @@ void help_usage()
 fprintf(stderr, 
 "\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
 Options:\n\
-   -p [required] (parameters): define path of parameters file to use in Harmony Search approach.\n\
-   -a (binary optimization for HS):\n\
-      (0) - Harmony Search weighted\n\
-      (1) - Harmony Search Binary (default)\n\
+   -p [required] (parameters): define path of parameters file to use in swarm optimization approach.\n\
    -o (output): Output ensemble pruning classifier (default: best_ensemble.txt)\n\n"
 );
 exit(1);
@@ -29,14 +26,14 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, binary_optimization = 1, DL = 0;
+	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0;
 	float time;
 	float Acc;
 	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0;
 	char fileName[256]; 
 	FILE *f = NULL, *fParameters = NULL;
 	timer tic, toc;
-	HarmonyMemory *H = NULL;
+	Swarm *S = NULL;
 
     // parse options
 	for(i=1;i<argc;i++)
@@ -46,32 +43,17 @@ int main(int argc, char **argv){
 		switch(argv[i-1][1])
 		{
 			case 'p':
-				fprintf(stdout, "\nLoading Harmony Search parameters file [%s] ...", argv[i]); fflush(stdout);
-				H = ReadHarmoniesFromFile(argv[i]);
+				fprintf(stdout, "\nLoading Swarm parameters file [%s] ...", argv[i]); fflush(stdout);
+				S = ReadSwarmFromFile(argv[i]);
 				fprintf(stdout, " OK"); fflush(stdout);
 				
-				ntraining = H->n; // n subset for ensemble-based approach
+				ntraining = S->n; // n subset for ensemble-based approach
 				if(ntraining < 2){
 					printf("\n*** Dimension in parameters file must be greater than 1 ***\n");
 					help_usage();
 				}
 				break;
 				
-			case 'a':
-				optimization_option = atoi(argv[i]);
-				if(optimization_option == 1 ) printf("\nEnsemble OPF using Binary Harmony Search");
-				else if(optimization_option == 0 ){
-					printf("\nEnsemble OPF using weighted Harmony Search");
-					binary_optimization = 0;
-				} 
-				
-				else if(optimization_option < 0 || optimization_option > 1){
-					printf("\nOptimization option invalid!");
-					info();
-					help_usage();
-				}
-
-				break;
 			case 'o':
 				fParameters = fopen(argv[i], "a");
 				break;
@@ -88,7 +70,7 @@ int main(int argc, char **argv){
 		help_usage();
     }
     
-	if(!H){
+	if(!S){
 		printf("\n*** Parameter files required! ***\n");
         info();
 		help_usage();
@@ -119,16 +101,15 @@ int main(int argc, char **argv){
 	else
 		train_set = j, eval_set = j+1, test_set = j+2;
     
-	/*-----------Harmony memory --------------------------------------*/
+	/*----------- Initializing optimization approach ---------------------*/
 	
-	ShowHarmonyMemoryInformation(H);
+	ShowSwarm(S);
 	
-	fprintf(stderr,"\nInitializing harmony memory ... ");
-	if(binary_optimization) InitializeHarmonyMemory_Binary(H);
-	else InitializeHarmonyMemory(H);
+	fprintf(stderr,"\nInitializing swarm ... ");
+	InitializeSwarm(S);
 	fprintf(stderr,"\nOK\n");
 
-	psi = (double *)calloc((H->n),sizeof(double));
+	psi = (double *)calloc((S->n),sizeof(double));
 	
 	/*--------- Training section  -------------------------------------*/
     Subgraph **gTrain = (Subgraph **)calloc((ntraining),sizeof(Subgraph *));
@@ -141,7 +122,7 @@ int main(int argc, char **argv){
     Subgraph *gTraining = ReadSubgraph(argv[train_set]);
     fprintf(stdout, " OK"); fflush(stdout);
 
-    //Split training set in n (ntraining) subset
+    //Split training set in n (ntraining) subsets
     fprintf(stdout, "\nCreate ensemble ..."); fflush(stdout);
     for(i = 0; i <= ntraining; i++){
         opf_SplitSubgraph(gTraining, &gAux, &gTrain[i], training_p);
@@ -201,54 +182,49 @@ int main(int argc, char **argv){
 	Subgraph *gEval = ReadSubgraph(argv[eval_set]);
 	fprintf(stdout, " OK"); fflush(stdout);
 	
-	fprintf(stdout, "\nOptimizing OPFpruning using HS ... \n\n"); fflush(stdout);
+	int binary_optimization = 0; // For binary HS only
+		
+	fprintf(stdout, "\nOptimizing OPFpruning using PSO ... \n\n"); fflush(stdout);
 	gettimeofday(&tic,NULL);
-	if(binary_optimization) runHS_binary(H, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
-	else runHS(H, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
+	runPSO(S, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
 	gettimeofday(&toc,NULL);
 	fprintf(stdout, " OK"); fflush(stdout);
 	
 	time = ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0;
 	
 	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
-	
-	
+
+
 	if(!fParameters) fParameters = fopen("best_ensemble.txt", "a");
-    fprintf(fParameters,"%d ", H->n);
-    for(i = 0; i < H->n; i++){
-        fprintf(fParameters, "%lf ", gsl_matrix_get(H->HM, H->best, i));
-		if(binary_optimization){
-			psi[i] = (int)gsl_matrix_get(H->HM, H->best, i); //Set classifiers to testing phase
-		}
-        else{
-			micro+=gsl_matrix_get(H->HM, H->best, i);
-        	psi[i] = gsl_matrix_get(H->HM, H->best, i); //Set classifiers to testing phase
-        } 
+    fprintf(fParameters,"%d ", S->n);
+    for(i = 0; i < S->n; i++){
+        fprintf(fParameters, "%lf ", gsl_matrix_get(S->x, S->best_fitness, i));
+		micro+=gsl_matrix_get(S->x, S->best_fitness, i);
+       	psi[i] = gsl_matrix_get(S->x, S->best_fitness, i); //Set classifiers to testing phase
+
 	}
 	fprintf(fParameters, "\n");
 	fclose(fParameters);
 
-	
-	if(!binary_optimization){
-			micro/=H->n; //mean of the weights of the classifiers
-			for(i = 0; i< H->n; i++){
-				if(psi[i] < micro){
-						DL++; //DL is the number of classifiers whose weight is less than micro
-						SL+= pow((psi[i] - micro),2); // square the difference
-				} 
-			} 
-			SL = sqrt((1/(double)DL)*SL); 
-			lambda = micro - SL;
-			for(i = 0; i< H->n; i++){
-				if(psi[i] > lambda) psi[i] = 1;
-				else psi[i] = 0;
-			}	
+	micro/=S->n; //mean of the weights of the classifiers
+	for(i = 0; i< S->n; i++){
+		if(psi[i] < micro){
+				DL++; //DL is the number of classifiers whose weight is less than micro
+				SL+= pow((psi[i] - micro),2); // square the difference
+		} 
+	} 
+	SL = sqrt((1/(double)DL)*SL); 
+	lambda = micro - SL;
+	for(i = 0; i< S->n; i++){
+		if(psi[i] > lambda) psi[i] = 1;
+		else psi[i] = 0;
 	}
 	
 	
 	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
-	for(i = 0; i< H->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
-	
+	for(i = 0; i< S->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
+
+
 	// WRITING OPTIMIZATION TIME
 	sprintf(fileName,"%s.time",argv[eval_set]);
 	f = fopen(fileName,"a");
@@ -349,7 +325,7 @@ int main(int argc, char **argv){
 
 	fprintf(stdout, "\nDeallocating memory ..."); fflush(stdout);
 	DestroySubgraph(&gTest);
-	DestroyHarmonyMemory(&H);
+	DestroySwarm(&S);
 	fprintf(stdout, " OK\n");
 
 	return 0;

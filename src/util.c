@@ -1385,10 +1385,12 @@ double Sphere(Subgraph *g, ...){
 
 
 /* It executes a OPF Ensemble-pruning and it outputs the best classifiers
-Parameters: [eval, train, psi]
+Parameters: [eval, train, psi, binary_optimization]
 eval: evaluation set in the OPF format
 train: vector of subgraphs of training set in the OPF format
 psi: vector of possible solutions
+binary_optimization: IF 0: approach using binary optimization (HS binary)
+					 IF 1: approach using weight optimization (HS, PSO, FFA, CS)
 */
 double ensemble_pruning(Subgraph *eval, ...){
     
@@ -1403,18 +1405,21 @@ double ensemble_pruning(Subgraph *eval, ...){
 	ensembleTrain = va_arg(arg, Subgraph **);
     Psi = va_arg(arg, gsl_vector *); // Vector of possible solutions
     n = va_arg(arg, int);
-	int HS_type = va_arg(arg, int);
+	int binary_optimization = va_arg(arg, int);
 	
 	psi = (int *)calloc((n),sizeof(int));  //For ensemble-pruning in LibOPT to LibOPF;
 	
 	for(i = 0; i < n; i++){
-		if(!HS_type){
+		/* For a approach using binary optimization (HS binary) */
+		if(binary_optimization){
 			psi[i] = (int)gsl_vector_get(Psi, i); //Set classifiers to evaluation phase
 			if(psi[i] == 1) pass = 1;
 		}else micro+=gsl_vector_get(Psi, i);		
 	}
 	
-	if(HS_type){
+	/* For a approach using weight (HS, PSO, FFA, CS)*/
+	/* select the individual classifiers whose weight is greater than a threshold lambda */
+	if(!binary_optimization){
 			micro/=n; //mean of the weights of the classifiers
 			for(i = 0; i< n; i++){
 				if(gsl_vector_get(Psi, i) < micro){
@@ -1423,7 +1428,7 @@ double ensemble_pruning(Subgraph *eval, ...){
 				} 
 			} 
 			SL = sqrt((1/(double)DL)*SL); 
-			lambda = micro - SL; //select the individual classifiers whose weight is greater than a threshold lambda
+			lambda = micro - SL;
 			for(i = 0; i< n; i++){
 				if(gsl_vector_get(Psi, i) > lambda){
 					psi[i] = 1;
@@ -1432,8 +1437,8 @@ double ensemble_pruning(Subgraph *eval, ...){
 			}	
 	}
 	
+	/* ensemble labels */
 	if(pass){
-		/* ensemble labels */
 		int **ensemble_label = (int **)malloc(eval->nnodes * sizeof(int *));
 		for(i = 0; i < eval->nnodes; i++) ensemble_label[i] = AllocIntArray(n+1);
 		
@@ -1465,6 +1470,7 @@ double ensemble_pruning(Subgraph *eval, ...){
 	        eval->node[i].label = label;
 	    }
 	    
+		/* Deallocating memory */
 	    for(i = 0; i < eval->nnodes; i++) free(ensemble_label[i]);
 	    free(ensemble_label);
 	    free(poll_label);
@@ -1472,7 +1478,7 @@ double ensemble_pruning(Subgraph *eval, ...){
 		acc = opf_Accuracy(eval);
 	}
 	else{
-		printf("\nThere is no classification requirement in this harmony!\n");
+		printf("\nThere is no classification requirement in this step!\n");
 		acc = 0.000001;
 	}
 	free(psi);
