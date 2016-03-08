@@ -414,6 +414,8 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
 			}
 			F->best = gsl_vector_min_index(F->fitness);
 		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+			
+			gsl_vector_free(row);
 		break;
 		
     }
