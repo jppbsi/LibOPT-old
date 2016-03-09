@@ -19,7 +19,7 @@ fprintf(stderr,
 "\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
 Options:\n\
    -p [required] (parameters): define path of parameters file to use in Firefly Algorithm approach.\n\
-   -o (output): Output ensemble pruning classifier (default: best_ensemble.txt)\n\n"
+   -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
 }
@@ -195,7 +195,7 @@ int main(int argc, char **argv){
 	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
 
 
-	if(!fParameters) fParameters = fopen("best_ensemble.txt", "a");
+	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
     fprintf(fParameters,"%d ", P->n);
     for(i = 0; i < P->n; i++){
         fprintf(fParameters, "%lf ", gsl_matrix_get(P->x, P->best, i));

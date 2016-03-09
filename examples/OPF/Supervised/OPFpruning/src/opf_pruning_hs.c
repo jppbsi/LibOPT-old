@@ -22,7 +22,7 @@ Options:\n\
    -a (binary optimization for HS):\n\
       (0) - Harmony Search weighted\n\
       (1) - Harmony Search Binary (default)\n\
-   -o (output): Output ensemble pruning classifier (default: best_ensemble.txt)\n\n"
+   -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
 }
@@ -213,7 +213,7 @@ int main(int argc, char **argv){
 	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
 	
 	
-	if(!fParameters) fParameters = fopen("best_ensemble.txt", "a");
+	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
     fprintf(fParameters,"%d ", H->n);
     for(i = 0; i < H->n; i++){
         fprintf(fParameters, "%lf ", gsl_matrix_get(H->HM, H->best, i));
