@@ -177,6 +177,53 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...){
     return reconstruction_error;
 }
 
+/* It executes a Bernoulli-Berboulli RBM with Dropout and returns the reconstruction error of dataset in g
+Parameters: [g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, p, q]
+g: dataset in the OPF format
+n_hidden_units: number of RBM hidden units
+eta: learning rate
+lambda: penalty parameter
+alpha: weigth decay
+n_epocs: numer of epochs for training
+batch_size: mini-batch size
+eta_min: minimum bound for eta
+eta_max: maximum bound for eta
+p: hidden units dropout rate
+q: visible units dropout rate */
+double Bernoulli_BernoulliRBM4ReconstructionwithDropout(Subgraph *g, ...){
+    va_list arg;
+    int n_hidden_units, n_epochs, batch_size;
+    double p, q;
+    double reconstruction_error;
+    RBM *m = NULL;
+    Dataset *D = NULL;
+    
+    va_start(arg, g);
+    D = Subgraph2Dataset(g);
+    
+    n_hidden_units = (int)va_arg(arg,double);
+    m = CreateRBM(g->nfeats, n_hidden_units, 1);
+    m->eta = va_arg(arg,double);
+    m->lambda = va_arg(arg,double);
+    m->alpha = va_arg(arg,double);
+    p = va_arg(arg, double);
+    q = va_arg(arg, double);
+    n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
+    m->eta_min = va_arg(arg,double);
+    m->eta_max = va_arg(arg,double);
+    
+    InitializeWeights(m);
+    InitializeBias4HiddenUnits(m);
+    InitializeBias4VisibleUnitsWithRandomValues(m);
+    reconstruction_error = BernoulliRBMTrainingbyContrastiveDivergencewithDropout(D, m, n_epochs, 1, batch_size, p, q);
+    DestroyRBM(&m);
+    DestroyDataset(&D);
+    va_end(arg);
+    
+    return reconstruction_error;
+}
+
 /* It executes a Bernoulli-Bernoulli RBM trained by PCD and returns the reconstruction error of dataset in g
 Parameters: [int, g, n_hidden_units, eta, lambda, alpha, n_epochs, batch_size, n_gibbs_sampling]
 int: number of parameters of the function

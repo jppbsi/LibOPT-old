@@ -30,6 +30,7 @@ double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...); /* It executes a
 double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by PCD and returns the reconstruction error of dataset in g */
 double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by FPCD and returns the reconstruction error of dataset in g */
 double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit */
+double Bernoulli_BernoulliRBM4ReconstructionwithDropout(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM with Dropout and returns the reconstruction error of dataset in g */
 /*********************************/
 
 /* Deep Belief Networks */
