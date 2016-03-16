@@ -212,11 +212,7 @@ int main(int argc, char **argv){
 	
 	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
 	
-	
-	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
-    fprintf(fParameters,"%d ", H->n);
     for(i = 0; i < H->n; i++){
-        fprintf(fParameters, "%lf ", gsl_matrix_get(H->HM, H->best, i));
 		if(binary_optimization){
 			psi[i] = (int)gsl_matrix_get(H->HM, H->best, i); //Set classifiers to testing phase
 		}
@@ -225,9 +221,6 @@ int main(int argc, char **argv){
         	psi[i] = gsl_matrix_get(H->HM, H->best, i); //Set classifiers to testing phase
         } 
 	}
-	fprintf(fParameters, "\n");
-	fclose(fParameters);
-
 	
 	if(!binary_optimization){
 			micro/=H->n; //mean of the weights of the classifiers
@@ -245,9 +238,18 @@ int main(int argc, char **argv){
 			}	
 	}
 	
-	
 	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
 	for(i = 0; i< H->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
+	
+	// WRITING BEST ENSEMBLE
+	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
+    fprintf(fParameters,"%d ", H->n);
+    for(i = 0; i < H->n; i++){
+        fprintf(fParameters, "%lf:(%d) ", gsl_matrix_get(H->HM, H->best, i),(int)psi[i]);
+	}
+	fprintf(fParameters, "\n");
+	fclose(fParameters);
+	
 	
 	// WRITING OPTIMIZATION TIME
 	sprintf(fileName,"%s.time",argv[eval_set]);
