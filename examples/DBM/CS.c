@@ -52,7 +52,7 @@ int main(int argc, char **argv){
         j+=4;
     }
 
-    d = CreateDBM(Train->nfeats, n_hidden_units, Train->nlabels, n_layers);
+    d = CreateDBM(Train->nfeats, n_hidden_units, Train->nlabels);
     InitializeDBM(d); j = 1; z = 1;
     for(i = 0; i < d->n_layers; i++){
         d->m[i]->eta = gsl_matrix_get(P->x, P->best, j); j++;
