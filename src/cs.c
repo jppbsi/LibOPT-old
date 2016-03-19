@@ -317,6 +317,77 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 
 			f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
 		break;
+	    case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Contrastive Divergence */
+		    g = va_arg(arg, Subgraph *);
+		    n_epochs = va_arg(arg, int);
+		    batch_size = va_arg(arg, int);
+		    n_gibbs_sampling = va_arg(arg, int);
+		    L = va_arg(arg, int);
+		    
+		    Param = gsl_matrix_alloc(L, 6);
+			
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+			    for(j = 0; j < 4; j++)
+				    gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(P->LB, z+1)); // setting up eta_min
+				gsl_matrix_set(Param, l, j, gsl_vector_get(P->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+			
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+			
+			gsl_matrix_free(Param);
+	    break;
+	    case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Persistent Contrastive Divergence */
+		    g = va_arg(arg, Subgraph *);
+		    n_epochs = va_arg(arg, int);
+		    batch_size = va_arg(arg, int);
+		    n_gibbs_sampling = va_arg(arg, int);
+		    L = va_arg(arg, int);
+		    
+			Param = gsl_matrix_alloc(L, 6);
+		    
+		    /* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(P->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(P->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+			
+			f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
+			
+			gsl_matrix_free(Param);
+	    break;
+	    case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Fast Persistent Contrastive Divergence */
+		    g = va_arg(arg, Subgraph *);
+		    n_epochs = va_arg(arg, int);
+		    batch_size = va_arg(arg, int);
+		    n_gibbs_sampling = va_arg(arg, int);
+		    L = va_arg(arg, int);
+		    row = gsl_vector_alloc(P->n);
+			
+			Param = gsl_matrix_alloc(L, 6);
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(P->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(P->UB, z+1)); // setting up eta_max
+				z+=4;
+			}
+							
+			f = Evaluate(g, 3, L, Param, n_epochs, batch_size);
+						
+			gsl_matrix_free(Param);
+		    gsl_vector_free(row);
+	    break;
     }
     return f;
 }
