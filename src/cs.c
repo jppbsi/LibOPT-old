@@ -317,6 +317,18 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 
 			f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
 		break;
+		case OPF_ENSEMBLE: /* OPFensemble pruning */
+			g = va_arg(arg, Subgraph *);
+			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+			int binary_optimization = va_arg(arg, int);
+			row = gsl_vector_alloc(P->n);
+		
+			for(l = 0; l < P->m; l++){
+				gsl_matrix_get_row(row, P->x, l);
+				f = Evaluate(g, ensembleTrain, row, P->n, binary_optimization);
+			}
+			gsl_vector_free(row);
+		break;
 	    case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
