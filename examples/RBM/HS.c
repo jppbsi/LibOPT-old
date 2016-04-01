@@ -35,6 +35,12 @@ int main(int argc, char **argv){
         case 1:
             runHS(H, Bernoulli_BernoulliRBM4ReconstructionwithDropout, BBRBM_CD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
         break;
+        case 2:
+            runHS(H, Bernoulli_BernoulliRBMbyPersistentContrastiveDivergencewithDropout, BBRBM_PCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
+        break;
+        case 3:
+            runHS(H, Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergencewithDropout, BBRBM_FPCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
+        break;
     }
     
     fprintf(stderr,"\nRunning RBM once more over the training set ... ");
@@ -60,10 +66,10 @@ int main(int argc, char **argv){
         errorTRAIN = BernoulliRBMTrainingbyContrastiveDivergencewithDropout(DatasetTrain, m, n_epochs, 1, batch_size, p, q);
     break;
     case 2:
-        errorTRAIN = BernoulliRBMTrainingbyPersistentContrastiveDivergence(DatasetTrain, m, n_epochs, n_gibbs_sampling, batch_size);
+        errorTRAIN = BernoulliRBMTrainingbyPersistentContrastiveDivergencewithDropout(DatasetTrain, m, n_epochs, n_gibbs_sampling, batch_size, p, q);
     break;
     case 3:
-        errorTRAIN = BernoulliRBMTrainingbyFastPersistentContrastiveDivergence(DatasetTrain, m, n_epochs, n_gibbs_sampling, batch_size);
+        errorTRAIN = BernoulliRBMTrainingbyFastPersistentContrastiveDivergencewithDropout(DatasetTrain, m, n_epochs, n_gibbs_sampling, batch_size, p, q);
     break;
     }
 

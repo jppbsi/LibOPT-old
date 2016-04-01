@@ -621,6 +621,42 @@ void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_li
 				    }
 				}
 			break;
+			case 21: /* Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+						
+				for(i = 0; i < H->m; i++){
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), gsl_matrix_get(H->HM, i, 4), gsl_matrix_get(H->HM, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
+				    gsl_vector_set(H->fitness, i, f);
+				    if(f < H->best_fitness){
+					H->best = i;
+					H->best_fitness = f;
+				    }else if(f > H->worst_fitness){
+					    H->worst = i;
+					    H->worst_fitness = f;
+				    }
+				}
+			break;
+			case 22: /* Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+						
+				for(i = 0; i < H->m; i++){
+				    f = Evaluate(g, gsl_matrix_get(H->HM, i, 0), gsl_matrix_get(H->HM, i, 1), gsl_matrix_get(H->HM, i, 2), gsl_matrix_get(H->HM, i, 3), gsl_matrix_get(H->HM, i, 4), gsl_matrix_get(H->HM, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
+				    gsl_vector_set(H->fitness, i, f);
+				    if(f < H->best_fitness){
+					H->best = i;
+					H->best_fitness = f;
+				    }else if(f > H->worst_fitness){
+					    H->worst = i;
+					    H->worst_fitness = f;
+				    }
+				}
+			break;
 			case FEATURESELECTION: /* Feature_Selection */
 	            optTransfer = va_arg(arg, TransferFunc);
             
@@ -1392,6 +1428,52 @@ void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FU
 				batch_size = va_arg(arg, int);
 				
 				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), gsl_vector_get(h, 4), gsl_vector_get(h, 5), n_epochs, batch_size, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1)); 
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+			break;
+			case 21: /* Bernoulli_Bernoulli RBM trained by Persistent Contrastive Divergence with Dropout */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+							
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), gsl_vector_get(h, 4), gsl_vector_get(h, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));  
+				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+					H->HMCRm+=H->HMCR; /* used for SGHS */
+					H->PARm+=H->PAR; /* used for SGHS */
+					H->aux++; /* used for SGHS */
+					for(i = 0; i < H->n; i++)
+						gsl_matrix_set(H->HM, H->worst, i, gsl_vector_get(h, i)); /* it copies the new harmony to the harmony memory */
+					gsl_vector_set(H->fitness, H->worst, f);
+					
+					UpdateHarmonyMemoryIndices(H);
+					
+					if(H->Rehearsal){ /* used for PSF_HS */
+						for(i = 0; i < H->n; i++)
+							H->Rehearsal[H->worst][i] = H->op_type[i];
+					}
+				}
+			break;
+			case 22: /* Bernoulli_Bernoulli RBM trained by Fast Persistent Contrastive Divergence with Dropout */
+				g = va_arg(arg, Subgraph *);
+				n_epochs = va_arg(arg, int);
+				batch_size = va_arg(arg, int);
+				n_gibbs_sampling = va_arg(arg, int);
+							
+				f = Evaluate(g, gsl_vector_get(h, 0), gsl_vector_get(h, 1), gsl_vector_get(h, 2), gsl_vector_get(h, 3), gsl_vector_get(h, 4), gsl_vector_get(h, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(H->LB, 1), gsl_vector_get(H->UB, 1));  
 				if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
 					H->HMCRm+=H->HMCR; /* used for SGHS */
 					H->PARm+=H->PAR; /* used for SGHS */

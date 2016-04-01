@@ -27,10 +27,12 @@ void CheckLimits(gsl_vector *x, gsl_vector *LB, gsl_vector *UB); /* It cheks the
 
 /* Restricted Boltzmann Machines */
 double Bernoulli_BernoulliRBM4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM and returns the reconstruction error of dataset in g */
-double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by PCD and returns the reconstruction error of dataset in g */
-double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by FPCD and returns the reconstruction error of dataset in g */
-double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit */
 double Bernoulli_BernoulliRBM4ReconstructionwithDropout(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM with Dropout and returns the reconstruction error of dataset in g */
+double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by PCD and returns the reconstruction error of dataset in g */
+double Bernoulli_BernoulliRBMbyPersistentContrastiveDivergencewithDropout(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM with Dropout trained by PCD and returns the reconstruction error of dataset in g */
+double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergence(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM trained by FPCD and returns the reconstruction error of dataset in g */
+double Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergencewithDropout(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli RBM with Dropout trained by FPCD and returns the reconstruction error of dataset in g */
+double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Bernoulli DRBM and it outpus the reconstruction error of the label unit */
 /*********************************/
 
 /* Deep Belief Networks */
