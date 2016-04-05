@@ -111,16 +111,18 @@ void goHybridHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, int HEURI
 QHarmonyMemory *CreateQHarmonyMemory(int m, int n); /*It allocates the quaternion-based harmony memory*/
 void DestroyQHarmonyMemory(QHarmonyMemory **H); /* It deallocates the quaternion-based harmony memory */
 QHarmonyMemory *ReadQHarmoniesFromFile(char *fileName); /* it creates a quaternion-based harmony memory specified in a file */
+void InitializeQHarmonyMemory(QHarmonyMemory *H); /* it initializes the quaternion-based harmony memory */
 void ShowQHarmonyMemory(QHarmonyMemory *H); /* It displays the quaternion-based harmomy memory's content */
 gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H); /* It creates a new quaternion-based harmony */
-void InitializeQHarmonyMemory(QHarmonyMemory *H); /* it initializes the quaternion-based harmony memory */
+gsl_matrix *CreateNewQHarmony4GHS(QHarmonyMemory *H);  /* It creates a new harmony for QGHS  */
+gsl_matrix *CreateNewQHarmony4SGHS(QHarmonyMemory *H);  /* It creates a new harmony for QSGHS  */
 void UpdateQHarmonyMemoryIndices(QHarmonyMemory *H); /* It updates the best and worst harmonies concerning quaternion-based Harmony Search*/
 void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates the new harmony and updates the harmony memory concerning the quaternion-bqsed harmony memory */
 void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all harmonies concerning quaternion-based Harmony Search */
 void runQHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Harmony Memory for function minimization */
 void runQIHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Improved Harmony Memory for function minimization */
 void runQGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Global-best Harmony Memory for function minimization */
-gsl_matrix *CreateNewQHarmony4GHS(QHarmonyMemory *H);  /* It creates a new harmony for QGHS  */
+void runQSGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the quaternion-based Self-adaptative Global-best Harmony Memory for function minimization */
 /********************************************/
 
 #endif

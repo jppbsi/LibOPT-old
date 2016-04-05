@@ -775,10 +775,9 @@ gsl_vector *CreateNewHarmony(HarmonyMemory *H){
 			}
 		}
 		gsl_rng_free(r);
-fprintf(stderr,"\n");
-for(i = 0; i < h->size; i++)
-fprintf(stderr,"h[%d]: %lf	", i, gsl_vector_get(h, i));
-		
+		fprintf(stderr,"\n");
+		for(i = 0; i < h->size; i++)
+			fprintf(stderr,"h[%d]: %lf	", i, gsl_vector_get(h, i));		
 		return h;
 	}else{
 		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewHarmony.\n");
@@ -1780,7 +1779,7 @@ void runSGHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
 	EvaluateHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
 	fprintf(stderr," OK.");
 	
-        /* Initializing HCMR~N(HMCRm,0.01) and PAR~N(PARm,0.05) according to Section 3.2.1 */
+        /* Initializing HMCR~N(HMCRm,0.01) and PAR~N(PARm,0.05) according to Section 3.2.1 */
 	H->HMCR = gsl_ran_gaussian(r, 0.01); H->HMCR+=H->HMCRm;
 	H->PAR = gsl_ran_gaussian(r, 0.05); H->PAR+=H->PARm;
 	H->HMCRm = 0;
@@ -2088,7 +2087,7 @@ n: number of decision variables to be optimized (dimension of the search space) 
 QHarmonyMemory *CreateQHarmonyMemory(int m, int n){
 	
 	if((m < 1) || (n < 1)){
-		fprintf(stderr,"\nInvalid parameters @CreateHarmonyMemory.\n");
+		fprintf(stderr,"\nInvalid parameters @CreateQHarmonyMemory.\n");
 		return NULL;
 	}
 	
@@ -2165,7 +2164,7 @@ QHarmonyMemory *ReadQHarmoniesFromFile(char *fileName){
         
         fp = fopen(fileName, "r");
         if(!fp){
-                fprintf(stderr,"\nunable to open file %s @ReadHarmonyMemoryFromFile.\n", fileName);
+                fprintf(stderr,"\nunable to open file %s @ReadQHarmonyMemoryFromFile.\n", fileName);
                 return NULL;
         }
         
@@ -2221,7 +2220,7 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 		gsl_rng_free(r);
 		
 		
-	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeHarmonyMemory.\n");		
+	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeQHarmonyMemory.\n");		
 }
 
 /* It displays the quaternion-based harmomy memory's content ---
@@ -2264,11 +2263,9 @@ gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H){
 		for(i = 0; i < H->n; i++){
 			p = gsl_rng_uniform(r);
 			if(H->HMCR >= p){
-				
 				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
 				for(j = 0; j < 4; j++)
 					gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i));
-			
 				p = gsl_rng_uniform(r);
 				if(H->PAR >= p){
 					signal = gsl_rng_uniform(r);
@@ -2299,6 +2296,112 @@ gsl_matrix *CreateNewQHarmony(QHarmonyMemory *H){
 		return h;
 	}else{
 		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewQHarmony.\n");
+		return NULL;
+	}
+}
+
+/* It creates a new quaternion-based harmony for QGHS
+Parameters: [H]
+H: harmony memory */
+gsl_matrix *CreateNewQHarmony4GHS(QHarmonyMemory *H){
+	if(H){
+		int i, j, index;
+		gsl_matrix *h = NULL;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p, signal;
+			    
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+		
+		h = gsl_matrix_alloc(4, H->n);
+		for(i = 0; i < H->n; i++){
+			p = gsl_rng_uniform(r);
+			if(H->HMCR >= p){
+				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i));
+				p = gsl_rng_uniform(r);
+				if(H->PAR >= p){
+					for(j = 0; j < 4; j++)
+						gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[H->best], j, i));
+					
+					/* quaternions are constrained to the interval [0,1] -> Equation 8 */
+					for(j = 0; j < 4; j++){
+						if(gsl_matrix_get(h, j, i) < 0) gsl_matrix_set(h, j, i, 0);
+						else if(gsl_matrix_get(h, j, i) > 1) gsl_matrix_set(h, j, i, 1);
+					}
+				}
+			}else{
+				for(j = 0; j < 4; j++){
+					p = gsl_rng_uniform(r);
+					gsl_matrix_set(h, j, i, p);
+				}
+			}
+		}
+		gsl_rng_free(r);
+		return h;
+	}else{
+		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewQHarmony4GHS.\n");
+		return NULL;
+	}
+}
+
+/* It creates a new quaternion-based harmony for SGHS
+Parameters: [H]
+H: harmony memory */
+gsl_matrix *CreateNewQHarmony4SGHS(QHarmonyMemory *H){
+	if(H){
+		int i, j, index;
+		gsl_matrix *h = NULL;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p, p2, signal;
+			    
+		srand(time(NULL));
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, random_seed());
+		
+		h = gsl_matrix_alloc(4, H->n);
+		for(i = 0; i < H->n; i++){
+			p = gsl_rng_uniform(r);
+			if(H->HMCR >= p){
+				p = gsl_rng_uniform(r);
+				p2 = gsl_rng_uniform(r);
+				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
+				if(p >= 0.5){
+					for (j = 0; j < 4; j++)
+						gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i)+(p2*H->bw));
+				}
+				else{
+					for (j = 0; j < 4; j++)
+						gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i)-(p2*H->bw));
+				}				
+				p = gsl_rng_uniform(r);
+				if(H->PAR >= p){
+					for (j = 0; j < 4; j++)
+						gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[H->best], j, i));
+				
+					/* quaternions are constrained to the interval [0,1] -> Equation 8 */
+					for(j = 0; j < 4; j++){
+						if(gsl_matrix_get(h, j, i) < 0) gsl_matrix_set(h, j, i, 0);
+						else if(gsl_matrix_get(h, j, i) > 1) gsl_matrix_set(h, j, i, 1);
+					}
+				}
+			}else{
+				for (j = 0; j < 4; j++){
+					p = gsl_rng_uniform(r);
+					gsl_matrix_set(h, j, i, p);
+				}
+			}
+		}
+		gsl_rng_free(r);
+		return h;
+	}else{
+		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewQHarmony4SGHS.\n");
 		return NULL;
 	}
 }
@@ -3161,7 +3264,7 @@ void runQHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
         double p;
 		gsl_matrix *h = NULL;
                             
-		fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+		fprintf(stderr,"\nInitial evaluation of the Q-harmony memory ...");
 		EvaluateQHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
 		fprintf(stderr," OK.");
 		
@@ -3181,7 +3284,7 @@ void runQHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
 			ShowQHarmonyMemory(H);
 		}
         
-    }else fprintf(stderr,"\nThere is no search space allocated @runHS.\n");
+    }else fprintf(stderr,"\nThere is no search space allocated @runQHS.\n");
     va_end(arg);
 }
 
@@ -3208,7 +3311,7 @@ void runQIHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
         r = gsl_rng_alloc(T);
         gsl_rng_set(r, random_seed());
         
-        fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+        fprintf(stderr,"\nInitial evaluation of the Q-harmony memory ...");
 	EvaluateQHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
 	fprintf(stderr," OK.");
 	
@@ -3254,7 +3357,7 @@ void runQGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
         r = gsl_rng_alloc(T);
         gsl_rng_set(r, random_seed());
         
-        fprintf(stderr,"\nInitial evaluation of the harmony memory ...");
+        fprintf(stderr,"\nInitial evaluation of the Q-harmony memory ...");
 	EvaluateQHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
 	fprintf(stderr," OK.");
 	
@@ -3263,7 +3366,7 @@ void runQGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
             va_copy(arg, argtmp);
             
 	    H->PAR = H->PAR_min+((H->PAR_max-H->PAR_min)/H->max_iterations)*t;
-	    H->bw = H->bw_max*exp((log(H->bw_min/H->bw_max)/H->max_iterations)*t);
+	    //H->bw = H->bw_max*exp((log(H->bw_min/H->bw_max)/H->max_iterations)*t);
             h = CreateNewQHarmony4GHS(H);
 	    EvaluateNewQHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
 	    gsl_matrix_free(h);
@@ -3277,53 +3380,70 @@ void runQGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     va_end(arg);
 }
 
-/* It creates a new quaternion-based harmony for QGHS
-Parameters: [H]
-H: harmony memory */
-gsl_matrix *CreateNewQHarmony4GHS(QHarmonyMemory *H){
-	if(H){
-		int i, j, index;
-		gsl_matrix *h = NULL;
-		const gsl_rng_type *T = NULL;
-		gsl_rng *r = NULL;
-		double p, signal;
-			    
-		srand(time(NULL));
-		T = gsl_rng_default;
-		r = gsl_rng_alloc(T);
-		gsl_rng_set(r, random_seed());
+
+
+/* It executes the Quaternion-Based Self-adaptative Global-best Harmony Search for function minimization ---
+Parameters: [H, EvaluateFun, FUNCTION_ID, ... ]
+H: search space
+EvaluateFun: pointer to the function used to evaluate bats
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function
+-> This implementation is based on the paper "A self-adaptive global best harmony search algorithm for continuous optimization problems". */
+void runQSGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
+    va_list arg, argtmp;
 		
-		h = gsl_matrix_alloc(4, H->n);
-		for(i = 0; i < H->n; i++){
-			p = gsl_rng_uniform(r);
-			if(H->HMCR >= p){
-				
-				index = (int)gsl_rng_uniform_int(r, (unsigned long int)H->m);
-				for(j = 0; j < 4; j++)
-					gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[index], j, i));
-			
-				p = gsl_rng_uniform(r);
-				if(H->PAR >= p){
-					for(j = 0; j < 4; j++)
-						gsl_matrix_set(h, j, i, gsl_matrix_get(H->HM[H->best], j, i));
-					
-					/* quaternions are constrained to the interval [0,1] -> Equation 8 */
-					for(j = 0; j < 4; j++){
-						if(gsl_matrix_get(h, j, i) < 0) gsl_matrix_set(h, j, i, 0);
-						else if(gsl_matrix_get(h, j, i) > 1) gsl_matrix_set(h, j, i, 1);
-					}
-				}
-			}else{
-				for(j = 0; j < 4; j++){
-					p = gsl_rng_uniform(r);
-					gsl_matrix_set(h, j, i, p);
-				}
-			}
-		}
-		gsl_rng_free(r);
-		return h;
-	}else{
-		fprintf(stderr,"\nThere is no harmony memory allocated @CreateNewQHarmony4GHS.\n");
-		return NULL;
-	}
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+    if(H){
+        int t, i, lp = 0, HMCR_ctr = 0, PAR_ctr = 0;
+        double p;
+        const gsl_rng_type *T = NULL;
+        gsl_rng *r = NULL;
+	gsl_matrix *h = NULL;
+                    
+        srand(time(NULL));
+        T = gsl_rng_default;
+        r = gsl_rng_alloc(T);
+        gsl_rng_set(r, random_seed());
+        
+        fprintf(stderr,"\nInitial evaluation of the Q-harmony memory ...");
+	EvaluateQHarmonies(H, EvaluateFun, FUNCTION_ID, arg);
+	fprintf(stderr," OK.");
+	
+        /* Initializing HMCR~N(HMCRm,0.01) and PAR~N(PARm,0.05) according to Section 3.2.1 */
+	H->HMCR = gsl_ran_gaussian(r, 0.01); H->HMCR+=H->HMCRm;
+	H->PAR = gsl_ran_gaussian(r, 0.05); H->PAR+=H->PARm;
+	H->HMCRm = 0;
+	H->PARm = 0;
+	H->aux = 0;
+	
+	for(t = 1; t <= H->max_iterations; t++, lp++){
+            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
+            va_copy(arg, argtmp);
+	    
+	    if(lp > H->LP){ /* step 7 of algorithm at Section 3.3: it updates the HMCR and PAR values */
+		H->HMCR = gsl_ran_gaussian(r, 0.01); H->HMCR+=(H->HMCRm/H->aux);
+		H->PAR = gsl_ran_gaussian(r, 0.05); H->PAR+=(H->PARm/H->aux);
+		H->HMCRm = 0;
+		H->PARm = 0;
+		H->aux = 0;
+		lp = 0;
+	    }
+            
+	    /* it updates the bandwidth according to Equation 8 */
+	    if(t < H->max_iterations/2.0) H->bw = H->bw_max - ((2*t)*(H->bw_max-H->bw_min)/H->max_iterations);
+	    else H->bw = H->bw_min;
+	
+            h = CreateNewQHarmony4SGHS(H);
+	    EvaluateNewQHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
+	    gsl_matrix_free(h);
+	    		            
+            fprintf(stderr, "OK (minimum fitness value %lf)", H->best_fitness);
+            fprintf(stdout,"%d %lf\n", t, H->best_fitness);
+        }
+        gsl_rng_free(r);
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runQSGHS.\n");
+    va_end(arg);
 }
+
