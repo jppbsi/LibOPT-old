@@ -205,19 +205,59 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
     gsl_vector *row = NULL, *w = NULL;
         
     switch(FUNCTION_ID){
-        case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
-                        
-            g = va_arg(arg, Subgraph *);
-            n_epochs = va_arg(arg, int);
-            batch_size = va_arg(arg, int);
-            
-            for(i = 0; i < F->m; i++){
-                f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), n_epochs, batch_size); 
-    			gsl_vector_set(F->fitness, i, f);
-    		}
-            
-            F->best = gsl_vector_min_index(F->fitness);
-		    F->best_fitness = gsl_vector_get(F->fitness, F->best);
+	case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
+			
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		
+		for(i = 0; i < F->m; i++){
+			f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), n_epochs, batch_size, gsl_vector_get(F->LB, 1), gsl_vector_get(F->UB, 1)); 
+			gsl_vector_set(F->fitness, i, f);
+		}
+		F->best = gsl_vector_min_index(F->fitness);
+		F->best_fitness = gsl_vector_get(F->fitness, F->best);
+        break;
+        case BBRBM_CD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
+			
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		
+		for(i = 0; i < F->m; i++){
+			f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), gsl_matrix_get(F->x, i, 4), gsl_matrix_get(F->x, i, 5), n_epochs, batch_size, gsl_vector_get(F->LB, 1), gsl_vector_get(F->UB, 1)); 
+			gsl_vector_set(F->fitness, i, f);
+		}
+		F->best = gsl_vector_min_index(F->fitness);
+		F->best_fitness = gsl_vector_get(F->fitness, F->best);
+        break;
+        case BBRBM_PCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
+			
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		
+		for(i = 0; i < F->m; i++){
+			f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), gsl_matrix_get(F->x, i, 4), gsl_matrix_get(F->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(F->LB, 1), gsl_vector_get(F->UB, 1)); 
+			gsl_vector_set(F->fitness, i, f);
+		}
+		F->best = gsl_vector_min_index(F->fitness);
+		F->best_fitness = gsl_vector_get(F->fitness, F->best);
+        break;
+        case BBRBM_FPCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Fast Persistent Contrastive Divergence */
+			
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		
+		for(i = 0; i < F->m; i++){
+			f = Evaluate(g, gsl_matrix_get(F->x, i, 0), gsl_matrix_get(F->x, i, 1), gsl_matrix_get(F->x, i, 2), gsl_matrix_get(F->x, i, 3), gsl_matrix_get(F->x, i, 4), gsl_matrix_get(F->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(F->LB, 1), gsl_vector_get(F->UB, 1)); 
+			gsl_vector_set(F->fitness, i, f);
+		}
+		F->best = gsl_vector_min_index(F->fitness);
+		F->best_fitness = gsl_vector_get(F->fitness, F->best);
         break;
 	    case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
 	    	g = va_arg(arg, Subgraph *);
@@ -484,7 +524,7 @@ void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_
 Parameters: [F, firefly_id]
 F: search space
 firefly_id: firefly's index */ 
-inline void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
+void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
     double beta, tmp, dist, aux;
     int i, j;
     gsl_vector_view row1, row2;
@@ -517,7 +557,7 @@ inline void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
 Parameters: [F, firefly_id]
 F: search space
 best_firefly_id: best firefly's index */ 
-inline void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id){
+void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id){
     int j;
     double aux, tmp;
     const gsl_rng_type *T = NULL;
@@ -572,6 +612,6 @@ void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
 			
         }
         
-    }else fprintf(stderr,"\nThere is no search space allocated @runGA.\n");
+    }else fprintf(stderr,"\nThere is no search space allocated @runFFA.\n");
     va_end(arg);
 }

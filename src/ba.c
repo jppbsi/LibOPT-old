@@ -281,14 +281,66 @@ void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
     Subgraph *g = NULL;
     
     switch(FUNCTION_ID){
-        case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+	case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
             g = va_arg(arg, Subgraph *);
             n_epochs = va_arg(arg, int);
             batch_size = va_arg(arg, int);
             B->mean_A = 0;
             
             for(i = 0; i < B->m; i++){
-                f = Evaluate(g, gsl_matrix_get(B->x, i, 0), gsl_matrix_get(B->x, i, 1), gsl_matrix_get(B->x, i, 2), gsl_matrix_get(B->x, i, 3), n_epochs, batch_size); 
+                f = Evaluate(g, gsl_matrix_get(B->x, i, 0), gsl_matrix_get(B->x, i, 1), gsl_matrix_get(B->x, i, 2), gsl_matrix_get(B->x, i, 3), n_epochs, batch_size, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
+                gsl_vector_set(B->fitness, i, f);
+                B->mean_A+=gsl_vector_get(B->A, i);
+                if(f < B->best_fitness){
+                    B->best = i;
+                    B->best_fitness = f;
+                }
+            }
+            B->mean_A/=B->m; /* it updates the mean loudness */
+        break;
+        case BBRBM_CD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+            B->mean_A = 0;
+            
+            for(i = 0; i < B->m; i++){
+                f = Evaluate(g, gsl_matrix_get(B->x, i, 0), gsl_matrix_get(B->x, i, 1), gsl_matrix_get(B->x, i, 2), gsl_matrix_get(B->x, i, 3), gsl_matrix_get(B->x, i, 4), gsl_matrix_get(B->x, i, 5), n_epochs, batch_size, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
+                gsl_vector_set(B->fitness, i, f);
+                B->mean_A+=gsl_vector_get(B->A, i);
+                if(f < B->best_fitness){
+                    B->best = i;
+                    B->best_fitness = f;
+                }
+            }
+            B->mean_A/=B->m; /* it updates the mean loudness */
+        break;
+        case BBRBM_PCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+            B->mean_A = 0;
+            
+            for(i = 0; i < B->m; i++){
+                f = Evaluate(g, gsl_matrix_get(B->x, i, 0), gsl_matrix_get(B->x, i, 1), gsl_matrix_get(B->x, i, 2), gsl_matrix_get(B->x, i, 3), gsl_matrix_get(B->x, i, 4), gsl_matrix_get(B->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
+                gsl_vector_set(B->fitness, i, f);
+                B->mean_A+=gsl_vector_get(B->A, i);
+                if(f < B->best_fitness){
+                    B->best = i;
+                    B->best_fitness = f;
+                }
+            }
+            B->mean_A/=B->m; /* it updates the mean loudness */
+        break;
+        case BBRBM_FPCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Fast PersistentContrastive Divergence */
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+            B->mean_A = 0;
+            
+            for(i = 0; i < B->m; i++){
+                f = Evaluate(g, gsl_matrix_get(B->x, i, 0), gsl_matrix_get(B->x, i, 1), gsl_matrix_get(B->x, i, 2), gsl_matrix_get(B->x, i, 3), gsl_matrix_get(B->x, i, 4), gsl_matrix_get(B->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
                 gsl_vector_set(B->fitness, i, f);
                 B->mean_A+=gsl_vector_get(B->A, i);
                 if(f < B->best_fitness){
@@ -388,36 +440,58 @@ double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va
 	Subgraph *g = NULL;
 	
 	switch(FUNCTION_ID){
-	    case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
-	        g = va_arg(arg, Subgraph *);
-	        n_epochs = va_arg(arg, int);
-	        batch_size = va_arg(arg, int);
-		
-		f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), n_epochs, batch_size); 
-	        break;
-	case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
-		g = va_arg(arg, Subgraph *);
-		n_epochs = va_arg(arg, int);
-		batch_size = va_arg(arg, int);
-		n_gibbs_sampling = va_arg(arg, int);
-		L = va_arg(arg, int);
-								
-		Param = gsl_matrix_alloc(L, 6);
-
-		/* setting Param matrix */
-		z = 0;
-		for(l = 0; l < L; l++){
-			for(j = 0; j < 4; j++)
-				gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
-			z+=4;
-		}
-							
-		f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
-
-		gsl_matrix_free(Param);
-		break;	
-	}
+		case 1: /* Bernoulli_BernoulliRBM4Reconstruction */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			
+			f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), n_epochs, batch_size); 
+			break;
+		case BBRBM_CD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			
+			f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), gsl_vector_get(tmp, 4), gsl_vector_get(tmp, 5), n_epochs, batch_size); 
+			break;
+		case BBRBM_PCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			
+			f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), gsl_vector_get(tmp, 4), gsl_vector_get(tmp, 5), n_epochs, batch_size, n_gibbs_sampling); 
+			break;
+		case BBRBM_FPCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Fast Persistent Contrastive Divergence */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			
+			f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), gsl_vector_get(tmp, 4), gsl_vector_get(tmp, 5), n_epochs, batch_size, n_gibbs_sampling); 
+			break;
+		case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+									
+			Param = gsl_matrix_alloc(L, 6);
 	
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+				z+=4;
+			}
+								
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+	
+			gsl_matrix_free(Param);
+			break;	
+		}
 	return f;
 }
 
@@ -453,7 +527,7 @@ Parameters: [B,t]
 B: search space
 best: index of the best solution so far
 tmp: array with temporary position for the current bat */
-inline void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp){
+void GenerateLocalSolutionNearBest(Bats *B, int best, gsl_vector *tmp){
 	int j;
 	double aux;
 	const gsl_rng_type *T = NULL;

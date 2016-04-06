@@ -31,8 +31,8 @@ void ShowFireflySwarm(FireflySwarm *F); /* It displays the search space's conten
 void ShowFireflySwarmInformation(FireflySwarm *F); /* It displays the search space's main information */
 
 /* Main algorithm */
-inline void UpdateFireflyPosition(FireflySwarm *F, int firefly_id); /* It updates the position of each firefly */
-inline void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id); /* It updates the position of the best firefly */
+void UpdateFireflyPosition(FireflySwarm *F, int firefly_id); /* It updates the position of each firefly */
+void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id); /* It updates the position of the best firefly */
 void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all fireflies */
 void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Firefly Algorithm for function minimization */
 

@@ -62,6 +62,9 @@ extern "C" {
 #define CS 10 /* Cuckoo Search */
 #define WCA 11 /* Water Cycle Algorithm */
 #define MBA 12 /* Mine Blast Algorithm */
+#define QIHS 13 /* Quaternion-based Improved Harmony Search */
+#define QGHS 14 /* Quaternion-based Global-best Harmony Search */
+#define QSGHS 15 /* Quaternion-based Self-Adaptative Global-best Harmony Search */
 /*****************************************************************/
     
 #include <stdio.h>

@@ -231,7 +231,69 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
             batch_size = va_arg(arg, int);
             
             for(i = 0; i < S->m; i++){
-                f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), n_epochs, batch_size); 
+                f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), n_epochs, batch_size, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
+                if(f < gsl_vector_get(S->fitness, i)){
+                    gsl_vector_set(S->fitness, i, f);
+                    for(j = 0; j < S->m; j++)
+                        gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
+                }
+                if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
+			tmp = gsl_matrix_row(S->x, i);
+			gsl_vector_memcpy(S->g, &tmp.vector);
+			S->best_fitness = f;
+                }
+            }
+        break;
+        case BBRBM_CD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
+                        
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+            
+            for(i = 0; i < S->m; i++){
+                f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), gsl_matrix_get(S->x, i, 4), gsl_matrix_get(S->x, i, 5), n_epochs, batch_size, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
+                if(f < gsl_vector_get(S->fitness, i)){
+                    gsl_vector_set(S->fitness, i, f);
+                    for(j = 0; j < S->m; j++)
+                        gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
+                }
+                if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
+			tmp = gsl_matrix_row(S->x, i);
+			gsl_vector_memcpy(S->g, &tmp.vector);
+			S->best_fitness = f;
+                }
+            }
+        break;
+        case BBRBM_PCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
+                        
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+            
+            for(i = 0; i < S->m; i++){
+                f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), gsl_matrix_get(S->x, i, 4), gsl_matrix_get(S->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
+                if(f < gsl_vector_get(S->fitness, i)){
+                    gsl_vector_set(S->fitness, i, f);
+                    for(j = 0; j < S->m; j++)
+                        gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
+                }
+                if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
+			tmp = gsl_matrix_row(S->x, i);
+			gsl_vector_memcpy(S->g, &tmp.vector);
+			S->best_fitness = f;
+                }
+            }
+        break;
+        case BBRBM_FPCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Fast Persistent Contrastive Divergence */
+                        
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+            
+            for(i = 0; i < S->m; i++){
+                f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), gsl_matrix_get(S->x, i, 4), gsl_matrix_get(S->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
                 if(f < gsl_vector_get(S->fitness, i)){
                     gsl_vector_set(S->fitness, i, f);
                     for(j = 0; j < S->m; j++)
@@ -726,19 +788,16 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
         EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg);
         
         for(t = 1; t <= S->max_iterations; t++){
-            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
-            va_copy(arg, argtmp);
-            
-            /* for each particle */
-            for(i = 0; i < S->m; i++){
-                UpdateParticleVelocity(S, i);
-                UpdateParticlePosition(S, i);
-            }
-	        
-			CheckSwarmLimits(S);
-			
+		fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
+		va_copy(arg, argtmp);
+		
+		/* for each particle */
+		for(i = 0; i < S->m; i++){
+		    UpdateParticleVelocity(S, i);
+		    UpdateParticlePosition(S, i);
+		}    
+		CheckSwarmLimits(S);	
 	        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
-	        
 	        fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
         }
         gsl_rng_free(r);
