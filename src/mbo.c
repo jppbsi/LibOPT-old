@@ -95,10 +95,10 @@ BirdFlock *ReadBirdFlockFromFile(char *fileName){
 	WaiveComment(fp);
 	B->max_iterations = max_iterations;
 	
-	if(B->X >= B->k){
+	if(B->k - (B->X * 2) < 1){
 		DestroyBirdFlock(&B);
 		fclose(fp);
-		fprintf(stderr,"\nThe number of solutions to be shared with the next bird should be lesser than the number of neighbours @ReadBirdFlockFromFile.\n");
+		fprintf(stderr,"\nThe number of solutions to be shared with the next bird should be two times lesser than the number of neighbours (k - 2*X >= 1) @ReadBirdFlockFromFile.\n");
 		
 		return NULL;
 	}
@@ -219,6 +219,35 @@ double EvaluateBird(BirdFlock *B, gsl_vector *x, prtFun Evaluate, int FUNCTION_I
 	gsl_matrix *Param = NULL;
 
 	switch(FUNCTION_ID){
+	case BBRBM_CD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
+			
+	    g = va_arg(arg, Subgraph *);
+	    n_epochs = va_arg(arg, int);
+	    batch_size = va_arg(arg, int);
+	    
+	    f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
+
+	break;
+	case BBRBM_PCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
+			
+	    g = va_arg(arg, Subgraph *);
+	    n_epochs = va_arg(arg, int);
+	    batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+	    
+	    f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
+
+	break;
+	case BBRBM_FPCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Fast Persistent Contrastive Divergence */
+			
+	    g = va_arg(arg, Subgraph *);
+	    n_epochs = va_arg(arg, int);
+	    batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+	    
+	    f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(B->LB, 1), gsl_vector_get(B->UB, 1)); 
+
+	break;
 		case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction using CD */
 			g = va_arg(arg, Subgraph *);
 			n_epochs = va_arg(arg, int);
@@ -602,7 +631,8 @@ void runMBO(BirdFlock *B, prtFun EvaluateFun, int FUNCTION_ID, ...){
 			fprintf(stdout,"%d %lf\n", B->best, B->best_fitness);
 			
 			ShowBirdFlock(B);
-			ReplaceLeader(B);
+			if (i != B->max_iterations)
+				ReplaceLeader(B);
 		}
         
     }else fprintf(stderr,"\nThere is no search space allocated @runMBO.\n");

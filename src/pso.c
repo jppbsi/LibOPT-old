@@ -855,6 +855,6 @@ void runAIWPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
         }
         gsl_rng_free(r);
         
-    }else fprintf(stderr,"\nThere is no search space allocated @runPSO.\n");
+    }else fprintf(stderr,"\nThere is no search space allocated @runAIWPSO.\n");
     va_end(arg);
 }

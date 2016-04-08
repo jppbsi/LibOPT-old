@@ -213,13 +213,42 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
     gsl_vector *row = NULL;
     
     switch(FUNCTION_ID){
-        case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
+	case BBRBM4RECONSTRUCTION: /* Bernoulli_BernoulliRBM4Reconstruction */
                         
             g = va_arg(arg, Subgraph *);
             n_epochs = va_arg(arg, int);
             batch_size = va_arg(arg, int);
             
-            f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), n_epochs, batch_size); 
+            f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), n_epochs, batch_size, gsl_vector_get(P->LB, 1), gsl_vector_get(P->UB, 1)); 
+
+        break;
+        case BBRBM_CD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
+                        
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+            
+            f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, gsl_vector_get(P->LB, 1), gsl_vector_get(P->UB, 1)); 
+
+        break;
+        case BBRBM_PCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
+                        
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+            
+            f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(P->LB, 1), gsl_vector_get(P->UB, 1)); 
+
+        break;
+        case BBRBM_FPCD_DROPOUT: /* Bernoulli-Bernoulli RBM with Dropout trained by Fast Persistent Contrastive Divergence */
+                        
+            g = va_arg(arg, Subgraph *);
+            n_epochs = va_arg(arg, int);
+            batch_size = va_arg(arg, int);
+	    n_gibbs_sampling = va_arg(arg, int);
+            
+            f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(P->LB, 1), gsl_vector_get(P->UB, 1)); 
 
         break;
 	    case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
@@ -554,48 +583,48 @@ void runCS(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID, ...){
         r = gsl_rng_alloc(T);
         gsl_rng_set(r, rand());
 	    
-	    sigma = (gamma(BETA+1)*sin(PI*BETA/2))/pow((gamma(BETA+1)/2)*BETA*pow(2,BETA/2),1/BETA);
+	sigma = (gamma(BETA+1)*sin(PI*BETA/2))/pow((gamma(BETA+1)/2)*BETA*pow(2,BETA/2),1/BETA);
 	    
-	    EvaluateNestPopulation(P, Evaluate, FUNCTION_ID, arg);
+	EvaluateNestPopulation(P, Evaluate, FUNCTION_ID, arg);
         
         SortingNestPopulation(P);
         
         for(t = 1; t <= P->max_iterations; t++){
-            fprintf(stderr,"\nRunning iteration %d/%d ... ", t, P->max_iterations);
-            va_copy(arg, argtmp);
-            
-            LevyFlightNest(P,P->alpha,sigma); //it generates new solutions via Levy Flights
-            
-            EvaluateNestPopulation(P, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
-            
-            SortingNestPopulation(P);
-            
-            loss = NestLossParameter(P->m, P->p);
-            
-            /*Replacing the worst nests*/
-            newNest = gsl_vector_alloc(P->n);
-            
-            for(k = 0; k < loss; k++){
-                for(j = 0; j < P->n; j++){
-                    index = gsl_rng_uniform_int(r, P->m);
-                    gsl_vector_set(newNest, j, gsl_matrix_get(P->x, index, j));
-                }
-                
-                f = EvaluateNest(P, newNest, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
-                
-                if(f > gsl_vector_get(P->fitness, P->m-1 - k)){
-                    gsl_vector_set(P->fitness, P->m-1 - k, f);
-                    for(j = 0; j < P->n; j++)
-                        gsl_matrix_set(P->x, P->m-1 - k, j, gsl_vector_get(newNest, j));
-                }
-            }
-            gsl_vector_free(newNest);
-            
-            SortingNestPopulation(P);
+		fprintf(stderr,"\nRunning iteration %d/%d ... ", t, P->max_iterations);
+		va_copy(arg, argtmp);
+		
+		LevyFlightNest(P,P->alpha,sigma); //it generates new solutions via Levy Flights
+		
+		EvaluateNestPopulation(P, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
+		
+		SortingNestPopulation(P);
+		
+		loss = NestLossParameter(P->m, P->p);
+		
+		/*Replacing the worst nests*/
+		newNest = gsl_vector_alloc(P->n);
+		
+		for(k = 0; k < loss; k++){
+			for(j = 0; j < P->n; j++){
+				index = gsl_rng_uniform_int(r, P->m);
+				gsl_vector_set(newNest, j, gsl_matrix_get(P->x, index, j));
+			}
 			
-			CheckNestPopulationLimits(P);
-            
-            fprintf(stderr, "OK (minimum fitness value %lf)", P->best_fitness);
+			f = EvaluateNest(P, newNest, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
+			
+			if(f > gsl_vector_get(P->fitness, P->m-1 - k)){
+				gsl_vector_set(P->fitness, P->m-1 - k, f);
+				for(j = 0; j < P->n; j++)
+					gsl_matrix_set(P->x, P->m-1 - k, j, gsl_vector_get(newNest, j));
+			}
+		}
+		gsl_vector_free(newNest);
+		
+		SortingNestPopulation(P);
+			    
+		CheckNestPopulationLimits(P);
+		
+		fprintf(stderr, "OK (minimum fitness value %lf)", P->best_fitness);
         }
         gsl_rng_free(r);
     }else fprintf(stderr,"\nThere is no search space allocated @runCS.\n");
