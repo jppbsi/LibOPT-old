@@ -234,7 +234,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), n_epochs, batch_size, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
                 if(f < gsl_vector_get(S->fitness, i)){
                     gsl_vector_set(S->fitness, i, f);
-                    for(j = 0; j < S->m; j++)
+                    for(j = 0; j < S->n; j++)
                         gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
                 }
                 if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
@@ -254,7 +254,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), gsl_matrix_get(S->x, i, 4), gsl_matrix_get(S->x, i, 5), n_epochs, batch_size, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
                 if(f < gsl_vector_get(S->fitness, i)){
                     gsl_vector_set(S->fitness, i, f);
-                    for(j = 0; j < S->m; j++)
+                    for(j = 0; j < S->n; j++)
                         gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
                 }
                 if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
@@ -275,7 +275,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), gsl_matrix_get(S->x, i, 4), gsl_matrix_get(S->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
                 if(f < gsl_vector_get(S->fitness, i)){
                     gsl_vector_set(S->fitness, i, f);
-                    for(j = 0; j < S->m; j++)
+                    for(j = 0; j < S->n; j++)
                         gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
                 }
                 if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
@@ -296,7 +296,7 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
                 f = Evaluate(g, gsl_matrix_get(S->x, i, 0), gsl_matrix_get(S->x, i, 1), gsl_matrix_get(S->x, i, 2), gsl_matrix_get(S->x, i, 3), gsl_matrix_get(S->x, i, 4), gsl_matrix_get(S->x, i, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(S->LB, 1), gsl_vector_get(S->UB, 1)); 
                 if(f < gsl_vector_get(S->fitness, i)){
                     gsl_vector_set(S->fitness, i, f);
-                    for(j = 0; j < S->m; j++)
+                    for(j = 0; j < S->n; j++)
                         gsl_matrix_set(S->y, i, j, gsl_matrix_get(S->x, i, j));
                 }
                 if(gsl_vector_get(S->fitness, i) < S->best_fitness){	
