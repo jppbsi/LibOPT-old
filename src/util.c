@@ -520,6 +520,76 @@ double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...){
     return reconstruction_error;
 }
 
+/* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g
+Parameters: [g, op, L, Param, n_epochs, batch_size = va_arg(arg,int), p, q;]
+g: dataset in the OPF format
+op: 1 - CD|2 - PCD|3 - FPCD
+L: number of RBMs
+Param: a matrix containing the parameters of each stacked RBM. Each row of this matrix stands for the configuration of each RBM.
+n_epochs: number of epochs for training
+batch_size: size of the mini-batch
+p: hidden units dropout rate
+q: visible units dropout rate */
+
+double Bernoulli_BernoulliDBN4ReconstructionwithDropout(Subgraph *g, ...){
+    va_list arg;
+    int n_hidden_units, n_epochs, batch_size, L, i, op;
+    double reconstruction_error;
+    DBN *d = NULL;
+    Dataset *D = NULL;
+    gsl_matrix *Param = NULL;
+    gsl_vector_view column;
+    gsl_vector *p = NULL, *q = NULL;
+    
+    /* reading input parameters */
+    va_start(arg, g);
+    op = va_arg(arg,int);
+    L = va_arg(arg,int);
+    Param = va_arg(arg,gsl_matrix *);
+    n_epochs = va_arg(arg,int);
+    batch_size = va_arg(arg,int);
+    
+    column = gsl_matrix_column(Param, 0); /* the first column stands for the number of hidden units */
+    
+    d = CreateDBN(g->nfeats, &column.vector, g->nlabels, L);
+    
+    p = gsl_vector_alloc(L);
+    q = gsl_vector_alloc(L);
+    
+    InitializeDBN(d);
+    for(i = 0; i < d->n_layers; i++){
+        d->m[i]->eta = gsl_matrix_get(Param, i, 1);
+        d->m[i]->lambda = gsl_matrix_get(Param, i, 2);
+        d->m[i]->alpha = gsl_matrix_get(Param, i, 3);
+        gsl_vector_set(p, i, gsl_matrix_get(Param, i, 4));
+        gsl_vector_set(q, i, gsl_matrix_get(Param, i, 5));
+        d->m[i]->eta_min = gsl_matrix_get(Param, i, 6);
+        d->m[i]->eta_max = gsl_matrix_get(Param, i, 7);
+    }
+        
+    D = Subgraph2Dataset(g);
+    switch (op){
+        case 1:
+            reconstruction_error = BernoulliDBNTrainingbyContrastiveDivergencewithDropout(D, d, n_epochs, 1, batch_size, p, q);
+        break;
+        case 2:
+            reconstruction_error = BernoulliDBNTrainingbyPersistentContrastiveDivergencewithDropout(D, d, n_epochs, 1, batch_size, p, q);
+        break;
+        case 3:
+            reconstruction_error = BernoulliDBNTrainingbyFastPersistentContrastiveDivergencewithDropout(D, d, n_epochs, 1, batch_size, p, q);
+        break;
+    }
+    
+    DestroyDBN(&d);
+    DestroyDataset(&D);
+    va_end(arg);
+    gsl_vector_free(p);
+    gsl_vector_free(q);
+    
+    fprintf(stderr,"\nreconstruction_error: %lf", reconstruction_error);
+    return reconstruction_error;
+}
+
 /*********************************/
 
 /* Deep Boltzmann Machines */

@@ -1,0 +1,15 @@
+5 12 10 #<n_nests> <dimension> <max_iterations>
+0.5 0.1 1 #<alpha> <alpha_min> <alpha_max>
+0.25 0.05 0.5 #<p> <p_min> <p_max>
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+0.1 1 #<LB> <UB> hidden units dropout rate
+0.1 1 #<LB> <UB> visible units dropout rate
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+0.1 1 #<LB> <UB> hidden units dropout rate
+0.1 1 #<LB> <UB> visible units dropout rate

@@ -37,6 +37,7 @@ double Gaussian_BernoulliDRBM(Subgraph *g, ...); /* It executes a Gaussian-Berno
 
 /* Deep Belief Networks */
 double Bernoulli_BernoulliDBN4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli DBN and returns the reconstruction error of dataset in g */
+double Bernoulli_BernoulliDBN4ReconstructionwithDropout(Subgraph *g, ...); /* It executes a Bernoulli-Berboulli DBN with Dropout and returns the reconstruction error of dataset in g */
 
 /* Deep Boltzmann Machines */
 double Bernoulli_BernoulliDBM4Reconstruction(Subgraph *g, ...); /* It executes a Bernoulli-Bernoulli DBM and returns the reconstruction error of dataset in g */

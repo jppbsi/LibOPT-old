@@ -1,0 +1,9 @@
+5 6 10 #<n_particles> <dimension> <max_iterations>
+1.7 1.7 #<c1> <c2>
+0.7 0.5 1.5 #<w> <w_min> <w_max>
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+0.1 1 #<LB> <UB> hidden units dropout rate
+0.1 1 #<LB> <UB> visible units dropout rate

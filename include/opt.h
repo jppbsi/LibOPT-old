@@ -23,6 +23,9 @@ extern "C" {
 #define BBRBM_CD_DROPOUT 20 /* Bernoulli-Bernoulli RBM with Dropout trained by Contrastive Divergence */
 #define BBRBM_PCD_DROPOUT 21 /* Bernoulli-Bernoulli RBM with Dropout trained by Persistent Contrastive Divergence */
 #define BBRBM_FPCD_DROPOUT 22 /* Bernoulli-Bernoulli RBM with Dropout trained by Fast Persistent Contrastive Divergence */
+#define BBDBN_CD_DROPOUT 23 /* Bernoulli_Bernoulli DBN with Dropout for data reconstruction trained by Contrastive Divergence */
+#define BBDBN_PCD_DROPOUT 24 /* Bernoulli_Bernoulli DBN with Dropout for data reconstruction trained by Persistent Contrastive Divergence */
+#define BBDBN_FPCD_DROPOUT 25 /* Bernoulli_Bernoulli DBN with Dropout for data reconstruction trained by Fast Persistent Contrastive Divergence */
 
 /* k-means */
 #define KMEANS 2 /* K-Means for data clustering */
