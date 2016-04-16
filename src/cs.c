@@ -251,7 +251,7 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
             f = Evaluate(g, gsl_vector_get(x, 0), gsl_vector_get(x, 1), gsl_vector_get(x, 2), gsl_vector_get(x, 3), gsl_vector_get(x, 4), gsl_vector_get(x, 5), n_epochs, batch_size, n_gibbs_sampling, gsl_vector_get(P->LB, 1), gsl_vector_get(P->UB, 1)); 
 
         break;
-	    case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
+	case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
 		    batch_size = va_arg(arg, int);
@@ -273,8 +273,31 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
 			
 			gsl_matrix_free(Param);
-	    break;
-	    case BBDBN_PCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Persistent Contrastive Divergence */
+	break;
+	case BBDBN_CD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Contrastive Divergence */
+		    g = va_arg(arg, Subgraph *);
+		    n_epochs = va_arg(arg, int);
+		    batch_size = va_arg(arg, int);
+		    n_gibbs_sampling = va_arg(arg, int);
+		    L = va_arg(arg, int);
+		    
+		    Param = gsl_matrix_alloc(L, 8);
+			
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+			    for(j = 0; j < 6; j++)
+				    gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(P->LB, z+1)); // setting up eta_min
+				gsl_matrix_set(Param, l, j, gsl_vector_get(P->UB, z+1)); // setting up eta_max
+				z+=6;
+			}
+			
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
+			
+			gsl_matrix_free(Param);
+	break;
+	case BBDBN_PCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Persistent Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
 		    batch_size = va_arg(arg, int);
@@ -296,8 +319,31 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
 			
 			gsl_matrix_free(Param);
-	    break;
-	    case BBDBN_FPCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Fast Persistent Contrastive Divergence */
+	break;
+	case BBDBN_PCD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Persistent Contrastive Divergence */
+		    g = va_arg(arg, Subgraph *);
+		    n_epochs = va_arg(arg, int);
+		    batch_size = va_arg(arg, int);
+		    n_gibbs_sampling = va_arg(arg, int);
+		    L = va_arg(arg, int);
+		    
+		    Param = gsl_matrix_alloc(L, 8);
+			
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+			    for(j = 0; j < 6; j++)
+				    gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(P->LB, z+1)); // setting up eta_min
+				gsl_matrix_set(Param, l, j, gsl_vector_get(P->UB, z+1)); // setting up eta_max
+				z+=6;
+			}
+			
+			f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
+			
+			gsl_matrix_free(Param);
+	break;
+	case BBDBN_FPCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Fast Persistent Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
 		    batch_size = va_arg(arg, int);
@@ -321,8 +367,31 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 						
 			gsl_matrix_free(Param);
 		    gsl_vector_free(row);
-	    break;
-	    case FEATURESELECTION: /* Feature_Selection */
+	break;
+	case BBDBN_FPCD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Fast Persistent Contrastive Divergence */
+		    g = va_arg(arg, Subgraph *);
+		    n_epochs = va_arg(arg, int);
+		    batch_size = va_arg(arg, int);
+		    n_gibbs_sampling = va_arg(arg, int);
+		    L = va_arg(arg, int);
+		    
+		    Param = gsl_matrix_alloc(L, 8);
+			
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+			    for(j = 0; j < 6; j++)
+				    gsl_matrix_set(Param, l, j, gsl_vector_get(x, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(P->LB, z+1)); // setting up eta_min
+				gsl_matrix_set(Param, l, j, gsl_vector_get(P->UB, z+1)); // setting up eta_max
+				z+=6;
+			}
+			
+			f = Evaluate(g, 3, L, Param, n_epochs, batch_size);
+			
+			gsl_matrix_free(Param);
+	break;
+	case FEATURESELECTION: /* Feature_Selection */
 	        optTransfer = va_arg(arg, TransferFunc);
             
             gTrain = va_arg(arg, Subgraph *);
@@ -331,12 +400,12 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
             f = Evaluate(gTrain, gTest, 1, x, optTransfer);
             
         break;
-		case OPFKNN: /* OPF with knn adjacency relation */
+	case OPFKNN: /* OPF with knn adjacency relation */
 			g = va_arg(arg, Subgraph *);
 			Val = va_arg(arg, Subgraph *);
 			
 			f = Evaluate(g, Val, (int)gsl_vector_get(x, 0));
-		break;
+	break;
         case EPNN_OPF: /* EPNN-OPF with k maximum degree for the knn graph */
 			g = va_arg(arg, Subgraph *);
 			Val = va_arg(arg, Subgraph *);
@@ -345,8 +414,8 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			gsl_vector *nGaussians = va_arg(arg, gsl_vector *);
 
 			f = Evaluate(g, Val, lNode, nsample4class, nGaussians, gsl_vector_get(x, 0), gsl_vector_get(x, 1));
-		break;
-		case OPF_ENSEMBLE: /* OPFensemble pruning */
+	break;
+	case OPF_ENSEMBLE: /* OPFensemble pruning */
 			g = va_arg(arg, Subgraph *);
 			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
 			int binary_optimization = va_arg(arg, int);
@@ -357,8 +426,8 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 				f = Evaluate(g, ensembleTrain, row, P->n, binary_optimization);
 			}
 			gsl_vector_free(row);
-		break;
-	    case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Contrastive Divergence */
+	break;
+	case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
 		    batch_size = va_arg(arg, int);
@@ -380,8 +449,8 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size);
 			
 			gsl_matrix_free(Param);
-	    break;
-	    case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Persistent Contrastive Divergence */
+	break;
+	case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Persistent Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
 		    batch_size = va_arg(arg, int);
@@ -403,8 +472,8 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			f = Evaluate(g, 2, L, Param, n_epochs, batch_size);
 			
 			gsl_matrix_free(Param);
-	    break;
-	    case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Fast Persistent Contrastive Divergence */
+	break;
+	case BBDBM_FPCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Fast Persistent Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
 		    n_epochs = va_arg(arg, int);
 		    batch_size = va_arg(arg, int);
@@ -428,7 +497,7 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 						
 			gsl_matrix_free(Param);
 		    gsl_vector_free(row);
-	    break;
+	break;
     }
     return f;
 }
@@ -454,7 +523,6 @@ void EvaluateNestPopulation(NestPopulation *P, prtFun Evaluate, int FUNCTION_ID,
 
 	P->best = gsl_vector_min_index(P->fitness);
 	P->best_fitness = gsl_vector_get(P->fitness, P->best);
-	fprintf(stderr,"Teste3\n");
 }
 
 /*It computes the Box-Muller Transform generating a vector whose elements are positives and belong to a normal distribution*/
