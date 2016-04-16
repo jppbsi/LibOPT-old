@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     int n_layers = atoi(argv[11]);
     double errorTRAIN, errorTEST;
     gsl_vector_view row;
-    gsl_vector *n_hidden_units = NULL;
+    gsl_vector *n_hidden_units = NULL, *p = NULL, *q = NULL;
     FILE *fp = NULL, *fpParameters = NULL;
     Dataset *DatasetTrain = NULL, *DatasetTest = NULL;
     DBN *d = NULL;
@@ -34,22 +34,25 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            runBA(B, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_CD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runBA(B, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_CD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
         case 2:
-            runBA(B, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_PCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runBA(B, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_PCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
         case 3:
-            runBA(B, Bernoulli_BernoulliDBN4Reconstruction, BBDBN_FPCD, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runBA(B, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_FPCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
     }   
     
     fprintf(stderr,"\nRunning DBN once more over the training set ... ");
     n_hidden_units = gsl_vector_alloc(n_layers);
+    p = gsl_vector_alloc(n_layers);
+    q = gsl_vector_alloc(n_layers);
+    
     j = 0;
     for(i = 0; i < n_layers; i++){
         gsl_vector_set(n_hidden_units, i, gsl_matrix_get(B->x, B->best, j));
-        j+=4;
+        j+=6;
     }
 
     d = CreateDBN(Train->nfeats, n_hidden_units, Train->nlabels, n_layers);
@@ -57,32 +60,36 @@ int main(int argc, char **argv){
     for(i = 0; i < d->n_layers; i++){
         d->m[i]->eta = gsl_matrix_get(B->x, B->best, j); j++;
         d->m[i]->lambda = gsl_matrix_get(B->x, B->best, j); j++;
-        d->m[i]->alpha = gsl_matrix_get(B->x, B->best, j); j+=2;
+        d->m[i]->alpha = gsl_matrix_get(B->x, B->best, j); j++;
+        gsl_vector_set(p, i, gsl_matrix_get(B->x, B->best, j)); j++;
+        gsl_vector_set(q, i, gsl_matrix_get(B->x, B->best, j)); j+=2;
         d->m[i]->eta_min = gsl_vector_get(B->LB, z);
         d->m[i]->eta_max = gsl_vector_get(B->UB, z);
-        z+=4;
+        z+=6;
     }
     
     switch (op){
         case 1:
-            errorTRAIN = BernoulliDBNTrainingbyContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
+            errorTRAIN = BernoulliDBNTrainingbyContrastiveDivergencewithDropout(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, p, q);
         break;
         case 2:
-            errorTRAIN = BernoulliDBNTrainingbyPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
+            errorTRAIN = BernoulliDBNTrainingbyPersistentContrastiveDivergencewithDropout(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, p, q);
         break;
         case 3:
-            errorTRAIN = BernoulliDBNTrainingbyFastPersistentContrastiveDivergence(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size);
+            errorTRAIN = BernoulliDBNTrainingbyFastPersistentContrastiveDivergencewithDropout(DatasetTrain, d, n_epochs, n_gibbs_sampling, batch_size, p, q);
         break;
     }
     fprintf(stderr,"\nOK\n");
     
     fprintf(stderr,"\nRunning DBN for reconstruction ... ");
-    errorTEST = BernoulliDBNReconstruction(DatasetTest, d);
+    errorTEST = BernoulliDBNReconstructionwithDropout(DatasetTest, d, p, q);
     fprintf(stderr,"\nOK\n");
         
     fp = fopen(argv[3], "a");
     fprintf(fp,"\n%d %lf %lf", iteration, errorTRAIN, errorTEST);
     fclose(fp);
+    
+    fprintf(stderr,"\nTraining Error: %lf \nTesting Error: %lf\n\n", errorTRAIN, errorTEST);
     
     fpParameters = fopen(argv[6], "a");
     fprintf(fpParameters,"%d ", B->n);
@@ -97,6 +104,8 @@ int main(int argc, char **argv){
     DestroySubgraph(&Test);
     DestroyDBN(&d);
     gsl_vector_free(n_hidden_units);
+    gsl_vector_free(p);
+    gsl_vector_free(q);
     
     return 0;
 }

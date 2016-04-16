@@ -380,6 +380,96 @@ void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 
 		gsl_matrix_free(Param);
 	break;
+	case BBDBN_CD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Contrastive Divergence */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+								
+		Param = gsl_matrix_alloc(L, 8);
+		for(i = 0; i < B->m; i++){
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 6; j++)
+					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=6;
+			}
+							
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+			gsl_vector_set(B->fitness, i, f);
+			if(f < B->best_fitness){
+				B->best = i;
+				B->best_fitness = f;
+			}
+		}
+
+		gsl_matrix_free(Param);
+	break;
+	case BBDBN_PCD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Persistent Contrastive Divergence */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+								
+		Param = gsl_matrix_alloc(L, 8);
+		for(i = 0; i < B->m; i++){
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 6; j++)
+					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=6;
+			}
+							
+			f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
+			gsl_vector_set(B->fitness, i, f);
+			if(f < B->best_fitness){
+				B->best = i;
+				B->best_fitness = f;
+			}
+		}
+
+		gsl_matrix_free(Param);
+	break;
+	case BBDBN_FPCD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Fast Persistent Contrastive Divergence */
+		g = va_arg(arg, Subgraph *);
+		n_epochs = va_arg(arg, int);
+		batch_size = va_arg(arg, int);
+		n_gibbs_sampling = va_arg(arg, int);
+		L = va_arg(arg, int);
+								
+		Param = gsl_matrix_alloc(L, 8);
+		for(i = 0; i < B->m; i++){
+				
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 6; j++)
+					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
+				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
+				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
+				z+=6;
+			}
+							
+			f = Evaluate(g, 3, L, Param, n_epochs, batch_size); 
+			gsl_vector_set(B->fitness, i, f);
+			if(f < B->best_fitness){
+				B->best = i;
+				B->best_fitness = f;
+			}
+		}
+
+		gsl_matrix_free(Param);
+	break;
     }
 }
 
@@ -488,6 +578,69 @@ double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va
 			}
 								
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+	
+			gsl_matrix_free(Param);
+			break;
+		case BBDBN_CD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Contrastive Divergence */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+									
+			Param = gsl_matrix_alloc(L, 8);
+	
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 6; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+				z+=6;
+			}
+								
+			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+	
+			gsl_matrix_free(Param);
+			break;
+		case BBDBN_PCD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Persistent Contrastive Divergence */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+									
+			Param = gsl_matrix_alloc(L, 8);
+	
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 6; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+				z+=6;
+			}
+								
+			f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
+	
+			gsl_matrix_free(Param);
+			break;
+		case BBDBN_FPCD_DROPOUT: /* Bernoulli_BernoulliDBN4Reconstruction with Dropout trained with Fast Persistent Contrastive Divergence */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+									
+			Param = gsl_matrix_alloc(L, 8);
+	
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 6; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+				z+=6;
+			}
+								
+			f = Evaluate(g, 3, L, Param, n_epochs, batch_size); 
 	
 			gsl_matrix_free(Param);
 			break;	
