@@ -690,7 +690,7 @@ void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
 			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, F->max_iterations);
 			va_copy(arg, argtmp);
 			
-			delta = (1 - 0.0001) / (pow(0.9, (1/F->max_iterations)));
+			delta = 1 - (0.0001 / (pow(0.9, (1/F->max_iterations))));
 			F->alpha = 1 - (delta * F->alpha);
 			
 			for(i = 0; i < F->m; i++)
@@ -1245,7 +1245,7 @@ void runQFFA(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
 			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, F->max_iterations);
 			va_copy(arg, argtmp);
 			
-			delta = (1 - 0.0001) / (pow(0.9, (1/F->max_iterations)));
+			delta = 1 - (0.0001 / (pow(0.9, (1/F->max_iterations))));
 			F->alpha = 1 - (delta * F->alpha);
 			
 			for(i = 0; i < F->m; i++)
