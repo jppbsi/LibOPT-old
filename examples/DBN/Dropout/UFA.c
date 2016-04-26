@@ -5,7 +5,7 @@
 int main(int argc, char **argv){
 
     if(argc != 12){
-        fprintf(stderr,"\nusage FFA <training set> <test set> <output results file name> <cross-validation iteration number> \
+        fprintf(stderr,"\nusage UFA <training set> <test set> <output results file name> <cross-validation iteration number> \
                 <firefly swarm configuration file> <output best parameters file name> <n_epochs> <batch_size> \
                 <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD> <number of DBN layers>\n");
         exit(-1);
@@ -34,13 +34,13 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            runFFA(F, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_CD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runUFA(F, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_CD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
         case 2:
-            runFFA(F, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_PCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runUFA(F, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_PCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
         case 3:
-            runFFA(F, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_FPCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
+            runUFA(F, Bernoulli_BernoulliDBN4ReconstructionwithDropout, BBDBN_FPCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling, n_layers);
         break;
     }   
     

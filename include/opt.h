@@ -59,7 +59,7 @@ extern "C" {
 #define MBO 4 /* Migrating Birds Optimization */
 #define GRADIENT_DESCENT 5 /* Gradient Descent */
 #define PSO 6 /* Particle Swarm Optimization */
-#define FFA 7 /* Firefly Algorithm */
+#define UFA 7 /* Uniform Firefly Algorithm */
 #define GA 8 /* Genetic Algorithm */
 #define QHS 9 /* Quaternion-based Harmony Search */
 #define CS 10 /* Cuckoo Search */
@@ -68,6 +68,7 @@ extern "C" {
 #define QIHS 13 /* Quaternion-based Improved Harmony Search */
 #define QGHS 14 /* Quaternion-based Global-best Harmony Search */
 #define QSGHS 15 /* Quaternion-based Self-Adaptative Global-best Harmony Search */
+#define QUFA 16 /* Quaternion-based Uniform Firefly Algorithm */
 /*****************************************************************/
     
 #include <stdio.h>
@@ -101,7 +102,7 @@ typedef gsl_vector *(*prtFun2)(Subgraph *, ...);
 #include "mbo.h"
 #include "numerical.h"
 #include "pso.h"
-#include "ffa.h"
+#include "fa.h"
 #include "ga.h"
 #include "cs.h"
 #include "wca.h"

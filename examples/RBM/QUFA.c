@@ -5,7 +5,7 @@
 int main(int argc, char **argv){
 
     if(argc != 11){
-        fprintf(stderr,"\nusage QFFA <training set> <test set> <output results file name> <cross-validation iteration number> \
+        fprintf(stderr,"\nusage QUFA <training set> <test set> <output results file name> <cross-validation iteration number> \
                 <firefly swarm configuration file> <output best parameters file name> <n_epochs> <batch_size> \
                 <number of iterations for Constrastive Divergence> <1 - CD | 2 - PCD | 3 - FPCD>\n");
         exit(-1);
@@ -35,13 +35,13 @@ int main(int argc, char **argv){
     
     switch (op){
         case 1:
-            runQFFA(F, Bernoulli_BernoulliRBM4ReconstructionwithDropout, BBRBM_CD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
+            runQUFA(F, Bernoulli_BernoulliRBM4ReconstructionwithDropout, BBRBM_CD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
         break;
         case 2:
-            runQFFA(F, Bernoulli_BernoulliRBMbyPersistentContrastiveDivergencewithDropout, BBRBM_PCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
+            runQUFA(F, Bernoulli_BernoulliRBMbyPersistentContrastiveDivergencewithDropout, BBRBM_PCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
         break;
         case 3:
-            runQFFA(F, Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergencewithDropout, BBRBM_FPCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
+            runQUFA(F, Bernoulli_BernoulliRBMbyFastPersistentContrastiveDivergencewithDropout, BBRBM_FPCD_DROPOUT, Train, n_epochs, batch_size, n_gibbs_sampling);
         break;
     }
     

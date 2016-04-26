@@ -1,4 +1,4 @@
-#include "ffa.h"
+#include "fa.h"
 
 /* It allocates the FireflySwarm --
 Parameters: [m,n]
@@ -625,7 +625,7 @@ void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
     gsl_rng_env_setup();
     T = gsl_rng_default;
     r = gsl_rng_alloc(T);
-    gsl_rng_set(r, rand());
+    gsl_rng_set(r, random_seed_deep());
     
     for(i = 0; i < F->m; i++){
         if(gsl_vector_get(F->fitness, firefly_id) > gsl_vector_get(F->fitness, i)){ /* It moves firefly firefly_id towards i */
@@ -634,7 +634,8 @@ void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
             dist = opt_EuclideanDistance(&row1.vector, &row2.vector);
 	    dist *= dist;
             beta = F->beta_0*exp(-F->gamma*dist); /* It obtains attractiveness by Equation 2 */
-            aux = gsl_rng_uniform(r);
+	    aux = gsl_rng_uniform(r);
+	    aux = 2 * (aux - 0.5);
             for(j = 0; j < F->n; j++){
                 tmp = gsl_matrix_get(F->x, firefly_id, j) + beta * (gsl_matrix_get(F->x, i, j) - gsl_matrix_get(F->x, firefly_id, j)) + (F->alpha * aux);
                 gsl_matrix_set(F->x, firefly_id, j, tmp);
@@ -658,9 +659,10 @@ void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id){
     gsl_rng_env_setup();
     T = gsl_rng_default;
     r = gsl_rng_alloc(T);
-    gsl_rng_set(r, rand());
+    gsl_rng_set(r, random_seed_deep());
     
     aux = gsl_rng_uniform(r);
+    aux = 2 * (aux - 0.5);
     for(j = 0; j < F->n; j++){
         tmp = gsl_matrix_get(F->x, best_firefly_id, j)+(F->alpha*aux);
         gsl_matrix_set(F->x, best_firefly_id, j, tmp);
@@ -669,13 +671,13 @@ void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id){
     
 }
 
-/* It executes the Firefly Algorithm for function minimization ---
+/* It executes the Uniform Firefly Algorithm for function minimization ---
 Parameters: [F, EvaluateFun, FUNCTION_ID, ... ]
 F: search space
 Evaluate: pointer to the function used to evaluate fireflies
 FUNCTION_ID: id of the function registered at opt.h
 ... other parameters of the desired function */
-void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
+void runUFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
 	double delta;
 	va_list arg, argtmp;
 		    
@@ -1224,13 +1226,13 @@ void EvaluateQFireflySwarm(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, v
 	free(column);
 }
 
-/* It executes the quaternion-based Firefly Algorithm for function minimization ---
+/* It executes the quaternion-based Uniform Firefly Algorithm for function minimization ---
 Parameters: [F, EvaluateFun, FUNCTION_ID, ... ]
 F: search space
 Evaluate: pointer to the function used to evaluate fireflies
 FUNCTION_ID: id of the function registered at opt.h
 ... other parameters of the desired function */
-void runQFFA(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
+void runQUFA(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
 	double delta;
 	va_list arg, argtmp;
 		    

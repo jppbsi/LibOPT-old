@@ -1,5 +1,5 @@
-#ifndef FFA_H
-#define FFA_H
+#ifndef FA_H
+#define FA_H
 
 #include "opt.h"
 
@@ -49,7 +49,7 @@ void ShowFireflySwarmInformation(FireflySwarm *F); /* It displays the search spa
 void UpdateFireflyPosition(FireflySwarm *F, int firefly_id); /* It updates the position of each firefly */
 void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id); /* It updates the position of the best firefly */
 void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all fireflies */
-void runFFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Firefly Algorithm for function minimization */
+void runUFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Uniform Firefly Algorithm for function minimization */
 
 /* Quaternion-based Firefly Algorithm */
 QFireflySwarm *CreateQFireflySwarm(int m, int n); /*It allocates the quaternion-based search space */
@@ -61,6 +61,6 @@ void ShowQFireflySwarm(QFireflySwarm *F); /* It displays the quaternion-based se
 void UpdateQFireflyPosition(QFireflySwarm *F, int firefly_id); /* It updates the position of each quaternion-based firefly */
 void UpdateBestQFireflyPosition(QFireflySwarm *F, int best_firefly_id); /* It updates the position of the best quaternion-based firefly */
 void EvaluateQFireflySwarm(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all quaternion-based fireflies */
-void runQFFA(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the quaternion-based Firefly Algorithm for function minimization */
+void runQUFA(QFireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the quaternion-based Uniform Firefly Algorithm for function minimization */
 
 #endif

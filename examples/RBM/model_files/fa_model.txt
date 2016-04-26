@@ -1,4 +1,4 @@
-5 6 10 #<n_fireflies> <dimension> <max_iterations>
+3 6 2 #<n_fireflies> <dimension> <max_iterations>
 1 1 0.2 #<gamma> <beta> <alpha>
 100 100 #<LB> <UB> number of hidden units
 0.1 0.1 #<LB> <UB> learning rate

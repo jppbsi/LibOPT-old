@@ -23,7 +23,7 @@ $(OBJ)/mbo.o \
 $(OBJ)/util.o \
 $(OBJ)/numerical.o \
 $(OBJ)/pso.o \
-$(OBJ)/ffa.o \
+$(OBJ)/fa.o \
 $(OBJ)/ga.o \
 $(OBJ)/cs.o \
 $(OBJ)/wca.o \
@@ -38,7 +38,7 @@ $(OBJ)/mbo.o \
 $(OBJ)/util.o \
 $(OBJ)/numerical.o \
 $(OBJ)/pso.o \
-$(OBJ)/ffa.o \
+$(OBJ)/fa.o \
 $(OBJ)/ga.o \
 $(OBJ)/cs.o \
 $(OBJ)/wca.o \
@@ -76,9 +76,9 @@ $(OBJ)/pso.o: $(SRC)/pso.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
     -c $(SRC)/pso.c -o $(OBJ)/pso.o
 
-$(OBJ)/ffa.o: $(SRC)/ffa.c
+$(OBJ)/fa.o: $(SRC)/fa.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
-    -c $(SRC)/ffa.c -o $(OBJ)/ffa.o
+    -c $(SRC)/fa.c -o $(OBJ)/fa.o
 
 $(OBJ)/ga.o: $(SRC)/ga.c
 	$(CC) $(FLAGS) -I $(INCLUDE) -I $(OPF_DIR)/include -I $(OPF_DIR)/include/util -I $(LIBDEEP_DIR)/include -I /usr/local/include \
