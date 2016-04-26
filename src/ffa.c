@@ -886,7 +886,7 @@ void UpdateQFireflyPosition(QFireflySwarm *F, int firefly_id){
 	double beta, tmp, dist, aux;
 	double E = 0.01;
 	int i, j, z;
-	gsl_vector *row1 = NULL, *row2 = NULL, *q = NULL;
+	gsl_vector *q = NULL;
 	gsl_vector_view *column = NULL, *column2 = NULL;
 	const gsl_rng_type *T = NULL;
 	gsl_rng *r = NULL;

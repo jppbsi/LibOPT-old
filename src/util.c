@@ -1574,7 +1574,9 @@ gsl_vector *QRand(gsl_vector *q){
         tmp = gsl_rng_uniform(r);
         gsl_vector_set(q, i, tmp);
     }
-        
+    
+    gsl_rng_free(r);
+    
     return q;
 }
 
