@@ -87,6 +87,7 @@ double FeatureSelection(Subgraph *g, ...); /* It executes Feature Selection opti
 
 /* Quaternion */
 double QNorm(gsl_vector *q); /* It computes the norm of a given quaternion */
+gsl_vector *QRand(gsl_vector *q); /* It computes a random quaternion vector */
 double Span(double L, double U, gsl_vector *q); /* It maps the quaternion value to a real one bounded by [L,U] */
 
 /*****************/

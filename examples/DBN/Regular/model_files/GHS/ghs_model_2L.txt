@@ -1,0 +1,13 @@
+5 8 10 #<n_harmonies> <dimension> <max_iterations>
+0.7 0.0 #<HMCR> <HMCRm>
+0 0.1 0.7 0.0 #<PAR> <PAR_min> <PAR_max> <PARm>
+0 0 0 #<bw> <bw_MIN> <bw_max>
+0.0 0.0 #<LP> <pm>
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum

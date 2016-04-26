@@ -1,0 +1,16 @@
+5 12 10 #<n_particles> <dimension> <max_iterations>
+1.7 1.7 # <alpha> <gamma>
+0.7 0.5 #<f_min> <f_max>
+0.7 0.5 #<A_min> <A_max>
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum

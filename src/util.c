@@ -1550,6 +1550,34 @@ double QNorm(gsl_vector *q){
     return norm;
 }
 
+/* It computes a random quaternion vector
+Parameters:
+q: vector with x0, x1, x2 and x3 values*/
+gsl_vector *QRand(gsl_vector *q){
+    int i;
+    double tmp;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r = NULL;
+    
+    srand(time(NULL));
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+    gsl_rng_set(r, rand());
+    
+    if(q->size != 4){
+        fprintf(stderr,"\nA quaternion needs four coefficients @QRand");
+	return 0;
+    }
+    
+    for (i = 0; i < 4; i++) {
+        tmp = gsl_rng_uniform(r);
+        gsl_vector_set(q, i, tmp);
+    }
+        
+    return q;
+}
+
 /* it maps the quaternion value to a real one bounded by [L,U]
 Parameters:
 L: lower bound

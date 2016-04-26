@@ -1,0 +1,10 @@
+5 8 10 #<n_birds> <dimension> <max_iterations>
+5 2 1 #<k> <X> <M>
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
+100 100 #<LB> <UB> number of hidden units
+0.1 0.1 #<LB> <UB> learning rate
+0.0002 0.0002 #<LB> <UB> weight decay
+0.5 0.5 #<LB> <UB> momentum
