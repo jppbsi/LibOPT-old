@@ -37,10 +37,11 @@ Bats *ReadBatsFromFile(char *fileName); /* Tt creates a search space specified i
 Bats *CopyBats(Bats *B); /* It copies an entire search space */
 
 /* Auxiliary functions */
-void CheckBatsLimits(Bats *H); /* it checks the limits of each decision variable */
+void CheckBatsLimits(Bats *B); /* it checks the limits of each decision variable */
+void CheckNewSolutionLimits(Bats *B, gsl_vector *tmp); /* it checks the limits of the new solution discovered */
 void InitializeBats(Bats *B); /* it initializes the search space */
-void ShowBats(Bats *H); /* It displays the search space's content */
-void ShowBatsInformation(Bats *H); /* It displays the search space's main information */
+void ShowBats(Bats *B); /* It displays the search space's content */
+void ShowBatsInformation(Bats *B); /* It displays the search space's main information */
 
 /* Main algorithm */
 void SetBatFrequency(Bats *B, int bat_id); /* It sets the frequency of each bat */

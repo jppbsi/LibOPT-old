@@ -141,6 +141,20 @@ void CheckBatsLimits(Bats *B){
 	}else fprintf(stderr,"\nThere is no search space allocated @CheckLimits.\n");	
 }
 
+/* it checks the limits of the new solution discovered ---
+Parameters: [h]
+B: search space */
+void CheckNewSolutionLimits(Bats *B, gsl_vector *tmp){
+	int i;
+	
+	if(tmp){
+		for(i = 0; i < tmp->size; i++){
+			if(gsl_vector_get(tmp, i) < gsl_vector_get(B->LB, i)) gsl_vector_set(tmp, i, gsl_vector_get(B->LB, i));
+			else if (gsl_vector_get(tmp, i) > gsl_vector_get(B->UB, i)) gsl_vector_set(tmp, i, gsl_vector_get(B->UB, i));
+		}
+	}else fprintf(stderr,"\nThere is no search space allocated @CheckNewSolutionLimits.\n");	
+}
+
 /* It displays the search space's content ---
 Parameters: [B]
 B: harmony memory */
@@ -350,7 +364,7 @@ void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
             }
             B->mean_A/=B->m; /* it updates the mean loudness */
         break;
-	case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction */
+	case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
 		g = va_arg(arg, Subgraph *);
 		n_epochs = va_arg(arg, int);
 		batch_size = va_arg(arg, int);
@@ -371,96 +385,6 @@ void EvaluateBats(Bats *B, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			}
 							
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
-			gsl_vector_set(B->fitness, i, f);
-			if(f < B->best_fitness){
-				B->best = i;
-				B->best_fitness = f;
-			}
-		}
-
-		gsl_matrix_free(Param);
-	break;
-	case BBDBN_PCD: /* Bernoulli_BernoulliDBN4Reconstruction trained with Persistent Contrastive Divergence */
-		g = va_arg(arg, Subgraph *);
-		n_epochs = va_arg(arg, int);
-		batch_size = va_arg(arg, int);
-		n_gibbs_sampling = va_arg(arg, int);
-		L = va_arg(arg, int);
-								
-		Param = gsl_matrix_alloc(L, 6);
-		for(i = 0; i < B->m; i++){
-				
-			/* setting Param matrix */
-			z = 0;
-			for(l = 0; l < L; l++){
-				for(j = 0; j < 4; j++)
-					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
-				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
-				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
-				z+=4;
-			}
-							
-			f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
-			gsl_vector_set(B->fitness, i, f);
-			if(f < B->best_fitness){
-				B->best = i;
-				B->best_fitness = f;
-			}
-		}
-
-		gsl_matrix_free(Param);
-	break;
-	case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained by Contrastive Divergence */
-		g = va_arg(arg, Subgraph *);
-		n_epochs = va_arg(arg, int);
-		batch_size = va_arg(arg, int);
-		n_gibbs_sampling = va_arg(arg, int);
-		L = va_arg(arg, int);
-								
-		Param = gsl_matrix_alloc(L, 6);
-		for(i = 0; i < B->m; i++){
-				
-			/* setting Param matrix */
-			z = 0;
-			for(l = 0; l < L; l++){
-				for(j = 0; j < 4; j++)
-					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
-				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
-				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
-				z+=4;
-			}
-							
-			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
-			gsl_vector_set(B->fitness, i, f);
-			if(f < B->best_fitness){
-				B->best = i;
-				B->best_fitness = f;
-			}
-		}
-
-		gsl_matrix_free(Param);
-	break;
-	case BBDBM_PCD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Persistent Contrastive Divergence */
-		g = va_arg(arg, Subgraph *);
-		n_epochs = va_arg(arg, int);
-		batch_size = va_arg(arg, int);
-		n_gibbs_sampling = va_arg(arg, int);
-		L = va_arg(arg, int);
-								
-		Param = gsl_matrix_alloc(L, 6);
-		for(i = 0; i < B->m; i++){
-				
-			/* setting Param matrix */
-			z = 0;
-			for(l = 0; l < L; l++){
-				for(j = 0; j < 4; j++)
-					gsl_matrix_set(Param, l, j, gsl_matrix_get(B->x, i, j+z));
-				gsl_matrix_set(Param, l, j++, gsl_vector_get(B->LB, z+1)); // setting up eta_min 
-				gsl_matrix_set(Param, l, j, gsl_vector_get(B->UB, z+1)); // setting up eta_max
-				z+=4;
-			}
-							
-			f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
 			gsl_vector_set(B->fitness, i, f);
 			if(f < B->best_fitness){
 				B->best = i;
@@ -650,7 +574,7 @@ double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va
 			
 			f = Evaluate(g, gsl_vector_get(tmp, 0), gsl_vector_get(tmp, 1), gsl_vector_get(tmp, 2), gsl_vector_get(tmp, 3), gsl_vector_get(tmp, 4), gsl_vector_get(tmp, 5), n_epochs, batch_size, n_gibbs_sampling); 
 			break;
-		case 6: /* Bernoulli_BernoulliDBN4Reconstruction */
+		case BBDBN_CD: /* Bernoulli_BernoulliDBN4Reconstruction */
 			g = va_arg(arg, Subgraph *);
 			n_epochs = va_arg(arg, int);
 			batch_size = va_arg(arg, int);
@@ -668,6 +592,48 @@ double EvaluateNewSolution(gsl_vector *tmp, prtFun Evaluate, int FUNCTION_ID, va
 			}
 								
 			f = Evaluate(g, 1, L, Param, n_epochs, batch_size); 
+	
+			gsl_matrix_free(Param);
+			break;
+		case BBDBN_PCD: /* Bernoulli_BernoulliDBN4Reconstruction */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+									
+			Param = gsl_matrix_alloc(L, 6);
+	
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+				z+=4;
+			}
+								
+			f = Evaluate(g, 2, L, Param, n_epochs, batch_size); 
+	
+			gsl_matrix_free(Param);
+			break;
+		case BBDBN_FPCD: /* Bernoulli_BernoulliDBN4Reconstruction */
+			g = va_arg(arg, Subgraph *);
+			n_epochs = va_arg(arg, int);
+			batch_size = va_arg(arg, int);
+			n_gibbs_sampling = va_arg(arg, int);
+			L = va_arg(arg, int);
+									
+			Param = gsl_matrix_alloc(L, 6);
+	
+			/* setting Param matrix */
+			z = 0;
+			for(l = 0; l < L; l++){
+				for(j = 0; j < 4; j++)
+					gsl_matrix_set(Param, l, j, gsl_vector_get(tmp, j+z));
+				z+=4;
+			}
+								
+			f = Evaluate(g, 3, L, Param, n_epochs, batch_size); 
 	
 			gsl_matrix_free(Param);
 			break;
@@ -834,7 +800,8 @@ void runBA(Bats *B, prtFun Evaluate, int FUNCTION_ID, ...){
 				prob = gsl_rng_uniform(r);
 				if(prob > gsl_vector_get(B->r, i))
 					GenerateLocalSolutionNearBest(B, B->best, tmp); /* Equation 4 */
-
+				CheckNewSolutionLimits(B, tmp);
+				
 				f = EvaluateNewSolution(tmp, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
 				prob = gsl_rng_uniform(r);
 				if((f <= gsl_vector_get(B->fitness, i)) && (prob < gsl_vector_get(B->A, i))){ /* it updates if the new solution improves the old one */
