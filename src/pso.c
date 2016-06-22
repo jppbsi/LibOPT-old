@@ -175,6 +175,34 @@ void InitializeSwarm(Swarm *S){
 	}else fprintf(stderr,"\nThere is no search space allocated @InitializeSwarm.\n");		
 }
 
+/* It initializes the search space ---
+Parameters: [S]
+S: search space */
+void InitializeSwarm4Binary(Swarm *S){
+	if(S){
+		int i, j;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p;
+		
+		srand(time(NULL));
+		gsl_rng_env_setup();
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, rand());
+		
+		for(i = 0; i < S->m; i++){
+			for(j = 0; j < S->n; j++){
+				p = gsl_rng_uniform_int(r, (int)gsl_vector_get(S->UB, j)+1);
+				gsl_matrix_set(S->x, i, j, p); gsl_matrix_set(S->y, i, j, p);
+			}
+			gsl_vector_set(S->fitness, i, DBL_MAX);
+		}
+		
+		gsl_rng_free(r);	
+	}else fprintf(stderr,"\nThere is no search space allocated @InitializeSwarm.\n");		
+}
+
 /* It displays the swarm's content ---
 Parameters: [S]
 S: swarm */
@@ -793,8 +821,11 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
 			int binary_optimization = va_arg(arg, int);
 			row = gsl_vector_alloc(S->n);
-		
+			
+			int var_aux = 0;//remover
+				
 			for(i = 0; i < S->m; i++){
+			    for(var_aux = 0; var_aux < S->m; var_aux++) fprintf(stdout,"\n........%f", gsl_matrix_get(S->x, i, var_aux)); fflush(stdout);// remover
 				gsl_matrix_get_row(row, S->x, i);
 				f = Evaluate(g, ensembleTrain, row, S->n, binary_optimization);
 								
@@ -858,6 +889,42 @@ void UpdateParticlePosition(Swarm *S, int particle_id){
         gsl_matrix_set(S->x, particle_id, j, tmp);
     }    
 }
+
+
+/* It updates the position of each particle for binary value ---
+Parameters: [S, particle_id]
+S: search space
+particle_id: particle's index
+*/ 
+
+void UpdateParticlePosition4binary(Swarm *S, int particle_id){
+    double tmp, r1, sig, exp_value;
+    int j;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r = NULL;
+
+    srand(time(NULL));
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+    gsl_rng_set(r, rand());
+    
+    for(j = 0; j < S->n; j++){
+    
+        r1 = gsl_rng_uniform(r);
+        
+        exp_value = exp((double) - gsl_matrix_get(S->v, particle_id, j));
+        sig = 1 / (1 + exp_value);
+        if(r1 >= sig) tmp = 0;
+        else tmp = 1;
+
+        gsl_matrix_set(S->x, particle_id, j, tmp);
+        fprintf(stdout, " ## tmp: %f // sig: %f // r1: %f ", tmp, sig, r1); fflush(stdout); //remover
+    }
+    gsl_rng_free(r);
+}
+
+
 
 /* It computes the success of each particle at iteration t  - AIWPSO 
 Parameters: [S]
@@ -931,6 +998,67 @@ void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
     }else fprintf(stderr,"\nThere is no search space allocated @runPSO.\n");
     va_end(arg);
 }
+
+
+
+
+/* It executes the Particle Swarm Optimization for function minimization ---
+Parameters: [S, EvaluateFun, FUNCTION_ID, ... ]
+S: search space
+Evaluate: pointer to the function used to evaluate particles
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function 
+
+The BPSO algorithm was introduced by Kennedy and Eberhart:
+Eberhart RC. A discrete binary version of the particle swarm algorithm.
+In: Proceedings of 1997 conference systems man cybernetics,
+NJ: Piscataway; 1997. p. 4104–8.
+
+*/
+void runBPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
+    va_list arg, argtmp;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r;
+    double p;
+    		
+    va_start(arg, FUNCTION_ID);
+    va_copy(argtmp, arg);
+    if(S){
+        int t, i;
+        double beta, prob;
+        const gsl_rng_type *T = NULL;
+        gsl_rng *r = NULL;
+                    
+        srand(time(NULL));
+        gsl_rng_env_setup();
+        T = gsl_rng_default;
+        r = gsl_rng_alloc(T);
+        gsl_rng_set(r, rand());
+	        
+        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg);
+        
+        for(t = 1; t <= S->max_iterations; t++){
+		fprintf(stderr,"\nRunning iteration %d/%d ... ", t, S->max_iterations);
+		va_copy(arg, argtmp);
+		
+		/* for each particle */
+		for(i = 0; i < S->m; i++){
+		    UpdateParticleVelocity(S, i);
+		    UpdateParticlePosition4binary(S, i);
+		}    
+		CheckSwarmLimits(S);	
+	        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
+	        fprintf(stderr, "OK (minimum fitness value %lf)", S->best_fitness);
+        }
+        gsl_rng_free(r);
+        
+    }else fprintf(stderr,"\nThere is no search space allocated @runPSO.\n");
+    va_end(arg);
+}
+
+
+
+
 
 /* It executes the Particle Swarm Optimization with Adpative Inertia Weight for function minimization for function minimization ---
 Parameters: [S, EvaluateFun, FUNCTION_ID, ... ]

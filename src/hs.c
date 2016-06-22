@@ -172,7 +172,7 @@ void InitializeHarmonyMemory(HarmonyMemory *H){
 /* It initializes the harmony memory ---
 Parameters: [H]
 H: harmony memory */
-void InitializeHarmonyMemory_Binary(HarmonyMemory *H){
+void InitializeHarmonyMemory4Binary(HarmonyMemory *H){
 	if(H){
 		int i, j;
 		const gsl_rng_type *T;
@@ -789,7 +789,7 @@ gsl_vector *CreateNewHarmony(HarmonyMemory *H){
 /* It creates a new binary harmony
 Parameters: [H]
 H: harmony memory */
-gsl_vector *CreateNewHarmony_Binary(HarmonyMemory *H){
+gsl_vector *CreateNewHarmony4Binary(HarmonyMemory *H){
 	if(H){
 		int i, index;
 		gsl_vector *h = NULL;
@@ -1625,7 +1625,7 @@ H: search space
 EvaluateFun: pointer to the function used to evaluate bats
 FUNCTION_ID: id of the function registered at opt.h
 ... other parameters of the desired function */
-void runHS_binary(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
+void runBHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
 	va_list arg, argtmp;
     va_start(arg, FUNCTION_ID);
     va_copy(argtmp, arg);
@@ -1645,7 +1645,7 @@ void runHS_binary(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
 			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, H->max_iterations);
 			va_copy(arg, argtmp);
 			
-			h = CreateNewHarmony_Binary(H);
+			h = CreateNewHarmony4Binary(H);
 			EvaluateNewHarmony(H, h, EvaluateFun, FUNCTION_ID, arg);
 			gsl_vector_free(h);
 						

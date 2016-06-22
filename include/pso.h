@@ -28,6 +28,7 @@ typedef struct _Swarm{
 
 /* Allocation and deallocation */
 Swarm *CreateSwarm(int m, int n); /*It allocates the search space */
+Swarm *CreateSwarm_Binary(int m, int n); /*It allocates the search space in binary*/
 void DestroySwarm(Swarm **S); /* It deallocates the search space */
 Swarm *ReadSwarmFromFile(char *fileName); /* Tt creates a search space specified in a file */
 Swarm *CopySwarm(Swarm *S); /* It copies an entire search space */
@@ -35,6 +36,7 @@ Swarm *CopySwarm(Swarm *S); /* It copies an entire search space */
 /* Auxiliary functions */
 void CheckSwarmLimits(Swarm *S); /* it checks the limits of each decision variable */
 void InitializeSwarm(Swarm *S); /* it initializes the search space */
+void InitializeSwarm4Binary(Swarm *S); /* it initializes the search space in binary*/
 void ShowSwarm(Swarm *S); /* It displays the search space's content */
 void ShowSwarmInformation(Swarm *S); /* It displays the search space's main information */
 void ComputeSuccess(Swarm *S); /* It computes the success of each particle at iteration t  - AIWPSO */
@@ -45,6 +47,7 @@ void UpdateParticleVelocity(Swarm *S, int particle_id); /* It updates the veloci
 void UpdateParticlePosition(Swarm *S, int particle_id); /* It updates the position of each particle */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all particles */
 void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Particle Swarm Optimization for function minimization */
+void runBPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Binary Particle Swarm Optimization for function minimization*/
 void runAIWPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Particle Swarm Optimization with Adpative Inertia Weight for function minimization */
 
 #endif

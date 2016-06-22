@@ -79,7 +79,7 @@ HarmonyMemory *ReadHarmoniesFromFile(char *fileName); /* it creates a harmony me
 
 /* Auxiliary functions */
 void InitializeHarmonyMemory(HarmonyMemory *H); /* it initializes the harmony memory */
-void InitializeHarmonyMemory_Binary(HarmonyMemory *H); /* it initializes the harmony memory in binary */
+void InitializeHarmonyMemory4Binary(HarmonyMemory *H); /* it initializes the harmony memory in binary */
 void InitializeHarmonyMemoryFromDatasetSamples4Kmeans(HarmonyMemory *H, Subgraph *g); /* It initializes the harmony memory with random dataset samples for k-Means algorithm */
 void ShowHarmonyMemory(HarmonyMemory *H); /* It displays the harmomy memory's content */
 void ShowHarmonyMemoryInformation(HarmonyMemory *H); /* It displays the harmomy memory's main information */
@@ -88,7 +88,7 @@ void UpdateIndividualHMCR_PAR(HarmonyMemory *H); /* It updates the individual va
 
 /* Main algorithm */
 gsl_vector *CreateNewHarmony(HarmonyMemory *H); /* It creates a new harmony */
-gsl_vector *CreateNewHarmony_Binary(HarmonyMemory *H); /* It creates a new harmony in binary */
+gsl_vector *CreateNewHarmony4Binary(HarmonyMemory *H); /* It creates a new harmony in binary */
 gsl_vector *CreateNewHarmony4GHS(HarmonyMemory *H);  /* It creates a new harmony for GHS  */
 gsl_vector *CreateNewHarmony4NGHS(HarmonyMemory *H);  /* It creates a new harmony for NGHS  */
 gsl_vector *CreateNewHarmony4SGHS(HarmonyMemory *H);  /* It creates a new harmony for SGHS  */
@@ -96,7 +96,7 @@ gsl_vector *CreateNewHarmony4PSF_HS(HarmonyMemory *H); /* It creates a new harmo
 void EvaluateNewHarmony(HarmonyMemory *H, gsl_vector *h, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates the new harmony and updates the harmony memory */
 void EvaluateHarmonies(HarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all harmonies */
 void runHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the Harmony Memory for function minimization */
-void runHS_binary(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the a Binary Harmony Search for function minimization */
+void runBHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the a Binary Harmony Search for function minimization */
 void runIHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...); /* It executes the Improved Harmony Memory for function minimization */
 void runGHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...);  /* It executes the Global-best Harmony Memory for function minimization */
 void runSGHS(HarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...);  /* It executes the Self-adaptative Global-best Harmony Memory for function minimization */

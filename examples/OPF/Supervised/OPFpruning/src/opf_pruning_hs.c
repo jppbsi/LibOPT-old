@@ -124,7 +124,7 @@ int main(int argc, char **argv){
 	ShowHarmonyMemoryInformation(H);
 	
 	fprintf(stderr,"\nInitializing harmony memory ... ");
-	if(binary_optimization) InitializeHarmonyMemory_Binary(H);
+	if(binary_optimization) InitializeHarmonyMemory4Binary(H);
 	else InitializeHarmonyMemory(H);
 	fprintf(stderr,"\nOK\n");
 
@@ -203,7 +203,7 @@ int main(int argc, char **argv){
 	
 	fprintf(stdout, "\nOptimizing OPFpruning using HS ... \n\n"); fflush(stdout);
 	gettimeofday(&tic,NULL);
-	if(binary_optimization) runHS_binary(H, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
+	if(binary_optimization) runBHS(H, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
 	else runHS(H, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
 	gettimeofday(&toc,NULL);
 	fprintf(stdout, " OK"); fflush(stdout);

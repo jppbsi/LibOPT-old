@@ -16,9 +16,9 @@ void help_usage()
 {
 
 fprintf(stderr, 
-"\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
+"\nusage opf_pruning [options] training_file test_file\n\
 Options:\n\
-   -p [required] (parameters): define path of parameters file to use in Firefly Algorithm approach.\n\
+   -p [required] (parameters): define path of parameters file to use all ensemble (pso_model_file).\n\
    -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
@@ -26,14 +26,14 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0;
+	int i,j, qtd_labels=0, ntraining = 0, *poll_label = NULL;
 	float time;
 	float Acc;
-	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0;
+	double *psi = NULL;
 	char fileName[256]; 
 	FILE *f = NULL, *fParameters = NULL;
 	timer tic, toc;
-	FireflySwarm *P = NULL;
+	Swarm *S = NULL;
 
     // parse options
 	for(i=1;i<argc;i++)
@@ -43,11 +43,11 @@ int main(int argc, char **argv){
 		switch(argv[i-1][1])
 		{
 			case 'p':
-				fprintf(stdout, "\nLoading Firefly parameters file [%s] ...", argv[i]); fflush(stdout);
-				P = ReadFireflySwarmFromFile(argv[i]);
+				fprintf(stdout, "\nLoading Swarm parameters file [%s] ...", argv[i]); fflush(stdout);
+				S = ReadSwarmFromFile(argv[i]);
 				fprintf(stdout, " OK"); fflush(stdout);
 				
-				ntraining = P->n; // n subset for ensemble-based approach
+				ntraining = S->n; // n subset for ensemble-based approach
 				if(ntraining < 2){
 					printf("\n*** Dimension in parameters file must be greater than 1 ***\n");
 					help_usage();
@@ -65,12 +65,12 @@ int main(int argc, char **argv){
 		}
 	}
 
-    if((i>=argc-1) || (argc < 4)){
+    if((i>=argc-1) || (argc < 3)){
         info();
 		help_usage();
     }
     
-	if(!P){
+	if(!S){
 		printf("\n*** Parameter files required! ***\n");
         info();
 		help_usage();
@@ -92,24 +92,17 @@ int main(int argc, char **argv){
     }
 
     //ID argv in input files
-    int train_set = 0, eval_set = 0, test_set = 0;
+    int train_set = 0, test_set = 0;
     
-    if(j == argc - 2){
-        printf("\n*** Required training, evaluation and testing files! ***\n");
+    if(j == argc - 1){
+        printf("\n*** Required training and testing files! ***\n");
         help_usage();
     }
 	else
-		train_set = j, eval_set = j+1, test_set = j+2;
+		train_set = j, test_set = j+1;
     
-	/*----------- Initializing optimization approach ---------------------*/
 	
-	ShowFireflySwarmInformation(P);
-	
-	fprintf(stderr,"\nInitializing optimization approach ... ");
-	InitializeFireflySwarm(P);
-	fprintf(stderr,"\nOK\n");
-
-	psi = (double *)calloc((P->n),sizeof(double));
+	psi = (double *)calloc((S->n),sizeof(double));
 	
 	/*--------- Training section  -------------------------------------*/
     Subgraph **gTrain = (Subgraph **)calloc((ntraining),sizeof(Subgraph *));
@@ -174,71 +167,22 @@ int main(int argc, char **argv){
 	f = fopen(fileName,"a");
 	fprintf(f,"%f\n",time);
 	fclose(f);
- 
- 
-	/*--------- Optimization section  -------------------------------------*/
+ 	
+	//Set all ensemble to testing phase
+ 	for(i = 0; i< S->n; i++) psi[i] = 1;
 	
-	fprintf(stdout, "\nReading evaluation set [%s] ...", argv[eval_set]); fflush(stdout);
-	Subgraph *gEval = ReadSubgraph(argv[eval_set]);
-	fprintf(stdout, " OK"); fflush(stdout);
-	
-	int binary_optimization = 0; // For binary HS only
-		
-	fprintf(stdout, "\nOptimizing OPFpruning using PSO ... \n\n"); fflush(stdout);
-	gettimeofday(&tic,NULL);
-	runUFA(P, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
-	gettimeofday(&toc,NULL);
-	fprintf(stdout, " OK"); fflush(stdout);
-	
-	time = ((toc.tv_sec-tic.tv_sec)*1000.0 + (toc.tv_usec-tic.tv_usec)*0.001)/1000.0;
-	
-	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
-
-    for(i = 0; i < P->n; i++){
-		micro+=gsl_matrix_get(P->x, P->best, i);
-       	psi[i] = gsl_matrix_get(P->x, P->best, i); //Set classifiers to testing phase
-
-	}
-
-	micro/=P->n; //mean of the weights of the classifiers
-	for(i = 0; i< P->n; i++){
-		if(psi[i] < micro){
-				DL++; //DL is the number of classifiers whose weight is less than micro
-				SL+= pow((psi[i] - micro),2); // square the difference
-		} 
-	} 
-	SL = sqrt((1/(double)DL)*SL); 
-	lambda = micro - SL;
-	for(i = 0; i< P->n; i++){
-		if(psi[i] > lambda) psi[i] = 1;
-		else psi[i] = 0;
-	}
-	
-	
-	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
-	for(i = 0; i< P->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
-
+	fprintf(stdout,"\n\nAll classifiers: "); fflush(stdout);
+	for(i = 0; i< S->n; i++) if((int)psi[i]) fprintf(stdout," %d,",(int)psi[i]); fflush(stdout);
 
 	// WRITING BEST ENSEMBLE
 	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
-    fprintf(fParameters,"%d ", P->n);
-    for(i = 0; i < P->n; i++){
-        fprintf(fParameters, "%lf:(%d) ", gsl_matrix_get(P->x, P->best, i),(int)psi[i]);
+    fprintf(fParameters,"%d ", S->n);
+    for(i = 0; i < S->n; i++){
+        fprintf(fParameters, "%d ", (int)psi[i]);
 	}
 	fprintf(fParameters, "\n");
 	fclose(fParameters);
-
-
-	// WRITING OPTIMIZATION TIME
-	sprintf(fileName,"%s.time",argv[eval_set]);
-	f = fopen(fileName,"a");
-	fprintf(f,"%f\n",time);
-	fclose(f);
-
-	fprintf(stdout, "\nDeallocating memory ...");
-    DestroySubgraph(&gEval);
-	fprintf(stdout, " OK\n");
-
+	
 
 	/*--------- Test section  -------------------------------------*/
 	fprintf(stdout, "\n\nReading test set [%s] ...", argv[test_set]); fflush(stdout);
@@ -329,7 +273,7 @@ int main(int argc, char **argv){
 
 	fprintf(stdout, "\nDeallocating memory ..."); fflush(stdout);
 	DestroySubgraph(&gTest);
-	DestroyFireflySwarm(&P);
+	DestroySwarm(&S);
 	fprintf(stdout, " OK\n");
 
 	return 0;
