@@ -821,11 +821,8 @@ void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg){
 			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
 			int binary_optimization = va_arg(arg, int);
 			row = gsl_vector_alloc(S->n);
-			
-			int var_aux = 0;//remover
 				
 			for(i = 0; i < S->m; i++){
-			    for(var_aux = 0; var_aux < S->m; var_aux++) fprintf(stdout,"\n........%f", gsl_matrix_get(S->x, i, var_aux)); fflush(stdout);// remover
 				gsl_matrix_get_row(row, S->x, i);
 				f = Evaluate(g, ensembleTrain, row, S->n, binary_optimization);
 								
@@ -910,16 +907,12 @@ void UpdateParticlePosition4binary(Swarm *S, int particle_id){
     gsl_rng_set(r, rand());
     
     for(j = 0; j < S->n; j++){
-    
         r1 = gsl_rng_uniform(r);
-        
         exp_value = exp((double) - gsl_matrix_get(S->v, particle_id, j));
         sig = 1 / (1 + exp_value);
         if(r1 >= sig) tmp = 0;
         else tmp = 1;
-
         gsl_matrix_set(S->x, particle_id, j, tmp);
-        fprintf(stdout, " ## tmp: %f // sig: %f // r1: %f ", tmp, sig, r1); fflush(stdout); //remover
     }
     gsl_rng_free(r);
 }
