@@ -45,6 +45,7 @@ double ComputeSuccessPercentage(Swarm *S); /* It computes the success percentage
 /* Main algorithm */
 void UpdateParticleVelocity(Swarm *S, int particle_id); /* It updates the velocity of each particle */
 void UpdateParticlePosition(Swarm *S, int particle_id); /* It updates the position of each particle */
+void UpdateParticlePosition4Binary(Swarm *S, int particle_id); /* It updates the position of each particle for binary type */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all particles */
 void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Particle Swarm Optimization for function minimization */
 void runBPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Binary Particle Swarm Optimization for function minimization*/

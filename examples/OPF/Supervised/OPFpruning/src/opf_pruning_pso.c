@@ -19,9 +19,9 @@ fprintf(stderr,
 "\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
 Options:\n\
    -p [required] (parameters): define path of parameters file to use in swarm optimization approach.\n\
-   -a (optimization):\n\
-      (0) - weighted\n\
-      (1) - Binary (default)\n\
+   -e (encoding):\n\
+      (0) - weighted type\n\
+      (1) - binary type (default)\n\
    -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
@@ -57,11 +57,11 @@ int main(int argc, char **argv){
 				}
 				break;
 
-			case 'a':
+			case 'e':
 				optimization_option = atoi(argv[i]);
-				if(optimization_option == 1 ) printf("\nEnsemble OPF using Binary values");
+				if(optimization_option == 1 ) printf("\nEnsemble OPF using binary type");
 				else if(optimization_option == 0 ){
-					printf("\nEnsemble OPF using weighted values");
+					printf("\nEnsemble OPF using weighted type");
 					binary_optimization = 0;
 				} 
 				

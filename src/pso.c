@@ -894,7 +894,7 @@ S: search space
 particle_id: particle's index
 */ 
 
-void UpdateParticlePosition4binary(Swarm *S, int particle_id){
+void UpdateParticlePosition4Binary(Swarm *S, int particle_id){
     double tmp, r1, sig, exp_value;
     int j;
     const gsl_rng_type *T = NULL;
@@ -1037,7 +1037,7 @@ void runBPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...){
 		/* for each particle */
 		for(i = 0; i < S->m; i++){
 		    UpdateParticleVelocity(S, i);
-		    UpdateParticlePosition4binary(S, i);
+		    UpdateParticlePosition4Binary(S, i);
 		}    
 		CheckSwarmLimits(S);	
 	        EvaluateSwarm(S, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);            
