@@ -42,14 +42,17 @@ FireflySwarm *CopyFireflySwarm(FireflySwarm *F); /* It copies an entire search s
 /* Auxiliary functions */
 void CheckFireflySwarmLimits(FireflySwarm *F); /* it checks the limits of each decision variable */
 void InitializeFireflySwarm(FireflySwarm *F); /* it initializes the search space */
+void InitializeFireflySwarm4Binary(FireflySwarm *F); /* it initializes the search space */
 void ShowFireflySwarm(FireflySwarm *F); /* It displays the search space's content */
 void ShowFireflySwarmInformation(FireflySwarm *F); /* It displays the search space's main information */
 
 /* Main algorithm */
 void UpdateFireflyPosition(FireflySwarm *F, int firefly_id); /* It updates the position of each firefly */
+void UpdateFireflyPosition4Binary(FireflySwarm *F, int firefly_id); /* It updates the position of each firefly for binary type*/
 void UpdateBestFireflyPosition(FireflySwarm *F, int best_firefly_id); /* It updates the position of the best firefly */
 void EvaluateFireflySwarm(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all fireflies */
 void runUFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Uniform Firefly Algorithm for function minimization */
+void runBUFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Binary Uniform Firefly Algorithm for function minimization */
 
 /* Quaternion-based Firefly Algorithm */
 QFireflySwarm *CreateQFireflySwarm(int m, int n); /*It allocates the quaternion-based search space */

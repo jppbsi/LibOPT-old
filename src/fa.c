@@ -157,6 +157,41 @@ void InitializeFireflySwarm(FireflySwarm *F){
 	}else fprintf(stderr,"\nThere is no search space allocated @InitializeSwarm.\n");		
 }
 
+
+
+/* It initializes the search space for binary type ---
+Parameters: [F]
+F: search space */
+void InitializeFireflySwarm4Binary(FireflySwarm *F){
+	if(F){
+		int i, j;
+		const gsl_rng_type *T = NULL;
+		gsl_rng *r = NULL;
+		double p;
+		
+		srand(time(NULL));
+		gsl_rng_env_setup();
+		T = gsl_rng_default;
+		r = gsl_rng_alloc(T);
+		gsl_rng_set(r, rand());
+		
+		for(i = 0; i < F->m; i++){
+			for(j = 0; j < F->n; j++){
+			    p = gsl_rng_uniform_int(r, (int)gsl_vector_get(F->UB, j)+1);
+				gsl_matrix_set(F->x, i, j, p);
+			}
+			gsl_vector_set(F->fitness, i, DBL_MAX);
+		}
+		
+		gsl_rng_free(r);
+		
+		
+	}else fprintf(stderr,"\nThere is no search space allocated @InitializeSwarm.\n");		
+}
+
+
+
+
 /* It displays the swarm's content ---
 Parameters: [F]
 F: search space */
@@ -645,6 +680,50 @@ void UpdateFireflyPosition(FireflySwarm *F, int firefly_id){
     gsl_rng_free(r);
 }
 
+
+/* It updates the position of each firefly for binary type ---
+Parameters: [F, firefly_id]
+F: search space
+firefly_id: firefly's index */ 
+void UpdateFireflyPosition4Binary(FireflySwarm *F, int firefly_id){
+    double beta, tmp, dist, aux, exp_value, sig, r1;
+    int i, j;
+    gsl_vector_view row1, row2;
+    const gsl_rng_type *T = NULL;
+    gsl_rng *r = NULL;
+
+    srand(time(NULL));
+    gsl_rng_env_setup();
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+    gsl_rng_set(r, random_seed_deep());
+    
+    for(i = 0; i < F->m; i++){
+        if(gsl_vector_get(F->fitness, firefly_id) > gsl_vector_get(F->fitness, i)){ /* It moves firefly firefly_id towards i */
+            row1 = gsl_matrix_row(F->x, i);
+            row2 = gsl_matrix_row(F->x, firefly_id);
+            dist = opt_EuclideanDistance(&row1.vector, &row2.vector);
+	    dist *= dist;
+            beta = F->beta_0*exp(-F->gamma*dist); /* It obtains attractiveness by Equation 2 */
+	    r1 = aux = gsl_rng_uniform(r);
+	    aux = 2 * (aux - 0.5);
+            for(j = 0; j < F->n; j++){
+                tmp = gsl_matrix_get(F->x, firefly_id, j) + beta * (gsl_matrix_get(F->x, i, j) - gsl_matrix_get(F->x, firefly_id, j)) + (F->alpha * aux);
+                
+                exp_value = exp((double) - tmp);
+                sig = 1 / (1 + exp_value);
+                if(r1 <= sig) tmp = 1;
+                else tmp = 0;
+                
+                gsl_matrix_set(F->x, firefly_id, j, tmp);
+            }
+        }
+    }
+    gsl_rng_free(r);
+}
+
+
+
 /* It updates the position of the best firefly ---
 Parameters: [F, firefly_id]
 F: search space
@@ -712,6 +791,51 @@ void runUFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
 	}else fprintf(stderr,"\nThere is no search space allocated @runFFA.\n");
 	va_end(arg);
 }
+
+
+/* It executes the Uniform Firefly Algorithm for function minimization ---
+Parameters: [F, EvaluateFun, FUNCTION_ID, ... ]
+F: search space
+Evaluate: pointer to the function used to evaluate fireflies
+FUNCTION_ID: id of the function registered at opt.h
+... other parameters of the desired function */
+void runBUFA(FireflySwarm *F, prtFun Evaluate, int FUNCTION_ID, ...){
+	double delta;
+	va_list arg, argtmp;
+		    
+	va_start(arg, FUNCTION_ID);
+	va_copy(argtmp, arg);
+	if(F){
+		int t, i;
+		
+		EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg);
+		
+		for(t = 1; t <= F->max_iterations; t++){
+			fprintf(stderr,"\nRunning iteration %d/%d ... ", t, F->max_iterations);
+			va_copy(arg, argtmp);
+			
+			delta = 1 - (0.0001 / (pow(0.9, (1/F->max_iterations))));
+			F->alpha = 1 - (delta * F->alpha);
+			
+			for(i = 0; i < F->m; i++)
+			    UpdateFireflyPosition4Binary(F, i); /* It updates the position of each firefly */
+			
+			UpdateBestFireflyPosition(F, F->best);
+			
+			CheckFireflySwarmLimits(F);
+			
+			EvaluateFireflySwarm(F, Evaluate, FUNCTION_ID, arg); va_copy(arg, argtmp);
+			
+			fprintf(stderr, "OK (minimum fitness value %lf)", F->best_fitness);
+			fprintf(stdout,"%d %lf\n", t, F->best_fitness);
+			    
+	    }
+	    
+	}else fprintf(stderr,"\nThere is no search space allocated @runFFA.\n");
+	va_end(arg);
+}
+
+
 
 /* Quaternion-based Firefly Algorithm */
 

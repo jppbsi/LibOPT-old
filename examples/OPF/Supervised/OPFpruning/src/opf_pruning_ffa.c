@@ -19,6 +19,9 @@ fprintf(stderr,
 "\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
 Options:\n\
    -p [required] (parameters): define path of parameters file to use in Firefly Algorithm approach.\n\
+   -e (encoding):\n\
+      (0) - weighted type\n\
+      (1) - binary type (default)\n\
    -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
@@ -26,7 +29,7 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0;
+	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0, binary_optimization = 1;
 	float time;
 	float Acc;
 	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0;
@@ -53,6 +56,23 @@ int main(int argc, char **argv){
 					help_usage();
 				}
 				break;
+
+			case 'e':
+				optimization_option = atoi(argv[i]);
+				if(optimization_option == 1 ) printf("\nEnsemble OPF using binary type");
+				else if(optimization_option == 0 ){
+					printf("\nEnsemble OPF using weighted type");
+					binary_optimization = 0;
+				} 
+				
+				else if(optimization_option < 0 || optimization_option > 1){
+					printf("\nOptimization option invalid!");
+					info();
+					help_usage();
+				}
+
+				break;
+				
 				
 			case 'o':
 				fParameters = fopen(argv[i], "a");
@@ -106,7 +126,8 @@ int main(int argc, char **argv){
 	ShowFireflySwarmInformation(P);
 	
 	fprintf(stderr,"\nInitializing optimization approach ... ");
-	InitializeFireflySwarm(P);
+	if(binary_optimization) InitializeFireflySwarm4Binary(P);
+	else InitializeFireflySwarm(P);
 	fprintf(stderr,"\nOK\n");
 
 	psi = (double *)calloc((P->n),sizeof(double));
@@ -181,12 +202,11 @@ int main(int argc, char **argv){
 	fprintf(stdout, "\nReading evaluation set [%s] ...", argv[eval_set]); fflush(stdout);
 	Subgraph *gEval = ReadSubgraph(argv[eval_set]);
 	fprintf(stdout, " OK"); fflush(stdout);
-	
-	int binary_optimization = 0; // For binary HS only
 		
 	fprintf(stdout, "\nOptimizing OPFpruning using PSO ... \n\n"); fflush(stdout);
 	gettimeofday(&tic,NULL);
-	runUFA(P, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
+	if(binary_optimization) runBUFA(P, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
+	else runUFA(P, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
 	gettimeofday(&toc,NULL);
 	fprintf(stdout, " OK"); fflush(stdout);
 	
@@ -195,25 +215,30 @@ int main(int argc, char **argv){
 	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
 
     for(i = 0; i < P->n; i++){
-		micro+=gsl_matrix_get(P->x, P->best, i);
-       	psi[i] = gsl_matrix_get(P->x, P->best, i); //Set classifiers to testing phase
-
+        if(binary_optimization){
+            psi[i] = (int)gsl_matrix_get(P->x, P->best, i); //Set classifiers to testing phase
+        }
+        else{
+            micro+=gsl_matrix_get(P->x, P->best, i);
+            psi[i] = gsl_matrix_get(P->x, P->best, i); //Set classifiers to testing phase
+        }
 	}
 
-	micro/=P->n; //mean of the weights of the classifiers
-	for(i = 0; i< P->n; i++){
-		if(psi[i] < micro){
-				DL++; //DL is the number of classifiers whose weight is less than micro
-				SL+= pow((psi[i] - micro),2); // square the difference
-		} 
-	} 
-	SL = sqrt((1/(double)DL)*SL); 
-	lambda = micro - SL;
-	for(i = 0; i< P->n; i++){
-		if(psi[i] > lambda) psi[i] = 1;
-		else psi[i] = 0;
+    if(!binary_optimization){
+        micro/=P->n; //mean of the weights of the classifiers
+        for(i = 0; i< P->n; i++){
+            if(psi[i] < micro){
+                    DL++; //DL is the number of classifiers whose weight is less than micro
+                    SL+= pow((psi[i] - micro),2); // square the difference
+            } 
+        } 
+        SL = sqrt((1/(double)DL)*SL); 
+        lambda = micro - SL;
+        for(i = 0; i< P->n; i++){
+            if(psi[i] > lambda) psi[i] = 1;
+            else psi[i] = 0;
+        }
 	}
-	
 	
 	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
 	for(i = 0; i< P->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
