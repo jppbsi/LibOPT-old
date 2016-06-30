@@ -1,5 +1,5 @@
 5 9 20 #<n_particles> <dimension> <max_iterations>
-0.3 1 0.3 #<gamma> <beta_0> <alpha>
+0.7 1 0.01 #<gamma> <beta_0> <alpha>
 0 1 #<LB> <UB> OPF classifier 00 
 0 1 #<LB> <UB> OPF classifier 01 
 0 1 #<LB> <UB> OPF classifier 02 
