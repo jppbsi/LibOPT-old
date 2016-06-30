@@ -36,7 +36,6 @@ Swarm *CopySwarm(Swarm *S); /* It copies an entire search space */
 /* Auxiliary functions */
 void CheckSwarmLimits(Swarm *S); /* it checks the limits of each decision variable */
 void InitializeSwarm(Swarm *S); /* it initializes the search space */
-void InitializeSwarm4Binary(Swarm *S); /* it initializes the search space in binary*/
 void ShowSwarm(Swarm *S); /* It displays the search space's content */
 void ShowSwarmInformation(Swarm *S); /* It displays the search space's main information */
 void ComputeSuccess(Swarm *S); /* It computes the success of each particle at iteration t  - AIWPSO */
@@ -45,10 +44,8 @@ double ComputeSuccessPercentage(Swarm *S); /* It computes the success percentage
 /* Main algorithm */
 void UpdateParticleVelocity(Swarm *S, int particle_id); /* It updates the velocity of each particle */
 void UpdateParticlePosition(Swarm *S, int particle_id); /* It updates the position of each particle */
-void UpdateParticlePosition4Binary(Swarm *S, int particle_id); /* It updates the position of each particle for binary type */
 void EvaluateSwarm(Swarm *S, prtFun Evaluate, int FUNCTION_ID, va_list arg); /* It evaluates all particles */
 void runPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Particle Swarm Optimization for function minimization */
-void runBPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Binary Particle Swarm Optimization for function minimization*/
 void runAIWPSO(Swarm *S, prtFun Evaluate, int FUNCTION_ID, ...); /* It executes the Particle Swarm Optimization with Adpative Inertia Weight for function minimization */
 
 #endif

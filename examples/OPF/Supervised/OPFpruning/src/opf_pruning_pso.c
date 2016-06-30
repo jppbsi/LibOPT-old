@@ -29,7 +29,7 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0, binary_optimization = 1;
+	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0, binary_optimization = 1, pass=0;
 	float time;
 	float Acc;
 	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0;
@@ -125,9 +125,7 @@ int main(int argc, char **argv){
 	ShowSwarm(S);
 	
 	fprintf(stderr,"\nInitializing swarm ... ");
-	
-	if(binary_optimization) InitializeSwarm4Binary(S);
-	else InitializeSwarm(S);
+	InitializeSwarm(S);
 	fprintf(stderr,"\nOK\n");
 
 	psi = (double *)calloc((S->n),sizeof(double));
@@ -205,8 +203,7 @@ int main(int argc, char **argv){
 		
 	fprintf(stdout, "\nOptimizing OPFpruning using PSO ... \n\n"); fflush(stdout);
 	gettimeofday(&tic,NULL);
-	if(binary_optimization) runBPSO(S, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
-	else runPSO(S, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
+    runPSO(S, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
 	gettimeofday(&toc,NULL);
 	fprintf(stdout, " OK"); fflush(stdout);
 	
@@ -241,7 +238,15 @@ int main(int argc, char **argv){
     }
 	
 	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
-	for(i = 0; i< S->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
+	for(i = 0; i< S->n; i++) {
+	    if((int)psi[i]) {
+	        fprintf(stdout," %i,",i); fflush(stdout);
+	        if((int)psi[i] == 1) pass = 1;
+	    }
+	}
+	
+	//In case of not finding any solution, selects all classifiers
+	if(!pass) for(i = 0; i< S->n; i++) psi[i] = 1;
 
 	// WRITING BEST ENSEMBLE
 	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
