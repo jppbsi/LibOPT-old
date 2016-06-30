@@ -1653,7 +1653,7 @@ double ensemble_pruning(Subgraph *eval, ...){
 	psi = (int *)calloc((n),sizeof(int));  //For ensemble-pruning in LibOPT to LibOPF;
 	
 	for(i = 0; i < n; i++){
-		/* For a approach using binary optimization (BHS, BPSO) */
+		/* For a approach using binary optimization (BHS, BPSO, BUFA, BQHS) */
 		if(binary_optimization){
 			psi[i] = (int)gsl_vector_get(Psi, i); //Set classifiers to evaluation phase
 			if(psi[i] == 1) pass = 1;
