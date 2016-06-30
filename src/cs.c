@@ -419,13 +419,30 @@ double EvaluateNest(NestPopulation *P, gsl_vector *x, prtFun Evaluate, int FUNCT
 			g = va_arg(arg, Subgraph *);
 			Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
 			int binary_optimization = va_arg(arg, int);
-			row = gsl_vector_alloc(P->n);
 		
-			for(l = 0; l < P->m; l++){
-				gsl_matrix_get_row(row, P->x, l);
-				f = Evaluate(g, ensembleTrain, row, P->n, binary_optimization);
-			}
-			gsl_vector_free(row);
+		    if(binary_optimization) {
+		        double r1, sig, exp_value;
+                const gsl_rng_type *T = NULL;
+                gsl_rng *r = NULL;
+                
+                srand(time(NULL));
+                gsl_rng_env_setup();
+                T = gsl_rng_default;
+                r = gsl_rng_alloc(T);
+                gsl_rng_set(r, rand());
+                
+                for(j = 0; j < P->n; j++) {
+                    r1 = gsl_rng_uniform(r);
+                    exp_value = exp((double) - gsl_vector_get(x, j));
+                    sig = 1.0 / (1.0 + exp_value);
+                    if(r1 >= sig) gsl_vector_set(x, j, 0);
+                    else gsl_vector_set(x, j, 1);
+                }
+                gsl_rng_free(r);
+            }
+            
+            f = Evaluate(g, ensembleTrain, x, P->n, binary_optimization);
+            
 	break;
 	case BBDBM_CD: /* Bernoulli_BernoulliDBM4Reconstruction trained with Contrastive Divergence */
 		    g = va_arg(arg, Subgraph *);
