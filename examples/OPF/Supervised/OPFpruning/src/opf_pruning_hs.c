@@ -19,9 +19,9 @@ fprintf(stderr,
 "\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
 Options:\n\
    -p [required] (parameters): define path of parameters file to use in Harmony Search approach.\n\
-   -a (binary optimization for HS):\n\
-      (0) - Harmony Search weighted\n\
-      (1) - Harmony Search Binary (default)\n\
+   -e (encoding):\n\
+      (0) - weighted type\n\
+      (1) - binary type (default)\n\
    -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
@@ -29,7 +29,7 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, binary_optimization = 1, DL = 0;
+	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, binary_optimization = 1, DL = 0, pass = 0;
 	float time;
 	float Acc;
 	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0;
@@ -57,7 +57,7 @@ int main(int argc, char **argv){
 				}
 				break;
 				
-			case 'a':
+			case 'e':
 				optimization_option = atoi(argv[i]);
 				if(optimization_option == 1 ) printf("\nEnsemble OPF using Binary Harmony Search");
 				else if(optimization_option == 0 ){
@@ -239,7 +239,15 @@ int main(int argc, char **argv){
 	}
 	
 	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
-	for(i = 0; i< H->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
+	for(i = 0; i< H->n; i++) {
+	    if((int)psi[i]) {
+	        fprintf(stdout," %i,",i); fflush(stdout);
+	        if((int)psi[i] == 1) pass = 1;
+	    }
+	}
+	
+	//In case of not finding any solution, selects all classifiers
+	if(!pass) for(i = 0; i< H->n; i++) psi[i] = 1;
 	
 	// WRITING BEST ENSEMBLE
 	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");

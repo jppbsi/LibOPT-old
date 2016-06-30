@@ -2223,6 +2223,7 @@ void InitializeQHarmonyMemory(QHarmonyMemory *H){
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @InitializeQHarmonyMemory.\n");		
 }
 
+
 /* It displays the quaternion-based harmomy memory's content ---
 Parameters: [H]
 H: harmony memory */
@@ -2429,7 +2430,7 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 		Subgraph *g = NULL, *Val = NULL;
 		double f, x, y;
 		double decision_variable, decision_variable1, decision_variable2, decision_variable3, decision_variable4, decision_variable5, decision_variable6; 
-		gsl_vector *sigma = NULL, *w = NULL;
+		gsl_vector *sigma = NULL, *w = NULL, *d_variables = NULL;
 		gsl_matrix *Param = NULL;
 		gsl_vector_view *column = NULL;
 
@@ -2867,6 +2868,62 @@ void EvaluateNewQHarmony(QHarmonyMemory *H, gsl_matrix *h, prtFun Evaluate, int 
 
 				gsl_matrix_free(Param);
 			break;
+		    case OPF_ENSEMBLE: /* OPFensemble pruning */
+		        g = va_arg(arg, Subgraph *);
+				Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+				int binary_optimization = va_arg(arg, int);
+				d_variables = gsl_vector_alloc(H->n);
+                
+                double r1, sig, exp_value;
+                const gsl_rng_type *T = NULL;
+                gsl_rng *r = NULL;
+                
+                srand(time(NULL));
+                gsl_rng_env_setup();
+                T = gsl_rng_default;
+                r = gsl_rng_alloc(T);
+                gsl_rng_set(r, rand());
+                
+                for(j = 0; j < H->n; j++){
+                    column[j] = gsl_matrix_column(h, j);
+                    if(binary_optimization){
+                        r1 = gsl_rng_uniform(r);
+                        exp_value = exp((double) - Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector));
+                        sig = 1.0 / (1.0 + exp_value);
+                        if(r1 >= sig) gsl_vector_set(d_variables, j, 0);
+                        else gsl_vector_set(d_variables, j, 1);
+                    
+                        //Update the harmony memory
+                        for(z = 0; z < 4; z++) 
+                            gsl_matrix_set(h, z, j, gsl_vector_get(d_variables,j));
+                    
+                    } else gsl_vector_set(d_variables, j, Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector)); 
+                }
+                
+                f = Evaluate(g, ensembleTrain, d_variables, H->n, binary_optimization);
+                
+                if(f < H->worst_fitness){ /* if the new harmony is better than the worst one (minimization problem) */
+                    H->HMCRm+=H->HMCR; /* used for SGHS */
+                    H->PARm+=H->PAR; /* used for SGHS */
+                    H->aux++; /* used for SGHS */
+                    for(i = 0; i < H->n; i++){
+                        for(j = 0; j < 4; j++)
+                            gsl_matrix_set(H->HM[H->worst], j, i, gsl_matrix_get(h, j, i)); /* it copies the new harmony to the harmony memory */
+                    }
+                    gsl_vector_set(H->fitness, H->worst, f);
+            
+                    UpdateQHarmonyMemoryIndices(H);
+            
+                    if(H->Rehearsal){ /* used for PSF_HS */
+                        for(i = 0; i < H->n; i++)
+                            H->Rehearsal[H->worst][i] = H->op_type[i];
+                    }
+                }
+                gsl_rng_free(r);
+                gsl_vector_free(d_variables);
+			break;
+
+			
 		}
 		free(column);
 	}else fprintf(stderr,"\nHarmony memory or new harmony not allocated @EvaluateQNewHarmony.\n");
@@ -2883,7 +2940,7 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 		double f, x, y;
 		double decision_variable, decision_variable1, decision_variable2, decision_variable3, decision_variable4, decision_variable5, decision_variable6;
 		gsl_vector_view row;
-		gsl_vector *sigma = NULL, *w = NULL;
+		gsl_vector *sigma = NULL, *w = NULL, *d_variables = NULL;
 		gsl_matrix *Param = NULL;	
 		Subgraph *g = NULL, *Val = NULL;
 		gsl_vector_view *column = NULL;
@@ -3243,6 +3300,52 @@ void EvaluateQHarmonies(QHarmonyMemory *H, prtFun Evaluate, int FUNCTION_ID, va_
 
 				gsl_matrix_free(Param);
 			break;
+			case OPF_ENSEMBLE: /* OPFensemble pruning */
+				g = va_arg(arg, Subgraph *);
+				Subgraph **ensembleTrain = va_arg(arg, Subgraph **);
+				int binary_optimization = va_arg(arg, int);
+				d_variables = gsl_vector_alloc(H->n);
+			
+			    double r1, sig, exp_value;
+                const gsl_rng_type *T = NULL;
+                gsl_rng *r = NULL;
+
+                srand(time(NULL));
+                gsl_rng_env_setup();
+                T = gsl_rng_default;
+                r = gsl_rng_alloc(T);
+                gsl_rng_set(r, rand());
+			    
+				for(i = 0; i < H->m; i++){
+                    for(j = 0; j < H->n; j++){
+                        column[j] = gsl_matrix_column(H->HM[i], j);
+                        
+                        if(binary_optimization){
+                            r1 = gsl_rng_uniform(r);
+                            exp_value = exp((double) - Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector));
+                            sig = 1.0 / (1.0 + exp_value);
+                            if(r1 >= sig) gsl_vector_set(d_variables, j, 0);
+                            else gsl_vector_set(d_variables, j, 1);
+                            
+                            //Update the harmony memory
+                            for(z = 0; z < 4; z++)
+							    gsl_matrix_set(H->HM[i], z, j, gsl_vector_get(d_variables,j));
+							    
+                        } else gsl_vector_set(d_variables, j, Span(gsl_vector_get(H->LB, j), gsl_vector_get(H->UB, j), &column[j].vector));
+                    }
+                        
+                    f = Evaluate(g, ensembleTrain, d_variables, H->n, binary_optimization);
+                    gsl_vector_set(H->fitness, i, f);
+                    if(f < H->best_fitness){
+                        H->best = i;
+                        H->best_fitness = f;
+                    }else if(f > H->worst_fitness){
+                        H->worst = i;
+                        H->worst_fitness = f;
+                    }
+				}
+				gsl_rng_free(r);
+				gsl_vector_free(d_variables);
 		}
 		free(column);
 	}else fprintf(stderr,"\nThere is no harmony memory allocated @EvaluateQHarmonies.\n");	
@@ -3379,8 +3482,6 @@ void runQGHS(QHarmonyMemory *H, prtFun EvaluateFun, int FUNCTION_ID, ...){
     }else fprintf(stderr,"\nThere is no search space allocated @runQGHS.\n");
     va_end(arg);
 }
-
-
 
 /* It executes the Quaternion-Based Self-adaptative Global-best Harmony Search for function minimization ---
 Parameters: [H, EvaluateFun, FUNCTION_ID, ... ]
