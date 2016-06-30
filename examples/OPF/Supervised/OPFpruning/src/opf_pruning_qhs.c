@@ -19,6 +19,9 @@ fprintf(stderr,
 "\nusage opf_pruning [options] training_file evaluation_file(*) test_file\n\
 Options:\n\
    -p [required] (parameters): define path of parameters file to use in Harmony Search Quaternion approach.\n\
+   -e (encoding):\n\
+      (0) - weighted type\n\
+      (1) - binary type (default)\n\
    -o (output): Output ensemble pruning classifier (default: best_ensemble.out)\n\n"
 );
 exit(1);
@@ -26,10 +29,10 @@ exit(1);
 
 int main(int argc, char **argv){
 
-	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0;
+	int i,j, qtd_labels=0, ntraining = 0, optimization_option = 0, *poll_label = NULL, DL = 0, binary_optimization = 1, pass=0;
 	float time;
 	float Acc;
-	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0, decision_variable;
+	double *psi = NULL, lambda=0.0, micro=0.0, SL=0.0, decision_variable, sig, exp_value;
 	char fileName[256]; 
 	FILE *f = NULL, *fParameters = NULL;
 	timer tic, toc;
@@ -56,7 +59,24 @@ int main(int argc, char **argv){
 				break;
 
 				break;
-			case 'o':
+
+			case 'e':
+				optimization_option = atoi(argv[i]);
+				if(optimization_option == 1 ) printf("\nEnsemble OPF using binary type");
+				else if(optimization_option == 0 ){
+					printf("\nEnsemble OPF using weighted type");
+					binary_optimization = 0;
+				} 
+				
+				else if(optimization_option < 0 || optimization_option > 1){
+					printf("\nOptimization option invalid!");
+					info();
+					help_usage();
+				}
+
+				break;
+		
+		    case 'o':
 				fParameters = fopen(argv[i], "a");
 				break;
 				
@@ -109,6 +129,8 @@ int main(int argc, char **argv){
 	InitializeQHarmonyMemory(H);
 	fprintf(stderr,"\nOK\n");
 
+    ShowQHarmonyMemory(H);
+    
 	psi = (double *)calloc((H->n),sizeof(double));
 	
 	/*--------- Training section  -------------------------------------*/
@@ -182,8 +204,6 @@ int main(int argc, char **argv){
 	Subgraph *gEval = ReadSubgraph(argv[eval_set]);
 	fprintf(stdout, " OK"); fflush(stdout);
 	
-	int binary_optimization = 0; // For binary HS only
-	
 	fprintf(stdout, "\nOptimizing OPFpruning using QHS ... \n\n"); fflush(stdout);
 	gettimeofday(&tic,NULL);
 	runQHS(H, ensemble_pruning, OPF_ENSEMBLE, gEval, gTrain, binary_optimization);
@@ -195,31 +215,43 @@ int main(int argc, char **argv){
 	fprintf(stdout, "\nOPFpruning optimizing time : %f seconds\n", time); fflush(stdout);
 	
     for(i = 0; i < H->n; i++){
-		column = gsl_matrix_column(H->HM[H->best], i);
-		decision_variable = Span(gsl_vector_get(H->LB, i), gsl_vector_get(H->UB, i), &column.vector);
-		
-		micro += decision_variable;
-    	psi[i] = decision_variable; //Set classifiers to testing phase
+        column = gsl_matrix_column(H->HM[H->best], i);
+        if(binary_optimization) psi[i] = (int)gsl_vector_get(&column.vector,0);
+        else{
+            decision_variable = Span(gsl_vector_get(H->LB, i), gsl_vector_get(H->UB, i), &column.vector);
+            micro += decision_variable;
+            psi[i] = decision_variable; //Set classifiers to testing phase
+        }
 	}
 	
+    if(!binary_optimization){
+        micro/=H->n; //mean of the weights of the classifiers
+        for(i = 0; i< H->n; i++){
+            if(psi[i] < micro){
+                    DL++; //DL is the number of classifiers whose weight is less than micro
+                    SL+= pow((psi[i] - micro),2); // square the difference
+            } 
+        } 
+        SL = sqrt((1/(double)DL)*SL); 
+        lambda = micro - SL;
+        for(i = 0; i< H->n; i++){
+            if(psi[i] > lambda) psi[i] = 1;
+            else psi[i] = 0;
+        }
+	}
 
-	micro/=H->n; //mean of the weights of the classifiers
-	for(i = 0; i< H->n; i++){
-		if(psi[i] < micro){
-				DL++; //DL is the number of classifiers whose weight is less than micro
-				SL+= pow((psi[i] - micro),2); // square the difference
-		} 
-	} 
-	SL = sqrt((1/(double)DL)*SL); 
-	lambda = micro - SL;
-	for(i = 0; i< H->n; i++){
-		if(psi[i] > lambda) psi[i] = 1;
-		else psi[i] = 0;
-	}	
-
+    
 	
 	fprintf(stdout,"\n\nBest classifiers: "); fflush(stdout);
-	for(i = 0; i< H->n; i++) if((int)psi[i]) fprintf(stdout," %i,",i); fflush(stdout);
+	for(i = 0; i< H->n; i++) {
+	    if((int)psi[i]) {
+	        fprintf(stdout," %i,",i); fflush(stdout);
+	        if((int)psi[i] == 1) pass = 1;
+	    }
+	}
+	
+	//In case of not finding any solution, selects all classifiers
+	if(!pass) for(i = 0; i< H->n; i++) psi[i] = 1;
 	
 	// WRITING BEST ENSEMBLE
 	if(!fParameters) fParameters = fopen("best_ensemble.out", "a");
